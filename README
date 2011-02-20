@@ -1,0 +1,8 @@
+urxvt:
+1) #followed instructions on http://scie.nti.st/2008/10/13/get-rxvt-unicode-with-256-color-support-on-ubunut to get a package of rxvt-unicode-ml that is 256c enabled.
+2) #install extensions:
+git clone https://github.com/muennich/urxvt-perls.git ~/.urxvt
+
+3) config as in .Xresources
+# restart X or use 'xrdb ~/.Xresources' to enable
+
