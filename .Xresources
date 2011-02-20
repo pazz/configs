@@ -1,9 +1,10 @@
 URxvt.urgentOnBell:    true
-URxvt.perl-ext-common: url-select,keyboard-select
+URxvt.perl-lib:        /home/pazz/.urxvt/
+URxvt.perl-ext-common: default,url-select,keyboard-select
 URxvt.urlLauncher:     firefox
 URxvt.underlineURLs:   false
-URxvt.keysym.C-u:      perl:url-select:select_next
-URxvt.keysym.C-Escape: perl:keyboard-select:activate
+URxvt.keysym.M-u:      perl:url-select:select_next
+URxvt.keysym.M-Escape: perl:keyboard-select:activate
 
 URxvt.background:      black
 URxvt.foreground:      white
@@ -15,82 +16,7 @@ URxvt.letterSpace: -1
 !URxvt*font: xft:Courier:size=12
 !Urxvt*boldFont: xft:Courier:size=12:style=Bold
 
-
-## teh transparency stuff
-!URxvt*shading: 100
-## change default colors
-!URxvt*background: #000000
-!URxvt*foreground: #A8A8A8
-!URxvt*color0: #000000
-!URxvt*color1: #A80000
-!
-!## URxvt*color2: #00A800
-!URxvt*color2: #ED254F
-!
-!URxvt*color3: #A85400
-
-! ! BLACK
-! *color0: #262729
-! *color8: #554444
-! ! MAGENTA
-! *color1: #F92672
-! *color9: #FF669D
-! ! BLUE
-! *color2: #7441ff
-! *color10: #391f80
-! ! YELLOW
-! *color3: #FFD800
-! *color11: #CCAD00
-! ! GREEN
-! *color4: #21802f
-! *color12: #52fc6f
-! ! PERIWINKLE
-! *color5: #9E6FFE
-! *color13: #9E6FFE
-! ! LIGHT BLUE
-! *color6: #66D9EF
-! *color14: #66D9EF
-! ! WHITE
-! *color7: #CCCCC6
-! *color15: #F8F8F2
-
-
-! Xft settings ---------------------------------------------------------------
-
-Xft.dpi:        96
-Xft.antialias:  true
-Xft.rgba:       rgb
-Xft.hinting:    true
-Xft.hintstyle:  hintslight
-Xft.lcdfilter:  lcddefault
-
-! xscreensaver ---------------------------------------------------------------
-
-!font settings
-xscreensaver.Dialog.headingFont:        -*-dina-bold-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.Dialog.bodyFont:           -*-dina-medium-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.Dialog.labelFont:          -*-dina-medium-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.Dialog.unameFont:          -*-dina-medium-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.Dialog.buttonFont:         -*-dina-bold-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.Dialog.dateFont:           -*-dina-medium-r-*-*-10-*-*-*-*-*-*-*
-xscreensaver.passwd.passwdFont:         -*-dina-bold-r-*-*-10-*-*-*-*-*-*-*
-!general dialog box (affects main hostname, username, password text)
-xscreensaver.Dialog.foreground:         #EDEDED
-xscreensaver.Dialog.background:         #202020
-xscreensaver.Dialog.topShadowColor:     #202024
-xscreensaver.Dialog.bottomShadowColor:  #202024
-xscreensaver.Dialog.Button.foreground:  #EDEDFF
-xscreensaver.Dialog.Button.background:  #444
-!username/password input box and date text colour
-xscreensaver.Dialog.text.foreground:    #EDEDFF
-xscreensaver.Dialog.text.background:    #444
-xscreensaver.Dialog.internalBorderWidth:24
-xscreensaver.Dialog.borderWidth:        20
-xscreensaver.Dialog.shadowThickness:    2
-!timeout bar (background is actually determined by Dialog.text.background)
-xscreensaver.passwd.thermometer.foreground:  #A9B7C4
-xscreensaver.passwd.thermometer.background:  #202020
-xscreensaver.passwd.thermometer.width:       8
-!datestamp format--see the strftime(3) manual page for details
-xscreensaver.dateFormat:    %I:%M%P %a %b %d, %Y
+URxvt*tintColor:    #dfdfdf
+URxvt.cursorColor:  #89B83F
+URxvt.pointerColor: #FFFFFF
 
