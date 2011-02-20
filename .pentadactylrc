@@ -1,0 +1,4 @@
+set showtabline=never
+colorscheme simple_dark
+set guioptions='sC'
+
