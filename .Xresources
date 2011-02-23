@@ -7,7 +7,7 @@ URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
 
-!appereance
+!apeareance
 URxvt.background:      black
 URxvt.foreground:      white
 URxvt.scrollBar:       false
