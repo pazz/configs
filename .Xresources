@@ -19,4 +19,4 @@ URxvt.pointerColor: #FFFFFF
 
 
 !xdvi reverse search
-xdvi.editor :       vim --servername xdvi --remote +%l %f
+xdvi.editor :       vim --servername tex --remote +%l %f
