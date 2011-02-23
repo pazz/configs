@@ -1,3 +1,4 @@
+!urxvt
 URxvt.urgentOnBell:    true
 URxvt.perl-lib:        /home/pazz/.urxvt/
 URxvt.perl-ext-common: default,url-select,keyboard-select
@@ -6,17 +7,16 @@ URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
 
+!appereance
 URxvt.background:      black
 URxvt.foreground:      white
 URxvt.scrollBar:       false
-
 URxvt*font: xft:Bitstream Vera Sans Mono:size=10
 Urxvt*boldFont: xft:Bitstream Vera Sans Mono:size=10:style=Bold
 URxvt.letterSpace: -1
-!URxvt*font: xft:Courier:size=12
-!Urxvt*boldFont: xft:Courier:size=12:style=Bold
-
-URxvt*tintColor:    #dfdfdf
 URxvt.cursorColor:  #89B83F
 URxvt.pointerColor: #FFFFFF
 
+
+!xdvi reverse search
+xdvi.editor :       vim --servername xdvi --remote +%l %f
