@@ -6,8 +6,6 @@ URxvt.urlLauncher:     firefox
 URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
-
-!apeareance
 URxvt.background:      black
 URxvt.foreground:      white
 URxvt.scrollBar:       false
@@ -17,6 +15,14 @@ URxvt.letterSpace: -1
 URxvt.cursorColor:  #89B83F
 URxvt.pointerColor: #FFFFFF
 
-
-!xdvi reverse search
-xdvi.editor :       vim --servername tex --remote +%l %f
+!xdvi
+xdvi.editor:        vim --servername tex --remote +%l %f
+xdvi.highlight:     orange
+xdvi.Hush:          true
+xdvi.hushStdout:    true
+xdvi.LinkStyle:     2
+xdvi.noInitFile:    true
+xdvi.expertMode:    0
+xdvi.shrinkFactor:  5
+xdvi.sideMargin:    2.5cm
+xdvi.topMargin:     3cm
