@@ -636,3 +636,7 @@ naughty.config.presets.critical.timeout     = 15
 naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
 naughty.config.screen = screen.count()
 
+os.execute("eval $(gnome-keyring-daemon --start --components=secrets)")
+os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
+os.execute("xset s 0")
+os.execute("xset -dpms")
