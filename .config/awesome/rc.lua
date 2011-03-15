@@ -4,7 +4,7 @@
 require("awful")
 require("naughty")
 
-local rc, err = loadfile(awful.util.getdir("config") .. "/pazz.lua")
+local rc, err = loadfile(awful.util.getdir("config") .. "/current.lua")
 if rc then
     rc, err = pcall(rc)
     if rc then
