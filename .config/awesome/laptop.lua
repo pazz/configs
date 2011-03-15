@@ -8,6 +8,9 @@ require('vicious')
 require("beautiful")
 -- Notification library
 require("naughty")
+-- delightful imap 
+require('delightful.widgets.imap')
+require('secret')
 
 -- {{{ Variable definitions
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -230,6 +233,28 @@ local calendar = nil
 
 -- Create a systray
 mysystray = widget({ type = "systray" })
+--imap
+
+iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
+iicons.image = image(beautiful.widget_cpu_lo)
+-- Prepare the container that is used when constructing the wibox
+--local delightful_container = { widgets = {}, icons = {} }
+--if install_delightful then
+--    for _, widget in pairs(awful.util.table.reverse(install_delightful)) do
+--        local config = delightful_config and delightful_config[widget]
+--        local widgets, icons = widget:load(config)
+--        if widgets then
+--            if not icons then
+--                icons = {}
+--            end
+--            table.insert(delightful_container.widgets, awful.util.table.reverse(
+--widgets))
+--            table.insert(delightful_container.icons,   awful.util.table.reverse(
+--icons))
+--        end
+--    end
+--end
+
 
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
@@ -438,6 +463,7 @@ for s = 1, screen.count() do
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
+        rightcap,iwidgets[1],midcap,iicons[1],midcap,iwidgets[2],midcap,iicons[2],leftcap,spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
@@ -638,5 +664,4 @@ naughty.config.screen = screen.count()
 
 os.execute("eval $(gnome-keyring-daemon --start --components=secrets)")
 os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
-os.execute("xset s 0")
-os.execute("xset -dpms")
+os.execute("xset s noblank s 0 -dpms&")
