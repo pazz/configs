@@ -8,6 +8,12 @@ require('vicious')
 require("beautiful")
 -- Notification library
 require("naughty")
+-- delightful imap 
+require('delightful.widgets.imap')
+require('secret')
+
+--calendar
+require('calendar2')
 
 -- {{{ Variable definitions
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -19,8 +25,8 @@ editor = os.getenv("EDITOR") or "editor"
 editor_cmd = terminal .. " -e " .. editor
 irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
---mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
-mixer_cmd = "pavucontrol"
+mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
+--mixer_cmd = "pavucontrol"
 
 -- Default modkey.
 modkey = "Mod4"
@@ -78,10 +84,11 @@ shifty.config.tags = {
         spawn = 'thunar' 
     },
     ["media"] = { 	
+        layout = awful.layout.suit.tile.bottom,
         mwfact = 0.65,
         position = 5, 
         init = false,
-        spawn = mpd_cmd
+        spawn = mixer_cmd .. "& " .. mpd_cmd
     },
     ["bib"] = { 	
         position = 6, 
@@ -125,8 +132,9 @@ shifty.config.apps = {
          { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
          { match = { terminal } ,slave = true } ,
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
+         { match = { "alsamixer" } ,slave = true, tag='media'} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
-         { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "Quodlibet", "ncmpc", "pavucontrol", mpd_cmd } ,tag='media'} ,
          { match = { "" } , buttons = clientbuttons },
 }
 --}}}
@@ -186,50 +194,13 @@ rightcap.text = fg(grey, "")
 --mytextclock = awful.widget.textclock({ align = "right" })
 mytextclock = widget({ type = "textbox" })
 vicious.register(mytextclock, vicious.widgets.date, "%b %d, %R")
-local calendar = nil
-    local offset = 0
-
-    function remove_calendar()
-        if calendar ~= nil then
-            naughty.destroy(calendar)
-            calendar = nil
-            offset = 0
-        end
-    end
-
-    function add_calendar(inc_offset)
-        local save_offset = offset
-        remove_calendar()
-        offset = save_offset + inc_offset
-        local datespec = os.date("*t")
-        datespec = datespec.year * 12 + datespec.month - 1 + offset
-        datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
-        local cal = awful.util.pread("cal  " .. datespec)
-        cal = string.gsub(cal, "^%s*(.-)%s*$", "%1")
-        calendar = naughty.notify({
-            text = string.format('<span font_desc="%s">%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n" .. cal),
-            timeout = 0, hover_timeout = 0.5,
-            width = 160,
-        })
-    end
-
--- change clockbox for your clock widget (e.g. mytextclock)
-    mytextclock:add_signal("mouse::enter", function()
-      add_calendar(0)
-    end)
-    mytextclock:add_signal("mouse::leave", remove_calendar)
- 
-    mytextclock:buttons(awful.util.table.join(
-        awful.button({ }, 4, function()
-            add_calendar(-1)
-        end),
-        awful.button({ }, 5, function()
-            add_calendar(1)
-        end)
-    ))
+calendar2.addCalendarToWidget(mytextclock)
 
 -- Create a systray
 mysystray = widget({ type = "systray" })
+
+-- imap
+iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
 
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
@@ -330,7 +301,7 @@ mpdbuttons = awful.util.table.join(
 	awful.button({ }, 5, function () awful.util.spawn('mpc -q next') end)
 )
 mpdicon = widget({ type = "imagebox" })
-mpdicon:buttons(mpdbuttons)
+mpdicon:buttons(volbuttons)
 mpdwidget = widget({ type = "textbox" }) --display now playing song
 mpdwidget:buttons(mpdbuttons)
 vicious.register(mpdwidget, vicious.widgets.mpd,
@@ -423,6 +394,7 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
+        spacer,rightcap,iwidgets[1],iicons[1],iwidgets[2],iicons[2],leftcap,spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
