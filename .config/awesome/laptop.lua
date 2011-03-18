@@ -11,6 +11,8 @@ require("naughty")
 -- delightful imap 
 require('delightful.widgets.imap')
 require('secret')
+--calendar
+require('calendar2')
 
 -- {{{ Variable definitions
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -189,72 +191,13 @@ rightcap.text = fg(grey, "")
 --mytextclock = awful.widget.textclock({ align = "right" })
 mytextclock = widget({ type = "textbox" })
 vicious.register(mytextclock, vicious.widgets.date, "%b %d, %R")
-local calendar = nil
-    local offset = 0
-
-    function remove_calendar()
-        if calendar ~= nil then
-            naughty.destroy(calendar)
-            calendar = nil
-            offset = 0
-        end
-    end
-
-    function add_calendar(inc_offset)
-        local save_offset = offset
-        remove_calendar()
-        offset = save_offset + inc_offset
-        local datespec = os.date("*t")
-        datespec = datespec.year * 12 + datespec.month - 1 + offset
-        datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
-        local cal = awful.util.pread("cal  " .. datespec)
-        cal = string.gsub(cal, "^%s*(.-)%s*$", "%1")
-        calendar = naughty.notify({
-            text = string.format('<span font_desc="%s">%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n" .. cal),
-            timeout = 0, hover_timeout = 0.5,
-            width = 160,
-        })
-    end
-
--- change clockbox for your clock widget (e.g. mytextclock)
-    mytextclock:add_signal("mouse::enter", function()
-      add_calendar(0)
-    end)
-    mytextclock:add_signal("mouse::leave", remove_calendar)
- 
-    mytextclock:buttons(awful.util.table.join(
-        awful.button({ }, 4, function()
-            add_calendar(-1)
-        end),
-        awful.button({ }, 5, function()
-            add_calendar(1)
-        end)
-    ))
+calendar2.addCalendarToWidget(mytextclock)
 
 -- Create a systray
 mysystray = widget({ type = "systray" })
+
 --imap
-
 iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
-iicons.image = image(beautiful.widget_cpu_lo)
--- Prepare the container that is used when constructing the wibox
---local delightful_container = { widgets = {}, icons = {} }
---if install_delightful then
---    for _, widget in pairs(awful.util.table.reverse(install_delightful)) do
---        local config = delightful_config and delightful_config[widget]
---        local widgets, icons = widget:load(config)
---        if widgets then
---            if not icons then
---                icons = {}
---            end
---            table.insert(delightful_container.widgets, awful.util.table.reverse(
---widgets))
---            table.insert(delightful_container.icons,   awful.util.table.reverse(
---icons))
---        end
---    end
---end
-
 
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
@@ -459,11 +402,11 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
+        spacer,rightcap,iwidgets[1],iicons[1],midcap,iwidgets[2],iicons[2],leftcap,spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
-        rightcap,iwidgets[1],midcap,iicons[1],midcap,iwidgets[2],midcap,iicons[2],leftcap,spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
