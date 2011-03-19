@@ -274,11 +274,7 @@ function update_data(imap_index)
 		if imap_data[imap_index].mailboxes[mailbox_index].error_string then
 			mailbox_status = string.format('<span color="red">%s</span>', mailbox_status);
 		elseif unread_num then
-                    if unread_num==0 then
-			mailbox_status = ''
-                    else
 			mailbox_status = tostring(unread_num)
-                    end
 		end
 		imap_data[imap_index].status_string =
 				string.format('%s%s', imap_data[imap_index].status_string,
@@ -303,8 +299,7 @@ function update_icon(imap_index)
 	end
 	local icon_file
 	if imap_data[imap_index].unread_total then
-		--icon_file = icon_files.read
-		icon_file = nil
+		icon_file = icon_files.read 
 		if imap_data[imap_index].unread_total > 0 then
 			icon_file = icon_files.unread 
 		end
