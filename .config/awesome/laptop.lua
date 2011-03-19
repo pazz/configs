@@ -402,7 +402,7 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
-        spacer,rightcap,iwidgets[1],iicons[1],midcap,iwidgets[2],iicons[2],leftcap,spacer,
+        spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
