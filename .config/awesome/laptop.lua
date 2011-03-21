@@ -26,6 +26,7 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
+mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
 modkey = "Mod4"
@@ -104,7 +105,7 @@ shifty.config.tags = {
         position = 8, 
         init = false,
         icon=beautiful.tag_mail,
-        spawn = 'thunderbird', 
+        spawn = mail_cmd, 
     },
     ["im"] = { 	
         layout = awful.layout.suit.tile, 
