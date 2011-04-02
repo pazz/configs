@@ -11,7 +11,6 @@ require("naughty")
 -- delightful imap 
 require('delightful.widgets.imap')
 require('secret')
-
 --calendar
 require('calendar2')
 
@@ -25,8 +24,11 @@ editor = os.getenv("EDITOR") or "editor"
 editor_cmd = terminal .. " -e " .. editor
 irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
-mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
---mixer_cmd = "pavucontrol"
+--mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
+mixer_cmd = "pavucontrol"
+gmutt = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
+mutt = 'urxvt -T mutt -e mutt'
+mail_cmd = gmutt .. '& ' .. mutt
 
 -- Default modkey.
 modkey = "Mod4"
@@ -84,11 +86,10 @@ shifty.config.tags = {
         spawn = 'thunar' 
     },
     ["media"] = { 	
-        layout = awful.layout.suit.tile.bottom,
         mwfact = 0.65,
         position = 5, 
         init = false,
-        spawn = mixer_cmd .. "& " .. mpd_cmd
+        spawn = mpd_cmd
     },
     ["bib"] = { 	
         position = 6, 
@@ -106,7 +107,8 @@ shifty.config.tags = {
         position = 8, 
         init = false,
         icon=beautiful.tag_mail,
-        spawn = 'thunderbird', 
+        spawn = mail_cmd, 
+        layout = awful.layout.suit.tile.bottom,
     },
     ["im"] = { 	
         layout = awful.layout.suit.tile, 
@@ -132,9 +134,8 @@ shifty.config.apps = {
          { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
          { match = { terminal } ,slave = true } ,
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
-         { match = { "alsamixer" } ,slave = true, tag='media'} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
-         { match = { "Quodlibet", "ncmpc", "pavucontrol", mpd_cmd } ,tag='media'} ,
+         { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
          { match = { "" } , buttons = clientbuttons },
 }
 --}}}
@@ -199,7 +200,7 @@ calendar2.addCalendarToWidget(mytextclock)
 -- Create a systray
 mysystray = widget({ type = "systray" })
 
--- imap
+--imap
 iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
 
 -- CPU widget
@@ -230,7 +231,7 @@ function (widget, args)
 	return args[1]
 end, 1 )
 
--- Battery state
+
 --baticon = widget({ type = "imagebox" })
 --baticon.image = image(beautiful.widget_bat_hi)
 --battery = widget({ type = "textbox" }) --display battery state and charge
@@ -261,7 +262,6 @@ end, 1 )
 --
 --end
 --		, 61, "BAT1")
-
 -- Audio Volume 
 sndicon = widget({ type = "imagebox" })
 volbar  = awful.widget.progressbar({layout = awful.widget.layout.horizontal.rightleft})
@@ -288,8 +288,8 @@ end,
 volbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(mixer_cmd) end),
 	awful.button({ }, 3, function () awful.util.spawn('amixer -q set Master toggle') end),
-	awful.button({ }, 4, function () awful.util.spawn('amixer -q set Master 5%+') end),
-	awful.button({ }, 5, function () awful.util.spawn('amixer -q set Master 5%-') end)
+	awful.button({ }, 4, function () awful.util.spawn('amixer -q set Master 5%-') end),
+	awful.button({ }, 5, function () awful.util.spawn('amixer -q set Master 5%+') end)
 )
 volbar.widget:buttons(volbuttons)
 sndicon:buttons(volbuttons)
@@ -301,7 +301,7 @@ mpdbuttons = awful.util.table.join(
 	awful.button({ }, 5, function () awful.util.spawn('mpc -q next') end)
 )
 mpdicon = widget({ type = "imagebox" })
-mpdicon:buttons(volbuttons)
+mpdicon:buttons(mpdbuttons)
 mpdwidget = widget({ type = "textbox" }) --display now playing song
 mpdwidget:buttons(mpdbuttons)
 vicious.register(mpdwidget, vicious.widgets.mpd,
@@ -318,42 +318,36 @@ vicious.register(mpdwidget, vicious.widgets.mpd,
           end
           if args["{state}"] == "Play" then 
 	    mpdicon.image = image(beautiful.widget_play)
-	    return args["{Artist}"] ..' - '.. args["{Title}"]
 	  elseif args["{state}"] == "Pause" then
 	    mpdicon.image = image(beautiful.widget_pause)
-	    return args["{Artist}"] ..' - '.. args["{Title}"]
-          else
-	    sndicon.image = volicon
-	    mpdicon.image = nil
-	    return nil
           end
+	  return args["{Artist}"] ..' - '.. args["{Title}"]
         end
     end, 1)
 
 
--- WIFI
---wifiicon = widget({type = "imagebox" })
---wifiicon.image = image(beautiful.widget_wifi_hi)
---wifiwidget = widget({ type = "textbox" }) --display SSID and rate
---vicious.register(wifiwidget, vicious.widgets.wifi,
---		 function (widget, args)
---			if args["{link}"] == 0 then
---				wifiicon.image = image(beautiful.widget_wifi_off)
---				return fg(bred, "∅")
---			elseif args["{rate}"] <= 11 then
---				wifiicon.image = image(beautiful.widget_wifi_lo)
---			elseif args["{rate}"] > 11 and args["{rate}"] < 54 then
---				wifiicon.image = image(beautiful.widget_wifi_mid)
---			else
---				wifiicon.image = image(beautiful.widget_wifi_hi)
---		 	end
---			return args["{ssid}"]
---		 end, 11, "wlan0")
---wifibuttons = awful.util.table.join(
---	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
---)
---wifiicon:buttons(wifibuttons)
---wifiwidget:buttons(wifibuttons)
+wifiicon = widget({type = "imagebox" })
+wifiicon.image = image(beautiful.widget_wifi_hi)
+wifiwidget = widget({ type = "textbox" }) --display SSID and rate
+vicious.register(wifiwidget, vicious.widgets.wifi,
+		 function (widget, args)
+			if args["{link}"] == 0 then
+				wifiicon.image = image(beautiful.widget_wifi_off)
+				return fg(bred, "∅")
+			elseif args["{rate}"] <= 11 then
+				wifiicon.image = image(beautiful.widget_wifi_lo)
+			elseif args["{rate}"] > 11 and args["{rate}"] < 54 then
+				wifiicon.image = image(beautiful.widget_wifi_mid)
+			else
+				wifiicon.image = image(beautiful.widget_wifi_hi)
+		 	end
+			return args["{ssid}"]
+		 end, 11, "wlan0")
+wifibuttons = awful.util.table.join(
+	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
+)
+wifiicon:buttons(wifibuttons)
+wifiwidget:buttons(wifibuttons)
 
  --Create a wibox for each screen and add it
 mywibox = {}
@@ -394,7 +388,7 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
-        spacer,rightcap,iwidgets[1],iicons[1],iwidgets[2],iicons[2],leftcap,spacer,
+        spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
@@ -597,3 +591,6 @@ naughty.config.presets.critical.timeout     = 15
 naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
 naughty.config.screen = screen.count()
 
+os.execute("eval $(gnome-keyring-daemon --start --components=secrets)")
+os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
+os.execute("xset s noblank s 0 -dpms&")
