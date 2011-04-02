@@ -1,0 +1,29 @@
+
+set imap_user = "patricktotzke@gmail.com"
+set imap_pass = "SECRET"
+
+set smtp_url = "smtp://patricktotzke@smtp.gmail.com:587/"
+set smtp_pass = "SECRET"
+set from = "patricktotzke@gmail.com"
+set realname = "Patrick Totzke"
+
+set folder = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set postponed="+Drafts"
+
+set header_cache=~/.mutt/cache/headers.gmail
+set message_cachedir=~/.mutt/cache/bodies
+set certificate_file=~/.mutt/certificates
+
+source ~/.mutt/rc/imap #my imap settings
+source ~/.mutt/rc/ui #my UI settings (incl local aliases)
+source ~/.mutt/rc/bindings #macros/bindings
+
+# use goobook (pip install goobook) for goocle contacts
+set query_command="goobook query '%s'"
+macro index,pager a "<pipe-message>goobook add<return>" "add the sender address to Google contacts"
+
+# PGP ui stuff/set default key for this address
+source ~/.mutt/rc/gpg
+set pgp_sign_as=0xD7D6C5AA # specify the uid to use when encrypting/signing
+
