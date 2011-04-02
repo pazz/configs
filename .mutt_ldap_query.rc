@@ -1,0 +1,5 @@
+# hostname of your ldap server
+$ldap_server = 'eddir.ed.ac.uk';
+# ldap base search
+$search_base = 'ou=eddir,dc=ed,dc=ac,dc=uk';
+$ldap_result_comment = '';
