@@ -1,0 +1,3 @@
+macro index,pager y <change-folder>?<toggle-mailboxes>
+bind index \Cn next-unread-mailbox
+bind editor <Tab> complete-query #ldap/goobook adress lookup

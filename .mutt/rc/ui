@@ -1,0 +1,12 @@
+set move = no
+set mark_old=no
+set timeout=15
+set quit=yes
+set print_command="mutt-print %s"
+set include=yes
+
+set alias_file= ~/.mutt/aliases
+set sort_alias= alias
+set reverse_alias=no
+source $alias_file
+

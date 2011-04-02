@@ -1,0 +1,3 @@
+set mail_check=30
+set imap_list_subscribed=yes
+set imap_check_subscribed=yes

@@ -1,0 +1,8 @@
+set pgp_timeout=60
+set pgp_good_sign="^gpg: Good signature from"
+set crypt_autosign # automatically sign all outcoming messages
+set crypt_replysign # sign only replies to signed messages
+set crypt_autoencrypt=no # automatically encrypt outcoming messages
+set crypt_replyencrypt=yes # encrypt only replies to signed messages
+set crypt_replysignencrypted=yes # encrypt and sign replies to encrypted messages
+set crypt_verify_sig=yes # automatically verify the sign of a message when opened
