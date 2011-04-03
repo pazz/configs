@@ -10,3 +10,4 @@ set sort_alias= alias
 set reverse_alias=no
 source $alias_file
 
+auto_view text/html
