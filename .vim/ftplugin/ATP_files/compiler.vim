@@ -1231,9 +1231,6 @@ endfunction
 augroup ATP_auTeX
     au!
     au CursorHold 	*.tex call s:auTeX()
-    if g:atp_insert_updatetime
-	au CursorHoldI 	*.tex call s:auTeX()
-    endif
 augroup END 
 "}}}
 
