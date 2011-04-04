@@ -1,0 +1,16 @@
+application/acrobat; zathura %s
+application/pdf; zathura %s
+application/postscript; gv %s
+application/x-dvi; xdvi %s
+audio/*; mplayer %s
+image/gif; gqview %s
+image/jpeg; gqview %s
+image/jpg; gqview %s
+image/png; gqview %s
+image/tiff; gqview %s
+image/x-portable-bitmap; display %s
+image/x-xpixmap; display %s
+text/html;                      links %s; nametemplate=%s.html
+text/html;                      links -dump %s; nametemplate=%s.html; copiousoutput
+video/*; mplayer %s
+video/mpeg; mplayer %s
