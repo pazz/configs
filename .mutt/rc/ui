@@ -2,7 +2,7 @@ set move = no
 set mark_old=no
 set timeout=15
 set quit=yes
-set print_command="mutt-print %s"
+set print_command="muttprint %s"
 set include=yes
 
 set alias_file= ~/.mutt/aliases
