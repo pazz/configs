@@ -6,3 +6,4 @@ set crypt_autoencrypt=no # automatically encrypt outcoming messages
 set crypt_replyencrypt=yes # encrypt only replies to signed messages
 set crypt_replysignencrypted=yes # encrypt and sign replies to encrypted messages
 set crypt_verify_sig=yes # automatically verify the sign of a message when opened
+set pgp_use_gpg_agent = yes 
