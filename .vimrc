@@ -83,4 +83,5 @@ nnoremap j gj
 nnoremap k gk
 
 set updatetime=1000
+set undofile
 set undodir=~/.vim/undodir
