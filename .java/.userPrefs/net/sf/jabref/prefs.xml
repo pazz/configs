@@ -34,6 +34,7 @@
   <entry key="enforceLegalBibtexKey" value="true"/>
   <entry key="exportInOriginalOrder" value="false"/>
   <entry key="exportInStandardOrder" value="true"/>
+  <entry key="externalFileTypes" value="PDF:pdf:application/pdf:zathura:pdfSmall"/>
   <entry key="fileColumn" value="true"/>
   <entry key="fileDirectory" value="/home/pazz/repo/bib/papers"/>
   <entry key="filechooserDisableRename" value="true"/>
@@ -81,7 +82,7 @@
   <entry key="promptBeforeUsingAutosave" value="true"/>
   <entry key="psDirectory" value=""/>
   <entry key="pushToApplication" value="Insert selected citations into &amp;Emacs"/>
-  <entry key="recentFiles" value="/home/pazz/bib/eq.bib;/home/pazz/projects/bibliography/bibliography.bib;/home/pazz/bib/bibliography.bib"/>
+  <entry key="recentFiles" value="/home/pazz/bib/bibliography.bib;/home/pazz/projects/bibliography/bibliography.bib;/home/pazz/bib/eq.bib"/>
   <entry key="regExpSearch" value="true"/>
   <entry key="regExpSearchExpression" value="**/.*[bibtexkey].*\\.[extension]"/>
   <entry key="rememberWindowLocation" value="true"/>
@@ -93,7 +94,7 @@
   <entry key="searchAllBases" value="false"/>
   <entry key="searchGen" value="true"/>
   <entry key="searchOpt" value="true"/>
-  <entry key="searchPanelVisible" value="false"/>
+  <entry key="searchPanelVisible" value="true"/>
   <entry key="searchReq" value="true"/>
   <entry key="secDescending" value="false"/>
   <entry key="secSort" value=""/>
@@ -101,8 +102,8 @@
   <entry key="showSearchInDialog" value="false"/>
   <entry key="showSource" value="true"/>
   <entry key="sidePaneWidth" value="160"/>
-  <entry key="sizeX" value="1274"/>
-  <entry key="sizeY" value="999"/>
+  <entry key="sizeX" value="1018"/>
+  <entry key="sizeY" value="575"/>
   <entry key="tableBackground" value="255:255:255"/>
   <entry key="tableColorCodesOn" value="true"/>
   <entry key="tableOptFieldBackground" value="230:255:230"/>
