@@ -2,14 +2,15 @@ set from = "p.totzke@ed.ac.uk"
 set realname = "Patrick Totzke"
 
 set imap_user = "s0976898@imap.sms.ed.ac.uk"
-set imap_pass = "SECRET"
+set imap_pass = `gpg -q --use-agent -d ~/secrets.gpg | awk -F'[: ]' '/UoE: p.totzke@ed.ac.uk:/ {print $4}'`
 set smtp_url = "smtp://s0976898@smtp.sms.ed.ac.uk:587"
-set smtp_pass = "SECRET"
-set ssl_min_dh_prime_bits = 512
-set spoolfile="imap://s0976898@imap.sms.ed.ac.uk/INBOX" # first index
-set folder="imap://s0976898@imap.sms.ed.ac.uk/" # entry point for the folder browser (c?)
-set record="=Sent"
-set postponed="=Drafts"
+set smtp_pass = $imap_pass
+set ssl_min_dh_prime_bits = 512 #UoE server needs this
+
+set folder="imap://s0976898@imap.sms.ed.ac.uk/"
+set spoolfile = "+INBOX"
+set record="+Sent"
+set postponed="+Drafts"
 
 #caches
 set header_cache=~/.mutt/cache/headers.uoe

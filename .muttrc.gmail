@@ -1,14 +1,14 @@
-
-set imap_user = "patricktotzke@gmail.com"
-set imap_pass = "SECRET"
-
-set smtp_url = "smtp://patricktotzke@smtp.gmail.com:587/"
-set smtp_pass = "SECRET"
 set from = "patricktotzke@gmail.com"
 set realname = "Patrick Totzke"
 
+set imap_user = "patricktotzke@gmail.com"
+set imap_pass = `gpg -q --use-agent -d ~/secrets.gpg | awk -F'[: ]' '/GMail: patricktotzke@gmail.com/ {print $4}'`
+set smtp_url = "smtp://patricktotzke@smtp.gmail.com:587/"
+set smtp_pass = $imap_pass
+
 set folder = "imaps://imap.gmail.com:993"
 set spoolfile = "+INBOX"
+set record="+Sent"
 set postponed="+Drafts"
 
 set header_cache=~/.mutt/cache/headers.gmail
