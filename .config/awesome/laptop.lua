@@ -198,7 +198,7 @@ calendar2.addCalendarToWidget(mytextclock)
 mysystray = widget({ type = "systray" })
 
 --imap
-iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
+--iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
 
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
@@ -403,7 +403,7 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
-        spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
+        --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
@@ -582,30 +582,10 @@ client.add_signal("unfocus", function(c) c.border_color = beautiful.border_norma
 -- }}}
 --
 
--- naughty popup settings
---naughty.config.default_preset.timeout          = 5
---naughty.config.default_preset.screen           = 1
---naughty.config.default_preset.position         = "top_right"
---naughty.config.default_preset.margin           = 4
---naughty.config.default_preset.height           = 16
---naughty.config.default_preset.width            = 300
---naughty.config.default_preset.gap              = 1
---naughty.config.default_preset.ontop            = true
---naughty.config.default_preset.font             = beautiful.font or "Verdana 8"
---naughty.config.default_preset.icon             = nil
---naughty.config.default_preset.icon_size        = 16
---naughty.config.default_preset.fg               = beautiful.fg_focus or '#ffffff'
---naughty.config.default_preset.bg               = beautiful.bg_focus or '#535d6c'
---naughty.config.presets.normal.border_color     = beautiful.border_focus or '#535d6c'
---naughty.config.default_preset.border_width     = 1
---naughty.config.default_preset.hover_timeout    = nil
-
-
 naughty.config.presets.normal.timeout     = 15
 naughty.config.presets.critical.timeout     = 15
 naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
 naughty.config.screen = screen.count()
 
-os.execute("eval $(gnome-keyring-daemon --start --components=secrets)")
 os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
-os.execute("xset s noblank s 0 -dpms&")
+os.execute("xset b 0 s 0 -dpms&")
