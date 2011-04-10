@@ -6,6 +6,8 @@ pythonfile = ~/.offlineimap.py
 [Account GMail]
 localrepository = gmaildir
 remoterepository = gmailimap
+autorefresh = 1
+quick = 50
 
 [Repository gmaildir]
 type = Maildir
@@ -17,4 +19,5 @@ remotehost = imap.gmail.com
 remoteuser = patricktotzke@gmail.com
 remotepasseval = get_authinfo_password("imap.gmail.com", "patricktotzke@gmail.com", 993)
 ssl = yes
-maxconnections = 1
+maxconnections = 6
+holdconnectionopen = yes
