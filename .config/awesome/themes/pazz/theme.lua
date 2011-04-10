@@ -101,6 +101,9 @@ theme.delightful_imap_mail_read   = theme.confdir .. "/icons/tp.git"
 theme.delightful_imap_mail_unread  = theme.confdir .. "/icons/picol/mail_16-white.png"
 theme.delightful_error = theme.confdir .. "/icons/picol/mail_cancel_16-white.png"
 
+theme.widget_mail = theme.confdir .. "/icons/picol/mail_16-white.png"
+theme.widget_nomail = theme.confdir .. "/icons/tp.git"
+
 
 -- Define the image to load
 theme.titlebar_close_button_normal = "/usr/share/awesome/themes/default/titlebar/close_normal.png"

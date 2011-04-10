@@ -13,6 +13,7 @@ require('delightful.widgets.imap')
 require('secret')
 --calendar
 require('calendar2')
+require('mailhoover')
 
 -- {{{ Variable definitions
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -228,6 +229,21 @@ function (widget, args)
 	return args[1]
 end, 1 )
 
+
+mailicon = widget({ type = 'imagebox', name = 'mailicon'})
+mailhoover.addToWidget(mailicon, '/home/pazz/mail/gmail/INBOX/', 'GMAIL')
+mailwidget = widget({ type = 'textbox', name = 'mailwidget'})
+mailicon.image = image(beautiful.widget_mail)
+vicious.register(mailwidget, vicious.widgets.mdir, 
+function (widget, args)
+	if args[1] > 0 then
+		mailicon.image = image(beautiful.widget_mail)
+	else
+		mailicon.image = image(beautiful.widget_nomail)
+	end
+	return args[1]
+end, 30, {'~/mail/gmail/INBOX/'})
+
 -- Battery state
 -- icon
 --baticon = widget({ type = "imagebox" })
@@ -404,6 +420,7 @@ for s = 1, screen.count() do
         mytextclock,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
+        spacer, mailicon, mailwidget, spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
