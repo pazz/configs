@@ -589,3 +589,4 @@ naughty.config.screen = screen.count()
 
 os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("xset b 0 s 0 -dpms&")
+os.execute("offlineimap -u Noninteractive.Quiet&")
