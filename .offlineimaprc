@@ -7,7 +7,6 @@ pythonfile = ~/.offlineimap.py
 localrepository = gmaildir
 remoterepository = gmailimap
 autorefresh = 1
-quick = 50
 
 [Repository gmaildir]
 type = Maildir
@@ -25,7 +24,6 @@ holdconnectionopen = yes
 localrepository = uoedir
 remoterepository = uoeimap
 autorefresh = 1
-quick = 50
 [Repository uoedir]
 type = Maildir
 localfolders = /home/pazz/mail/uoe/
