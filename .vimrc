@@ -5,11 +5,12 @@ if has('syntax') && (&t_Co > 2)
    set foldmethod=syntax
 endif
 " ??
+colorscheme desert256
 highlight   ShowMarksHLl ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLu ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLo ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLm ctermfg=white ctermbg=black cterm=bold
-colorscheme desert256
+hi Conceal       ctermbg=None "conceal..
 
 set guioptions=''
 set incsearch
