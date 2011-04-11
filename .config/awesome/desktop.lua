@@ -13,6 +13,7 @@ require('delightful.widgets.imap')
 require('secret')
 --calendar
 require('calendar2')
+require('mailhoover')
 
 -- {{{ Variable definitions
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -26,9 +27,7 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
-gmutt = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
-mutt = 'urxvt -T mutt -e mutt'
-mail_cmd = gmutt .. '& ' .. mutt
+mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
 modkey = "Mod4"
@@ -108,7 +107,6 @@ shifty.config.tags = {
         init = false,
         icon=beautiful.tag_mail,
         spawn = mail_cmd, 
-        layout = awful.layout.suit.tile.bottom,
     },
     ["im"] = { 	
         layout = awful.layout.suit.tile, 
@@ -201,7 +199,7 @@ calendar2.addCalendarToWidget(mytextclock)
 mysystray = widget({ type = "systray" })
 
 --imap
-iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
+--iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
 
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
@@ -231,6 +229,49 @@ function (widget, args)
 	return args[1]
 end, 1 )
 
+
+mailicon = widget({ type = 'imagebox', name = 'mailicon'})
+mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/INBOX/', 'UoE')
+vicious.register(mailicon, vicious.widgets.mdir, 
+function (widget, args)
+	if args[1] > 0 then
+		mailicon.image = image(beautiful.widget_mail)
+	else
+		mailicon.image = image(beautiful.widget_nomail)
+	end
+	return nil
+end, 10, {'~/mail/uoe/INBOX/'})
+
+gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
+mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/INBOX/', 'GMAIL')
+vicious.register(gmailicon, vicious.widgets.mdir, 
+function (widget, args)
+	if args[1] > 0 then
+		gmailicon.image = image(beautiful.widget_mail)
+	else
+		gmailicon.image = image(beautiful.widget_nomail)
+	end
+	return nil
+end, 10, {'~/mail/gmail/INBOX/'})
+
+-- Battery state
+-- icon
+--baticon = widget({ type = "imagebox" })
+--baticon.image = image(beautiful.widget_bat)
+---- textpart
+--batwidget = widget({ type = "textbox" })
+----vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT1")
+--vicious.register(batwidget, vicious.widgets.bat, "$1", 61, "BAT1")
+---- bar
+--batbar = awful.widget.progressbar()
+--batbar:set_width(8)
+--batbar:set_height(18)
+--batbar:set_vertical(true)
+--batbar:set_background_color("#494B4F")
+----barbar:set_background_color(beautiful.bg_normal)
+--batbar:set_color(beautiful.border_focus)
+----barbar:set_gradient_colors({ "#AECF96", "#88A175", "#FF5656" })
+--vicious.register(batbar, vicious.widgets.bat, "$2", 61, "BAT1")
 
 --baticon = widget({ type = "imagebox" })
 --baticon.image = image(beautiful.widget_bat_hi)
@@ -326,29 +367,29 @@ vicious.register(mpdwidget, vicious.widgets.mpd,
     end, 1)
 
 
-wifiicon = widget({type = "imagebox" })
-wifiicon.image = image(beautiful.widget_wifi_hi)
-wifiwidget = widget({ type = "textbox" }) --display SSID and rate
-vicious.register(wifiwidget, vicious.widgets.wifi,
-		 function (widget, args)
-			if args["{link}"] == 0 then
-				wifiicon.image = image(beautiful.widget_wifi_off)
-				return fg(bred, "∅")
-			elseif args["{rate}"] <= 11 then
-				wifiicon.image = image(beautiful.widget_wifi_lo)
-			elseif args["{rate}"] > 11 and args["{rate}"] < 54 then
-				wifiicon.image = image(beautiful.widget_wifi_mid)
-			else
-				wifiicon.image = image(beautiful.widget_wifi_hi)
-		 	end
-			return args["{ssid}"]
-		 end, 11, "wlan0")
-wifibuttons = awful.util.table.join(
-	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
-)
-wifiicon:buttons(wifibuttons)
-wifiwidget:buttons(wifibuttons)
-
+--wifiicon = widget({type = "imagebox" })
+--wifiicon.image = image(beautiful.widget_wifi_hi)
+--wifiwidget = widget({ type = "textbox" }) --display SSID and rate
+--vicious.register(wifiwidget, vicious.widgets.wifi,
+--		 function (widget, args)
+--			if args["{link}"] == 0 then
+--				wifiicon.image = image(beautiful.widget_wifi_off)
+--				return fg(bred, "∅")
+--			elseif args["{rate}"] <= 11 then
+--				wifiicon.image = image(beautiful.widget_wifi_lo)
+--			elseif args["{rate}"] > 11 and args["{rate}"] < 54 then
+--				wifiicon.image = image(beautiful.widget_wifi_mid)
+--			else
+--				wifiicon.image = image(beautiful.widget_wifi_hi)
+--		 	end
+--			return args["{ssid}"]
+--		 end, 11, "wlan0")
+--wifibuttons = awful.util.table.join(
+--	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
+--)
+--wifiicon:buttons(wifibuttons)
+--wifiwidget:buttons(wifibuttons)
+--
  --Create a wibox for each screen and add it
 mywibox = {}
 mypromptbox = {}
@@ -388,7 +429,8 @@ for s = 1, screen.count() do
         },
         mytextclock,
         s == 1 and mysystray or nil,
-        spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
+        --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
+        spacer, mailwidget, mailicon, spacer, gmailwidget, gmailicon, spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
@@ -567,30 +609,11 @@ client.add_signal("unfocus", function(c) c.border_color = beautiful.border_norma
 -- }}}
 --
 
--- naughty popup settings
---naughty.config.default_preset.timeout          = 5
---naughty.config.default_preset.screen           = 1
---naughty.config.default_preset.position         = "top_right"
---naughty.config.default_preset.margin           = 4
---naughty.config.default_preset.height           = 16
---naughty.config.default_preset.width            = 300
---naughty.config.default_preset.gap              = 1
---naughty.config.default_preset.ontop            = true
---naughty.config.default_preset.font             = beautiful.font or "Verdana 8"
---naughty.config.default_preset.icon             = nil
---naughty.config.default_preset.icon_size        = 16
---naughty.config.default_preset.fg               = beautiful.fg_focus or '#ffffff'
---naughty.config.default_preset.bg               = beautiful.bg_focus or '#535d6c'
---naughty.config.presets.normal.border_color     = beautiful.border_focus or '#535d6c'
---naughty.config.default_preset.border_width     = 1
---naughty.config.default_preset.hover_timeout    = nil
-
-
 naughty.config.presets.normal.timeout     = 15
 naughty.config.presets.critical.timeout     = 15
 naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
 naughty.config.screen = screen.count()
 
-os.execute("eval $(gnome-keyring-daemon --start --components=secrets)")
 os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
-os.execute("xset s noblank s 0 -dpms&")
+os.execute("xset b 0 s 0 -dpms&")
+os.execute("offlineimap -u Noninteractive.Quiet&")
