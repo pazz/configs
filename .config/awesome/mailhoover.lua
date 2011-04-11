@@ -2,7 +2,7 @@ local string = string
 --local print = print
 local tostring = tostring
 local io = io
-local lfs = require('lfs')
+local lfs = require('lfs') -- this is liblua5.1-filesystem-dev in ubuntu
 local capi = {
     mouse = mouse,
     screen = screen
@@ -37,13 +37,16 @@ function read_maildir (mdir)
             f = io.open( mdir .. "new/" .. msgfile)
 
             subject = ""
-
+            from = ""
             for line in f:lines() do
-               if line:find("^Subject:") then subject = string.match(line, 
-"^Subject: (.*)") end
+               if line:find("^Subject:") then subject = string.match(line, "^Subject: (.*)") end
+               if line:find("^From:") then 
+                   from = string.match(line, "^From: (.*)") 
+                   from = string.gsub(from, "<.*>","")
+               end
             end
             f:close()
-            info = info .. awful.util.escape("\n" .. string.format("%4d %-80.80s", mailcount, subject))
+            info = info .. awful.util.escape("\n" .. string.format("%-50s %-80.80s", from, subject))
         end
       end
    return info
