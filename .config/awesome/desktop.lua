@@ -185,7 +185,7 @@ leftcap = widget({ type = "textbox"})
 midcap = widget({ type = "textbox"})
 rightcap = widget({ type = "textbox"})
 
-spacer.text= "     "
+spacer.text= "      "
 leftcap.text = fg(grey, "") 
 midcap.text = fg(grey, " ")
 rightcap.text = fg(grey, "")
@@ -231,7 +231,12 @@ end, 1 )
 
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/INBOX/', 'UoE')
+mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/',
+  {'INBOX/', 
+  'lists.lfcs/',
+  'lists.seminars/',
+  'lists.phd-students',
+  }, 'UoE')
 vicious.register(mailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
@@ -243,7 +248,7 @@ function (widget, args)
 end, 10, {'~/mail/uoe/INBOX/'})
 
 gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/INBOX/', 'GMAIL')
+mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/',{'INBOX/'}, 'GMAIL')
 vicious.register(gmailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
@@ -430,7 +435,7 @@ for s = 1, screen.count() do
         mytextclock,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
-        spacer, mailwidget, mailicon, spacer, gmailwidget, gmailicon, spacer,
+        spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
