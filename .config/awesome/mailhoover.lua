@@ -2,6 +2,7 @@ local string = string
 --local print = print
 local tostring = tostring
 local io = io
+local table = table
 local lfs = require('lfs') -- this is liblua5.1-filesystem-dev in ubuntu
 local pairs = pairs
 local capi = {
@@ -10,55 +11,67 @@ local capi = {
 }
 local awful = require("awful")
 local naughty = require("naughty")
+local beautiful = require('beautiful')
 module("mailhoover")
 
-local n
-local cp
-local sd
+local popup
+local account_format = "<span color='" .. beautiful.fg_urgent .."'><b>%s</b></span>"
+local dir_format = "<span color='" .. beautiful.fg_normal .."'><b>%s</b></span>"
+local newmail_format = "<span color='" .. beautiful.fg_urgent .. "'>%s</span>"
+local oldmail_format = "<span color='" .. beautiful.fg_focus .. "'>%s</span>"
 
 function addToWidget(mywidget, commonprefix, subdirs, accountname)
-  cp = commonprefix
-  sd = subdirs
-
   mywidget:add_signal('mouse::enter', function ()
-        local info = read_maildirs()
-        n = naughty.notify({
-                title = accountname,
-                text = string.format('<span font_desc="%s">%s</span>', "monospace", info),
+        local info = read_maildirs(commonprefix,subdirs)
+        popup = naughty.notify({
+                title = string.format(account_format,accountname),
+                text = info,
                 timeout = 0,
                 hover_timeout = 0.5,
                 screen = capi.mouse.screen
         })
   end)
-  mywidget:add_signal('mouse::leave', function () naughty.destroy(n) end)
+  mywidget:add_signal('mouse::leave', function () naughty.destroy(popup) end)
 end
-function read_maildirs()
-      local info = ""
+function read_maildirs(cp,sd)
+    local info = ""
+    local count = 0
 
-      for no,folder in pairs(sd) do
-          info = info .. folder .. ':\n'
-          mdir = cp .. folder
-          local mailcount = 0
-          for msgfile in lfs.dir(mdir .. "new") do
-             if lfs.attributes(mdir .. "new/" .. msgfile, "mode") == 
-    "file" then
-                mailcount = mailcount + 1
-                f = io.open( mdir .. "new/" .. msgfile)
+    for i=1, #sd do
+        folder = sd[i]
+        mdir = cp .. folder
+        mails = {}
+        -- Recursively find new messages
+        local f = io.popen("find "..mdir.." -type f -wholename '*/new/*'")
+        for line in f:lines() do 
+            table.insert(mails,format_mail(newmail_format,line)) 
+        end
+        f:close()
 
-                subject = ""
-                from = ""
-                for line in f:lines() do
-                   if line:find("^Subject:") then subject = string.match(line, "^Subject: (.*)") end
-                   if line:find("^From:") then 
-                       from = string.match(line, "^From: (.*)") 
-                       from = string.gsub(from, "<.*>","")
-                   end
-                end
-                f:close()
-                info = info .. awful.util.escape("\n" .. string.format("%-30s %-80.80s", from, subject))
-            end
-          end
-   end
+        -- Recursively find "old" messages lacking the Seen flag
+        local f = io.popen("find "..mdir.." -type f -regex '.*/cur/.*2,[^S]*$'")
+        for line in f:lines() do 
+            table.insert(mails,format_mail(oldmail_format,line))
+        end
+        f:close()
+
+        if #mails>0 then info = info .. string.format(dir_format,folder) .. ':\n' end
+        for m=1, #mails do
+            info = info .. mails[m]
+        end
+    end
    return info
+end
+function format_mail(template,mailpath)
+    mailfile = io.open(mailpath,"r")
+    for line in mailfile:lines() do
+       if line:find("^Subject:") then subject = string.match(line, "^Subject: (.*)%s?") end
+       if line:find("^From:") then 
+           from = string.match(line, "^From: (.*)") 
+           from = string.gsub(from, "<.*>","")
+       end
+    end
+    mailfile:close()
+    return string.format(" %-30s %s\n", from, subject)
 end
 
