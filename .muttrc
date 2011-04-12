@@ -7,10 +7,19 @@ set smtp_url = "smtp://s0976898@smtp.sms.ed.ac.uk:587"
 set smtp_pass = $imap_pass
 set ssl_min_dh_prime_bits = 512 #UoE server needs this
 
-set folder="imap://s0976898@imap.sms.ed.ac.uk/"
-set spoolfile = "+INBOX"
-set record="+Sent"
-set postponed="+Drafts"
+#set folder="imap://s0976898@imap.sms.ed.ac.uk/"
+#set spoolfile = "+INBOX"
+#set record="+Sent"
+#set postponed="+Drafts"
+
+set mbox_type=Maildir
+
+set spoolfile="~/mail/uoe/INBOX"
+set folder="~/mail/uoe/"
+set mask="!^\\.[^.]"
+set record="+.Sent"
+set postponed="+.Drafts"
+mailboxes `echo -n "+ "; find ~/mail/uoe -maxdepth 1 -type d -printf "+'%f' "`
 
 #caches
 set header_cache=~/.mutt/cache/headers.uoe
