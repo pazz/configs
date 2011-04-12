@@ -260,7 +260,7 @@ function (widget, args)
 		gmailicon.image = image(beautiful.widget_nomail)
 	end
 	return nil
-end, 10, {'~/mail/gmail/'})
+end, 10, {'~/mail/gmail/INBOX'})
 gmailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
 )
