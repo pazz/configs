@@ -261,10 +261,10 @@ function (widget, args)
 	end
 	return nil
 end, 10, {'~/mail/gmail/'})
-mailbuttons = awful.util.table.join(
+gmailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
 )
-mailicon:buttons(mailbuttons)
+gmailicon:buttons(gmailbuttons)
 
 -- Battery state
 -- icon
