@@ -6,6 +6,7 @@ require('shifty')
 require('vicious')
 -- Theme handling library
 require("beautiful")
+beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 -- Notification library
 require("naughty")
 -- delightful imap 
@@ -14,9 +15,6 @@ require('secret')
 --calendar
 require('calendar2')
 require('mailhoover')
-
--- {{{ Variable definitions
-beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -27,7 +25,8 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
-mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
+mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
 modkey = "Mod4"
@@ -232,9 +231,9 @@ end, 1 )
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
 mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/',
-  {'INBOX/', 
-  'lists.lfcs/',
-  'lists.seminars/',
+  {'INBOX', 
+  'lists.lfcs',
+  'lists.seminars',
   'lists.phd-students',
   }, 'UoE')
 vicious.register(mailicon, vicious.widgets.mdir, 
@@ -245,10 +244,14 @@ function (widget, args)
 		mailicon.image = image(beautiful.widget_nomail)
 	end
 	return nil
-end, 10, {'~/mail/uoe/INBOX/'})
+end, 10, {'~/mail/uoe'})
+mailbuttons = awful.util.table.join(
+	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
+)
+mailicon:buttons(mailbuttons)
 
 gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/',{'INBOX/'}, 'GMAIL')
+mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/',{'INBOX'}, 'GMAIL')
 vicious.register(gmailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
@@ -257,7 +260,11 @@ function (widget, args)
 		gmailicon.image = image(beautiful.widget_nomail)
 	end
 	return nil
-end, 10, {'~/mail/gmail/INBOX/'})
+end, 10, {'~/mail/gmail/'})
+mailbuttons = awful.util.table.join(
+	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
+)
+mailicon:buttons(mailbuttons)
 
 -- Battery state
 -- icon
