@@ -2,7 +2,7 @@ set from = "patricktotzke@gmail.com"
 set realname = "Patrick Totzke"
 
 set imap_user = "patricktotzke@gmail.com"
-set imap_pass = `gpg -q --use-agent -d ~/secrets.gpg | awk -F'[: ]' '/GMail: patricktotzke@gmail.com/ {print $4}'`
+set imap_pass = `~/bin/getpwd Gmail`
 set smtp_url = "smtp://patricktotzke@smtp.gmail.com:587/"
 set smtp_pass = $imap_pass
 
