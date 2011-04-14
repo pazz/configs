@@ -133,6 +133,16 @@ shifty.config.apps = {
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
          { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "URXVTsys" } ,tag='sys'} ,
+         { match = { "URXVTedit" } ,tag='edit'} ,
+         { match = { "URXVTweb" } ,tag='web'} ,
+         { match = { "URXVTfs" } ,tag='fs'} ,
+         { match = { "URXVTmedia" } ,tag='media'} ,
+         { match = { "URXVTbib" } ,tag='bib'} ,
+         { match = { "URXVTcalendar" } ,tag='calendar'} ,
+         { match = { "URXVTmail" } ,tag='mail'} ,
+         { match = { "URXVTim" } ,tag='im'} ,
+
          { match = { "" } , buttons = clientbuttons },
 }
 --}}}
@@ -493,8 +503,12 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end),
     awful.key({ modkey,           }, "u", awful.client.urgent.jumpto),
 
-    -- Standard program
-    awful.key({ modkey, "Shift"   }, "Return", function () awful.util.spawn(terminal) end),
+    -- spawn term with current tag in name for matching
+    awful.key({ modkey, "Shift"   }, "Return", 
+      function () 
+          t= awful.tag.selected()
+          awful.util.spawn('urxvt -T URXVT' ..t.name) 
+      end),
     awful.key({ modkey, "Control" }, "r", awesome.restart),
     awful.key({ modkey, "Shift"   }, "q", awesome.quit),
 
