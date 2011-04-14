@@ -6,6 +6,7 @@ require('shifty')
 require('vicious')
 -- Theme handling library
 require("beautiful")
+beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 -- Notification library
 require("naughty")
 -- delightful imap 
@@ -14,9 +15,6 @@ require('secret')
 --calendar
 require('calendar2')
 require('mailhoover')
-
--- {{{ Variable definitions
-beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -27,7 +25,8 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
-mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
+mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
 modkey = "Mod4"
@@ -185,7 +184,7 @@ leftcap = widget({ type = "textbox"})
 midcap = widget({ type = "textbox"})
 rightcap = widget({ type = "textbox"})
 
-spacer.text= "     "
+spacer.text= "      "
 leftcap.text = fg(grey, "") 
 midcap.text = fg(grey, " ")
 rightcap.text = fg(grey, "")
@@ -231,18 +230,41 @@ end, 1 )
 
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(mailicon, '/home/pazz/mail/gmail/INBOX/', 'GMAIL')
-mailwidget = widget({ type = 'textbox', name = 'mailwidget'})
-mailicon.image = image(beautiful.widget_mail)
-vicious.register(mailwidget, vicious.widgets.mdir, 
+mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/',
+  {'INBOX', 
+  'lists.lfcs',
+  'lists.seminars',
+  'lists.phd-students',
+  }, 'UoE')
+vicious.register(mailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
 		mailicon.image = image(beautiful.widget_mail)
 	else
 		mailicon.image = image(beautiful.widget_nomail)
 	end
-	return args[1]
-end, 30, {'~/mail/gmail/INBOX/'})
+	return nil
+end, 10, {'~/mail/uoe'})
+mailbuttons = awful.util.table.join(
+	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
+)
+mailicon:buttons(mailbuttons)
+
+gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
+mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/',{'INBOX'}, 'GMAIL')
+vicious.register(gmailicon, vicious.widgets.mdir, 
+function (widget, args)
+	if args[1] > 0 then
+		gmailicon.image = image(beautiful.widget_mail)
+	else
+		gmailicon.image = image(beautiful.widget_nomail)
+	end
+	return nil
+end, 10, {'~/mail/gmail/INBOX'})
+gmailbuttons = awful.util.table.join(
+	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
+)
+gmailicon:buttons(gmailbuttons)
 
 -- Battery state
 -- icon
@@ -420,7 +442,7 @@ for s = 1, screen.count() do
         mytextclock,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
-        spacer, mailicon, mailwidget, spacer,
+        spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
@@ -604,6 +626,8 @@ naughty.config.presets.critical.timeout     = 15
 naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
 naughty.config.screen = screen.count()
 
-os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
+os.execute("export $(gnome-keyring-daemon -s)")
+--os.execute("eval $(seahorse-agent --variables)")
+--os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("xset b 0 s 0 -dpms&")
 os.execute("offlineimap -u Noninteractive.Quiet&")
