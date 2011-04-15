@@ -125,14 +125,21 @@ clientbuttons = awful.util.table.join(
 --{{{ SHIFTY: application matching rules
 -- order here matters, early rules will be applied first
 shifty.config.apps = {
+         { match = { "URXVTsys" } ,tag='sys'} ,
+         { match = { "URXVTedit" } ,tag='edit'} ,
+         { match = { ".*VIM.*" } , tag = "edit" } ,
+         { match = { "URXVTweb" } ,tag='web'} ,
          { match = { "Firefox" }, tag = "web" } ,
-         { match = { "Shredder.*","Thunderbird","mutt" } , tag = "mail" } ,
-         { match = { ".*Calendar.*" } , tag = "calendar" } ,
-         { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
-         { match = { terminal } ,slave = true } ,
+         { match = { "URXVTfs" } ,tag='fs'} ,
+         { match = { "URXVTmedia", "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "URXVTbib" } ,tag='bib'} ,
+         { match = { "URXVTcalendar",".*Calendar.*" } ,tag='calendar'} ,
+         { match = { "URXVTmail","Thunderbird","mutt" } , tag = "mail" } ,
+         { match = { "URXVTim" } ,tag='im'} ,
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
-         { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
+
          { match = { "" } , buttons = clientbuttons },
 }
 --}}}
@@ -493,8 +500,12 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end),
     awful.key({ modkey,           }, "u", awful.client.urgent.jumpto),
 
-    -- Standard program
-    awful.key({ modkey, "Shift"   }, "Return", function () awful.util.spawn(terminal) end),
+    -- spawn term with current tag in name for matching
+    awful.key({ modkey, "Shift"   }, "Return", 
+      function () 
+          t= awful.tag.selected()
+          awful.util.spawn('urxvt -T URXVT' ..t.name) 
+      end),
     awful.key({ modkey, "Control" }, "r", awesome.restart),
     awful.key({ modkey, "Shift"   }, "q", awesome.quit),
 

@@ -1,2 +1,5 @@
 set show_inputbar 0
 set show_statusbar 0
+set adjust_open 24
+map + zoom in
+map - zoom out
