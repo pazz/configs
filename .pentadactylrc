@@ -1,4 +1,5 @@
 set showtabline=never
 colorscheme simple_dark
 set guioptions='sC'
+set editor='urxvt -e vim -f +<line> <file>'
 
