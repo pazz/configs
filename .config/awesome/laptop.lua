@@ -125,23 +125,20 @@ clientbuttons = awful.util.table.join(
 --{{{ SHIFTY: application matching rules
 -- order here matters, early rules will be applied first
 shifty.config.apps = {
-         { match = { "Firefox" }, tag = "web" } ,
-         { match = { "Shredder.*","Thunderbird","mutt" } , tag = "mail" } ,
-         { match = { ".*Calendar.*" } , tag = "calendar" } ,
-         { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
-         { match = { terminal } ,slave = true } ,
-         { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
-         { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
-         { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
          { match = { "URXVTsys" } ,tag='sys'} ,
          { match = { "URXVTedit" } ,tag='edit'} ,
+         { match = { ".*VIM.*" } , tag = "edit" } ,
          { match = { "URXVTweb" } ,tag='web'} ,
+         { match = { "Firefox" }, tag = "web" } ,
          { match = { "URXVTfs" } ,tag='fs'} ,
-         { match = { "URXVTmedia" } ,tag='media'} ,
+         { match = { "URXVTmedia", "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
          { match = { "URXVTbib" } ,tag='bib'} ,
-         { match = { "URXVTcalendar" } ,tag='calendar'} ,
-         { match = { "URXVTmail" } ,tag='mail'} ,
+         { match = { "URXVTcalendar",".*Calendar.*" } ,tag='calendar'} ,
+         { match = { "URXVTmail","Thunderbird","mutt" } , tag = "mail" } ,
          { match = { "URXVTim" } ,tag='im'} ,
+         { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
+         { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
+         { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
 
          { match = { "" } , buttons = clientbuttons },
 }
