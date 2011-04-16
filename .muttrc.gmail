@@ -6,23 +6,18 @@ set imap_pass = `~/bin/getpwd Gmail`
 set smtp_url = "smtp://patricktotzke@smtp.gmail.com:587/"
 set smtp_pass = $imap_pass
 
-#set folder = "imaps://imap.gmail.com:993"
-#set spoolfile = "+INBOX"
-#set record="+Sent"
-#set postponed="+Drafts"
 set mbox_type=Maildir
 set spoolfile="~/mail/gmail/INBOX"
 set folder="~/mail/gmail/"
 set mask="!^\\.[^.]"
-set record="+.Sent"
-set postponed="+.Drafts"
-mailboxes `echo -n "+ "; find ~/mail/uoe -maxdepth 1 -type d -printf "+'%f' "`
+set record="+Sent"
+set postponed="+Drafts"
+mailboxes `echo -n "+ "; find ~/mail/gmail -maxdepth 1 -type d -printf "+'%f' "`
 
-set header_cache=~/.mutt/cache/headers.gmail
-set message_cachedir=~/.mutt/cache/bodies
+set header_cache=~/mail/gmail/.cache/headers
+set message_cachedir=~/mail/gmail/.cache/bodies
 set certificate_file=~/.mutt/certificates
 
-source ~/.mutt/rc/imap #my imap settings
 source ~/.mutt/rc/ui #my UI settings (incl local aliases)
 source ~/.mutt/rc/bindings #macros/bindings
 
