@@ -7,6 +7,7 @@ pythonfile = ~/.offlineimap.py
 localrepository = gmaildir
 remoterepository = gmailimap
 autorefresh = 1
+postsynchook = notmuch new
 
 [Repository gmaildir]
 type = Maildir
@@ -16,6 +17,12 @@ type = IMAP
 remotehost = imap.gmail.com
 remoteuser = patricktotzke@gmail.com
 remotepasseval = getpwd("Gmail")
+nametrans = lambda foldername: re.sub ('^\[Google\ Mail\]', 'bak',
+                               re.sub ('sent_mail', 'sent',
+                               re.sub ('starred', 'flagged',
+                               re.sub (' ', '_', foldername))))
+folderfilter = lambda foldername: not re.match('^\[Google\ Mail\]\/.*',foldername)
+
 ssl = yes
 maxconnections = 6
 holdconnectionopen = yes
@@ -24,6 +31,8 @@ holdconnectionopen = yes
 localrepository = uoedir
 remoterepository = uoeimap
 autorefresh = 1
+postsynchook = notmuch new
+
 [Repository uoedir]
 type = Maildir
 localfolders = /home/pazz/mail/uoe/

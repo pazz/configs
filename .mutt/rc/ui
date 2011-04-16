@@ -11,3 +11,13 @@ set reverse_alias=no
 source $alias_file
 
 auto_view text/html
+
+
+
+macro index <F8> \
+      "<enter-command>unset wait_key<enter><shell-escape>~/bin/mutt-notmuch --prompt search<enter><change-folder-readonly>~/.cache/mutt_results<enter>" \
+      "search mail (using notmuch)"
+macro index <F9> \
+      "<enter-command>unset wait_key<enter><pipe-message>~/bin/mutt-notmuch thread<enter><change-folder-readonly>~/.cache/mutt_results<enter><enter-command>set wait_key<enter>" \
+      "search and reconstruct owning thread (using notmuch)"
+
