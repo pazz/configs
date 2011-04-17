@@ -1,6 +1,6 @@
 alias vim="vim --servername VIM"
 alias bu='rsync -Pav projects/ afshome/projects/'
-journal () { editmoin http://localhost/journal/`date -I $*`; }
+journal () { editmoin -t journalTemplate http://localhost/journal/`date -I $*`; }
 wiki () { editmoin http://localhost/$*; }
 alias w="weather -mq -i EGPH"
 
