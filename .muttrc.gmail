@@ -12,10 +12,11 @@ set folder="~/mail/gmail/"
 set mask="!^\\.[^.]"
 set record="+Sent"
 set postponed="+Drafts"
-mailboxes `echo -n "+ "; find ~/mail/gmail -maxdepth 1 -type d -printf "+'%f' "`
+#mailboxes `echo -n "+ "; find ~/mail/gmail -maxdepth 1 -type d -printf "+'%f' "`
+mailboxes ! + `for file in ~/mail/uoe/*; do box=$(basename "$file"); if [ ! "$box" = '.' -a ! "$box" = '..' -a ! "$box" = 'Drafts' -a ! "$box" = 'Sent' ]; then echo -n "\"+$box\" "; fi; done`
 
-set header_cache=~/mail/gmail/.cache/headers
-set message_cachedir=~/mail/gmail/.cache/bodies
+set header_cache=~/.mutt/cache/headers.gmail
+set message_cachedir=~/.mutt/cache/bodies
 set certificate_file=~/.mutt/certificates
 
 source ~/.mutt/rc/ui #my UI settings (incl local aliases)

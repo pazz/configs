@@ -14,11 +14,10 @@ set folder="~/mail/uoe/"
 set mask="!^\\.[^.]"
 set record="+Sent"
 set postponed="+Drafts"
-mailboxes `echo -n "+ "; find ~/mail/uoe -maxdepth 1 -type d -printf "+'%f' "`
-
+mailboxes ! + `for file in ~/mail/uoe/*; do box=$(basename "$file"); if [ ! "$box" = '.' -a ! "$box" = '..' -a ! "$box" = 'Drafts' -a ! "$box" = 'Sent' ]; then echo -n "\"+$box\" "; fi; done`
 #caches
-set header_cache=~/mail/uoe/.cache/headers
-set message_cachedir=~/mail/uoe/.cache/bodies
+set header_cache=~/.mutt/cache/headers.uoe
+set message_cachedir=~/.mutt/cache/bodies
 set certificate_file=~/.mutt/certificates
 
 source ~/.mutt/rc/ui #my UI settings
