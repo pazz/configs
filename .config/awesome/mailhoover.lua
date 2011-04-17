@@ -20,9 +20,9 @@ local dir_format = "<span color='" .. beautiful.fg_normal .."'><b>%s</b></span>"
 local newmail_format = "<span color='" .. beautiful.fg_urgent .. "'>%s</span>"
 local oldmail_format = "<span color='" .. beautiful.fg_focus .. "'>%s</span>"
 
-function addToWidget(mywidget, commonprefix, subdirs, accountname)
+function addToWidget(mywidget, maildirs, accountname)
   mywidget:add_signal('mouse::enter', function ()
-        local info = read_maildirs(commonprefix,subdirs)
+        local info = read_maildirs(maildirs)
         popup = naughty.notify({
                 title = string.format(account_format,accountname),
                 text = info,
@@ -33,13 +33,12 @@ function addToWidget(mywidget, commonprefix, subdirs, accountname)
   end)
   mywidget:add_signal('mouse::leave', function () naughty.destroy(popup) end)
 end
-function read_maildirs(cp,sd)
+function read_maildirs(md)
     local info = ""
     local count = 0
 
-    for i=1, #sd do
-        folder = sd[i]
-        mdir = cp .. folder
+    for i=1, #md do
+        mdir = md[i]
         mails = {}
         -- Recursively find new messages
         local f = io.popen("find "..mdir.." -type f -wholename '*/new/*'")
@@ -55,7 +54,7 @@ function read_maildirs(cp,sd)
         end
         f:close()
 
-        if #mails>0 then info = info .. string.format(dir_format,folder) .. ':\n' end
+        if #mails>0 then info = info .. string.format(dir_format,mdir) .. ':\n' end
         for m=1, #mails do
             info = info .. mails[m]
         end

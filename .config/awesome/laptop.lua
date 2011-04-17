@@ -237,12 +237,13 @@ end, 1 )
 
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(mailicon, '/home/pazz/mail/uoe/',
-  {'INBOX', 
-  'lists.lfcs',
-  'lists.seminars',
-  'lists.phd-students',
-  }, 'UoE')
+mailfolders =   {
+    '/home/pazz/mail/uoe/INBOX', 
+    '/home/pazz/mail/uoe/lists.lfcs',
+    '/home/pazz/mail/uoe/lists.seminars',
+    '/home/pazz/mail/uoe/lists.phd-students',
+}
+mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
 vicious.register(mailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
@@ -251,14 +252,15 @@ function (widget, args)
 		mailicon.image = image(beautiful.widget_nomail)
 	end
 	return nil
-end, 10, {'~/mail/uoe'})
+end, 10, mailfolders)
 mailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
 )
 mailicon:buttons(mailbuttons)
 
 gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailhoover.addToWidget(gmailicon, '/home/pazz/mail/gmail/',{'INBOX'}, 'GMAIL')
+gmailfolders= { '/home/pazz/mail/gmail/INBOX'}
+mailhoover.addToWidget(gmailicon, gmailfolders , 'GMAIL')
 vicious.register(gmailicon, vicious.widgets.mdir, 
 function (widget, args)
 	if args[1] > 0 then
@@ -267,7 +269,7 @@ function (widget, args)
 		gmailicon.image = image(beautiful.widget_nomail)
 	end
 	return nil
-end, 10, {'~/mail/gmail/INBOX'})
+end, 10, gmailfolders)
 gmailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
 )
