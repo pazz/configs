@@ -10,8 +10,8 @@ beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 -- Notification library
 require("naughty")
 -- delightful imap 
-require('delightful.widgets.imap')
-require('secret')
+--require('delightful.widgets.imap')
+--require('secret')
 --calendar
 require('calendar2')
 require('mailhoover')

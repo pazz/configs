@@ -3,7 +3,6 @@ local string = string
 local tostring = tostring
 local io = io
 local table = table
-local lfs = require('lfs') -- this is liblua5.1-filesystem-dev in ubuntu
 local pairs = pairs
 local capi = {
     mouse = mouse,
