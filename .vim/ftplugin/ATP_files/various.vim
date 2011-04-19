@@ -3,7 +3,7 @@
 " Note:	       This file is a part of Automatic Tex Plugin for Vim.
 " URL:	       https://launchpad.net/automatictexplugin
 " Language:    tex
-" Last Change: Sun Mar 20 04:00  2011 W
+" Last Change: Sat Apr 16 07:00  2011 W
 
 let s:sourced 	= exists("s:sourced") ? 1 : 0
 
@@ -13,6 +13,7 @@ if !s:sourced || g:atp_reload_functions "{{{
 " {{{ WrapSelection
 function! s:WrapSelection(wrapper,...)
 
+    let g:args=[a:wrapper]+a:000
     let l:end_wrapper 	= ( a:0 >= 1 ? a:1 : '}' )
     let l:cursor_pos	= ( a:0 >= 2 ? a:2 : 'end' )
     let l:new_line	= ( a:0 >= 3 ? a:3 : 0 )
@@ -216,6 +217,39 @@ function! s:InteligentWrapSelection(text_wrapper, math_wrapper, ...)
     call s:WrapSelection(begin_wrapper, end_wrapper, cursor_pos, new_line) 
 endfunction
 "}}}
+" WrapEnvironment "{{{
+" a:1 = 0 (or not present) called by a command
+" a:1 = 1 called by a key map (ask for env)
+function! <SID>WrapEnvironment(env_name,...)
+    let map = ( a:0 == 0 ? 0 : a:1 ) 
+    if !map
+	'<,'>WrapSelection '\begin{'.a:env_name.'}','\end{'.a:env_name.'}','0', '1'
+    else
+	let envs=sort(filter(EnvCompletion("","",""), "v:val !~ '\*$' && v:val != 'thebibliography'"))
+	let g:envs=envs
+	" adjust the list - it is too long.
+	let envs_a=copy(envs)
+	call map(envs_a, "index(envs_a, v:val)+1.'. '.v:val")
+	for line in atplib#PrintTable(envs_a,3)
+	    echo line
+	endfor
+	let envs_a=['Which environment to use:']+envs_a
+	let env=input("Which environment to use? type number and press <enter> or type environemnt name, <tab> to complete, <none> for exit:\n","","customlist,EnvCompletion")
+	let g:env=env
+	if env == ""
+	    return
+	elseif env =~ '^\d\+$'
+	    let env_name=get(envs, env-1, '')
+	    if env_name == ''
+		return
+	    endif
+	else
+	    let env_name=env
+	endif
+	'<,'>WrapSelection '\begin{'.env_name.'}','\end{'.env_name.'}','0', '1'
+    endif
+endfunction "}}}
+vmap <buffer> <silent> <Plug>WrapEnvironment		:<C-U>call <SID>WrapEnvironment('', 1)<CR>
 
 " Inteligent Aling
 " TexAlign {{{
@@ -509,7 +543,7 @@ function! s:ToggleStar()
 	    call setline(open_pos[0],substitute(getline(open_pos[0]),'\(\\begin\s*{\)'.env_name.'\*}','\1'.env_name.'}',''))
 	    call setline(close_pos[0],substitute(getline(close_pos[0]),
 			\ '\(\\end\s*{\)'.env_name.'\*}','\1'.env_name.'}',''))
-	    echomsg "Star removed from '".env_name."*' at lines: " .open_pos[0]." and ".close_pos[0]
+	    echomsg "[ATP:] star removed from '".env_name."*' at lines: " .open_pos[0]." and ".close_pos[0]
 	endif
     else
 	let close_pos=searchpairpos('\\begin\s{'.env_name.'}','','\\end\s*{'.env_name.'}\zs','cnW',"",to_line)
@@ -518,7 +552,7 @@ function! s:ToggleStar()
 		    \ '\(\\begin\s*{\)'.env_name.'}','\1'.env_name.'\*}',''))
 	    call setline(close_pos[0],substitute(getline(close_pos[0]),
 			\ '\(\\end\s*{\)'.env_name.'}','\1'.env_name.'\*}',''))
-	    echomsg "Star added to '".env_name."' at lines: " .open_pos[0]." and ".close_pos[0]
+	    echomsg "[ATP:] star added to '".env_name."' at lines: " .open_pos[0]." and ".close_pos[0]
 	endif
     endif
 
@@ -598,9 +632,9 @@ function! s:ToggleEnvironment(ask, ...)
 	endif
     else
 	if l:add == 1
-	    let l:new_env_name=input("What is the new name for " . l:env_name . "? type and hit <Enter> ", "", "customlist,<SID>EnvCompletion" )
+	    let l:new_env_name=input("What is the new name for " . l:env_name . "? type and hit <Enter> ", "", "customlist,EnvCompletion" )
 	    if l:new_env_name == ""
-		echomsg "Environment name not changed"
+		echomsg "[ATP:] environment name not changed"
 		return
 	    endif
 	else
@@ -621,7 +655,7 @@ function! s:ToggleEnvironment(ask, ...)
 	call setline(l:open_pos[0],substitute(getline(l:open_pos[0]),'\(\\begin\s*{\)'.l:env_name.'}','\1'.l:new_env_name.'}',''))
 	call setline(l:close_pos[0],substitute(getline(l:close_pos[0]),
 		    \ '\(\\end\s*{\)'.l:env_name.'}','\1'.l:new_env_name.'}',''))
-	echomsg "Environment toggeled at lines: " .l:open_pos[0]." and ".l:close_pos[0]
+	echomsg "[ATP:] environment toggeled at lines: " .l:open_pos[0]." and ".l:close_pos[0]
     endif
 
     if l:label != "" && g:atp_toggle_labels
@@ -673,7 +707,7 @@ function! s:ToggleEnvironment(ask, ...)
 	    let &hidden = hidden
 	elseif n != 0 && l:new_label != l:label
 	    echohl WarningMsg
-	    echomsg "Labels not changed, new label: ".l:new_label." is in use!"
+	    echomsg "[ATP:] labels not changed, new label: ".l:new_label." is in use!"
 	    echohl Normal
 	endif
     endif
@@ -684,7 +718,7 @@ endtry "}}}
 
 " This is completion for input() inside ToggleEnvironment which uses
 " b:atp_LocalEnvironments variable.
-function! <SID>EnvCompletion(ArgLead, CmdLine, CursorPos)
+function! EnvCompletion(ArgLead, CmdLine, CursorPos) "{{{
     if !exists("b:atp_LocalEnvironments")
 	LocalCommands
     endif
@@ -695,9 +729,39 @@ function! <SID>EnvCompletion(ArgLead, CmdLine, CursorPos)
     if atplib#SearchPackage('amsmath')
 	let env_list=atplib#Extend(env_list, g:atp_amsmath_environments)
     endif
-    call filter(env_list, "v:val =~ '^' .a:ArgLead")
+    call filter(env_list, "v:val =~# '^' .a:ArgLead")
     return env_list
-endfunction
+endfunction "}}}
+function! EnvCompletionWithoutStarEnvs(ArgLead, CmdLine, CursorPos) "{{{
+    if !exists("b:atp_LocalEnvironments")
+	LocalCommands
+    endif
+
+    let env_list = copy(b:atp_LocalEnvironments)
+    " add standard and ams environment if not present.
+    let env_list=atplib#Extend(env_list, g:atp_Environments)
+    if atplib#SearchPackage('amsmath')
+	let env_list=atplib#Extend(env_list, g:atp_amsmath_environments)
+    endif
+    call filter(env_list, "v:val =~# '^' .a:ArgLead")
+    return env_list
+endfunction "}}}
+function! F_compl(ArgLead, CmdLine, CursorPos) "{{{
+    " This is like EnvCompletion but without stared environments and with: chapter, section, ...
+    if !exists("b:atp_LocalEnvironments")
+	LocalCommands
+    endif
+
+    let env_list = copy(b:atp_LocalEnvironments)
+    " add standard and ams environment if not present.
+    let env_list=atplib#Extend(env_list, g:atp_Environments)
+    let env_list=atplib#Extend(env_list, ['part', 'chapter', 'section', 'subsection', 'subsubsection'])
+    if atplib#SearchPackage('amsmath')
+	let env_list=atplib#Extend(env_list, g:atp_amsmath_environments)
+    endif
+    call filter(env_list+['math'], "v:val !~ '\*$'")
+    return join(env_list, "\n")
+endfunction "}}}
 " TexDoc commanand and its completion
 " {{{ TexDoc 
 " This is non interactive !, use :!texdoc for interactive command.
@@ -732,8 +796,8 @@ function! s:TeXdoc_complete(ArgLead, CmdLine, CursorPos)
 
     call filter(aliases, "v:val =~ 'alias'")
     call filter(map(aliases, "matchstr(v:val, '^\\s*alias\\s*\\zs\\S*\\ze\\s*=')"),"v:val !~ '^\\s*$'")
-    if exists("g:atp_latexpackages")
-	call extend(aliases, g:atp_latexpackages)
+    if exists("g:atp_LatexPackages")
+	call extend(aliases, g:atp_LatexPackages)
     endif
 
     return filter(copy(aliases), "v:val =~ '^' . a:ArgLead")
@@ -743,37 +807,34 @@ endfunction
 " This function deletes tex specific output files (exept the pdf/dvi file, unless
 " bang is used - then also delets the current output file)
 " {{{ Delete
-function! s:Delete(delete_output)
+function! <SID>Delete(delete_output)
 
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
     call atplib#outdir()
 
     let atp_tex_extensions=deepcopy(g:atp_tex_extensions)
 
-    if a:delete_output == "!"
+    if a:delete_output == "!" || g:atp_delete_output == 1
 	if b:atp_TexCompiler == "pdftex" || b:atp_TexCompiler == "pdflatex"
 	    let ext="pdf"
 	else
 	    let ext="dvi"
 	endif
 	call add(atp_tex_extensions,ext)
+    else
+	" filter extensions which should not be deleted
+	call filter(atp_tex_extensions, "index(g:atp_DeleteWithBang, v:val) == -1")
     endif
 
-    for ext in atp_tex_extensions
-	if executable(g:rmcommand)
-	    if g:rmcommand =~ "^\s*rm\p*" || g:rmcommand =~ "^\s*perltrash\p*"
-		if ext != "dvi" && ext != "pdf"
-		    let rm=g:rmcommand . " " . shellescape(b:atp_OutDir) . "*." . ext . " 2>/dev/null && echo Removed: ./*" . ext 
-		else
-		    let rm=g:rmcommand . " " . shellescape(fnamemodify(atp_MainFile,":r")).".".ext . " 2>/dev/null && echo Removed: " . fnamemodify(atp_MainFile,":r").".".ext
-		endif
-	    endif
-	    echo system(rm)
-	else
-	    let file=b:atp_OutDir . fnamemodify(expand("%"),":t:r") . "." . ext
-	    if delete(file) == 0
-		echo "Removed " . file 
-	    endif
+    " Be sure that we are not deleting outputs:
+    for ext in filter(atp_tex_extensions, 
+		\ "v:val != 'tex' && v:val != 'pdf' && v:val != 'dvi' && v:val != 'ps'")
+	let files=split(globpath(fnamemodify(atp_MainFile, ":h"), "*.".ext), "\n")
+	if files != []
+	    echo "Removing *.".ext
+	    for f in files
+		call delete(f)
+	    endfor
 	endif
     endfor
 endfunction
@@ -800,7 +861,7 @@ function! <SID>Search(pattern, flag, ...)
 	let message = a:flag =~# 'b' ? 'previous' : 'next'
 	if a:pattern =~ 'warning'
 	    let type = 'warning'
-	elseif a:pattern =~ '\^!'
+	elseif a:pattern =~ '!$'
 	    let type = 'error'
 	elseif a:pattern =~ 'info'
 	    let type = 'info'
@@ -849,8 +910,8 @@ function! s:OpenLog()
 	nnoremap <silent> <buffer> [c :call <SID>Search('\CLaTeX Warning: Citation', 'bW')<CR>
 	nnoremap <silent> <buffer> ]r :call <SID>Search('\CLaTeX Warning: Reference', 'W')<CR>
 	nnoremap <silent> <buffer> [r :call <SID>Search('\CLaTeX Warning: Reference', 'bW')<CR>
-	nnoremap <silent> <buffer> ]e :call <SID>Search('^!', 'W')<CR>
-	nnoremap <silent> <buffer> [e :call <SID>Search('^!', 'bW')<CR>
+	nnoremap <silent> <buffer> ]e :call <SID>Search('^[^!].*\n\zs!', 'W')<CR>
+	nnoremap <silent> <buffer> [e :call <SID>Search('^[^!].*\n\zs!', 'bW')<CR>
 	nnoremap <silent> <buffer> ]f :call <SID>Search('\CFont \%(Info\\|Warning\)', 'W')<CR>
 	nnoremap <silent> <buffer> [f :call <SID>Search('\CFont \%(Info\\|Warning\)', 'bW')<CR>
 	nnoremap <silent> <buffer> ]p :call <SID>Search('\CPackage', 'W')<CR>
@@ -1167,7 +1228,7 @@ endfunction
 	let ext = get(g:atp_CompilersDict, b:atp_TexCompiler, "not present")
 	if ext == "not present"
 	    echohl WarningMsg
-	    echomsg b:atp_TexCompiler . " is not present in g:atp_CompilersDict"
+	    echomsg "[ATP:] ".b:atp_TexCompiler . " is not present in g:atp_CompilersDict"
 	    echohl Normal
 	    return "extension not found"
 	endif
@@ -1195,23 +1256,20 @@ endfunction
     " the default is to print locally (g:atp_ssh=`whoami`@localhost)
     let server	= ( exists("g:atp_ssh") ? strpart(g:atp_ssh,stridx(g:atp_ssh,"@")+1) : "localhost" )
 
-    echomsg "Server " . server
-    echomsg "File   " . pfile
+    echomsg "[ATP:] server " . server
+    echomsg "[ATP:] file   " . pfile
 
     if server =~ 'localhost'
-	let com	= lprcommand . " " . print_options . " " .  fnameescape(pfile)
+	let cmd	= lprcommand . " " . print_options . " " .  fnameescape(pfile)
 
 	redraw!
-	echomsg "Printing ...  " . com
-	let b:com=com " DEBUG
-" 	call system(com)
-    " print over ssh on the server g:atp_ssh with the printer a:1 (or the
+	echomsg "[ATP:] printing ...  " . cmd
+	call system(cmd)
+"     " print over ssh on the server g:atp_ssh with the printer a:1 (or the
     " default system printer if a:0 == 0
     else 
-	let com="cat " . fnameescape(pfile) . " | ssh " . g:atp_ssh . " " . lprcommand . " " . print_options
-	echomsg "Printing ...  " . com
-	let b:com=com " DEBUG
-" 	call system(com)
+	let cmd="cat " . fnameescape(pfile) . " | ssh " . g:atp_ssh . " " . lprcommand . " " . print_options
+	call system(cmd)
     endif
 endfunction
 
@@ -1224,7 +1282,7 @@ function! <SID>Lpr(...)
 	let ext = get(g:atp_CompilersDict, b:atp_TexCompiler, "not present")
 	if ext == "not present"
 	    echohl WarningMsg
-	    echomsg b:atp_TexCompiler . " is not present in g:atp_CompilersDict"
+	    echomsg "[ATP:] ".b:atp_TexCompiler . " is not present in g:atp_CompilersDict"
 	    echohl Normal
 	    return "extension not found"
 	endif
@@ -1247,12 +1305,11 @@ function! <SID>Lpr(...)
 	let print_options	= join(arg_list, " ")
     endif
 
-	let com	= lprcommand . " " . print_options . " " .  fnameescape(pfile)
+    let cmd	= lprcommand . " " . print_options . " " .  fnameescape(pfile)
 
-	redraw!
-	echomsg "Printing ...  " . com
-	let b:com=com " DEBUG
-" 	call system(com)
+    redraw!
+    echomsg "[ATP:] printing ...  " . cmd
+    call system(cmd)
 endfunction
 " The command only prints the output file.
 fun! s:Lpstat()
@@ -1271,16 +1328,16 @@ endfunction
 " This function is used for completetion of the command SshPrint
 function! s:ListPrinters(A,L,P)
     if exists("g:atp_ssh") && g:atp_ssh !~ '@localhost' && g:atp_ssh != ""
-	let com="ssh -q " . g:atp_ssh . " lpstat -a | awk '{print $1}'"
+	let cmd="ssh -q " . g:atp_ssh . " lpstat -a | awk '{print $1}'"
     else
-	let com="lpstat -a | awk '{print $1}'"
+	let cmd="lpstat -a | awk '{print $1}'"
     endif
-    return system(com)
+    return system(cmd)
 endfunction
 
 function! s:ListLocalPrinters(A,L,P)
-    let com="lpstat -a | awk '{print $1}'"
-    return system(com)
+    let cmd="lpstat -a | awk '{print $1}'"
+    return system(cmd)
 endfunction
 
 " custom style completion
@@ -1379,10 +1436,10 @@ function! ToDo(keyword,stop,...)
     " Show ToDos
     echohl atp_Todo
     if len(keys(todo)) == 0
-	echomsg " List for '%.*" . a:keyword . "' in '" . bufname . "' is empty."
+	echomsg "[ATP:] list for '%.*" . a:keyword . "' in '" . bufname . "' is empty."
 	return
     endif
-    echomsg " List for '%.*" . a:keyword . "' in '" . bufname . "':"
+    echomsg "[ATP:] list for '%.*" . a:keyword . "' in '" . bufname . "':"
     let sortedkeys=sort(keys(todo), "atplib#CompareNumbers")
     for key in sortedkeys
 	" echo the todo line.
@@ -1413,93 +1470,9 @@ endfunction
 " }}}
 
 " This functions reloads ATP (whole or just a function)
-" {{{  RELOAD
-
-if !exists("g:debug_atp_plugin")
-    let g:debug_atp_plugin=0
-endif
-if g:debug_atp_plugin==1 && !exists("*Reload")
-" Reload() - reload all the tex_apt functions
-" Reload(func1,func2,...) reload list of functions func1 and func2
-" function! Reload(...)
-"     let pos_saved=getpos(".")
-"     let bufname=fnamemodify(expand("%"),":p")
-" 
-"     if a:0 == 0
-" 	let runtime_path=split(&runtimepath,',')
-" 	echo "Searching for atp plugin files"
-" 	let file_list=['ftplugin/tex_atp.vim', 'ftplugin/fd_atp.vim', 
-" 		    \ 'ftplugin/bibsearch_atp.vim', 'ftplugin/toc_atp.vim', 
-" 		    \ 'autoload/atplib.vim', 'ftplugin/atp_LatexBox.vim',
-" 		    \ 'indent/tex_atp.vim' ]
-" 	let file_path=[]
-" 	for file in file_list
-" 		call add(file_path,globpath(&rtp,file))
-" 	endfor
-" " 	if exists("b:atp_debug")
-" " 	    if b:atp_debug == "v" || b:atp_debug == "verbose"
-" " 		echomsg string(file_path)
-" " 	    endif
-" " 	endif
-" 	for file in file_path
-" 	    echomsg "deleting FUNCTIONS and VARIABLES from " . file
-" 	    let atp=readfile(file)
-" 	    for line in atp
-" 		let function_name=matchstr(line,'^\s*fun\%(ction\)\?!\?\s\+\zs\<[^(]*\>\ze(')
-" 		if function_name != "" && function_name != "Reload"
-" 		    if exists("*" . function_name)
-" 			if exists("b:atp_debug")
-" 			    if b:atp_debug == "v" || b:atp_debug == "verbose"
-" 				echomsg "deleting function " . function_name
-" 			    endif
-" 			endif
-" 			execute "delfunction " . function_name
-" 		    endif
-" 		endif
-" 		let variable_name=matchstr(line,'^\s*let\s\+\zsg:[a-zA-Z_^{}]*\ze\>')
-" 		if exists(variable_name)
-" 		    execute "unlet ".variable_name
-" 		    if exists("b:atp_debug")
-" 			if b:atp_debug == "v" || b:atp_debug == "verbose"
-" 			    echomsg "unlet ".variable_name
-" 			endif
-" 		    endif
-" 		endif
-" 	    endfor
-" 	endfor
-"     else
-" 	if a:1 != "maps" && a:1 != "reload"
-" 	    let f_list=split(a:1,',')
-" 	    let g:f_list=f_list
-" 	    for function in f_list
-" 		execute "delfunction " . function
-" 		if exists("b:atp_debug")
-" 		    if b:atp_debug == "v" || b:atp_debug == "verbose"
-" 			echomsg "delfunction " . function
-" 		    endif
-" 		endif
-" 	    endfor
-" 	endif
-"     endif
-"     augroup! ATP_auTeX
-"     " Do not write project script file while saving the file.
-"     let atp_ProjectScript	= ( exists("g:atp_ProjectScript") ? g:atp_ProjectScript : -1 )
-"     let g:atp_ProjectScript	= 0
-"     w
-"     if atp_ProjectScript == -1
-" 	unlet g:atp_ProjectScript
-"     else
-" 	let g:atp_ProjectScript	= atp_ProjectScript
-"     endif
-" "   THIS IS THE SLOW WAY:
-"     bd!
-"     execute "edit " . fnameescape(bufname)
-"     keepjumps call setpos(".",pos_saved)
-" "   This could be faster: but aparently doesn't work.
-" "     execute "source " . file_path[0]
-" endfunction
-
-" Source options.vim
+" {{{  ReloadATP
+" ReloadATP() - reload all the tex_atp functions and delete all autoload functions from
+" autoload/atplib.vim
 try
 function! <SID>ReloadATP(bang)
     " First source the option file
@@ -1529,6 +1502,17 @@ function! <SID>ReloadATP(bang)
 	let tex_atp_file = globpath(&rtp, 'ftplugin/tex_atp.vim')
 	execute "source " . tex_atp_file
 	" This reloads all functions except autoload/atplib.vim
+	let atplib_file	= globpath(&rtp, 'autoload/atplib.vim')
+	let saved_loclist = getloclist(0)
+	exe 'lvimgrep /^\s*fun\%[ction]!\=\s\+/gj '.atplib_file
+	let list=map(getloclist(0), 'v:val["text"]')
+	call setloclist(0,saved_loclist)
+	call map(list, 'matchstr(v:val, ''^\s*fun\%[ction]!\=\s\+\zsatplib#\S\+\ze\s*('')')
+	for fname in list
+	    if fname != ""
+		exe 'delfunction '.fname
+	    endif
+	endfor
 	let g:atp_reload		= 0
 	let g:atp_reload_functions 	= 0
     endif
@@ -1536,7 +1520,6 @@ endfunction
 catch /E127:/
     " Cannot redefine function, function is in use.
 endtry
-endif
 " }}}
 
 " This functions prints preambule 
@@ -1558,13 +1541,14 @@ function! Preambule()
 	endif
 	call winrestview(winview)
     else	
-	echomsg " Not found \begin{document}."
+	echomsg "[ATP:] not found \begin{document}."
     endif
 endfunction
 " }}}
 
 " Get bibdata from ams
 " {{{ AMSGet
+
 try
 function! <SID>GetAMSRef(what, bibfile)
     let what = substitute(a:what, '\s\+', ' ',	'g') 
@@ -1582,17 +1566,17 @@ function! <SID>GetAMSRef(what, bibfile)
     let what = substitute(what, '@',	'%40',	'g')
     let what = substitute(what, ' ',	'+',	'g')
 
-    let tmpdir=tempname()
-    call mkdir(tmpdir, "p")
-    let atpbib_WgetOutputFile = tmpdir . g:atpbib_pathseparator . "amsref.html"
  
+    " Get data from AMS web site.
+    let atpbib_WgetOutputFile = tempname()
+    let URLquery_path = globpath(&rtp, 'ftplugin/ATP_files/url_query.py')
     if a:bibfile != "nobibfile"
-	let cmd = g:atpbib_wget . " -O " . atpbib_WgetOutputFile . ' "http://www.ams.org/mathscinet-mref?ref='.what.'&dataType=bibtex"'
+	let url="http://www.ams.org/mathscinet-mref?ref=".what."&dataType=bibtex"
     else
-	let cmd = g:atpbib_wget . " -O " . atpbib_WgetOutputFile . ' "http://www.ams.org/mathscinet-mref?ref='.what.'&dataType=tex"'
+	let url="http://www.ams.org/mathscinet-mref?ref=".what."&dataType=tex"
     endif
+    let cmd=g:atp_Python." ".URLquery_path." ".shellescape(url)." ".shellescape(atpbib_WgetOutputFile)
     call system(cmd)
-    let g:cmd=cmd
     let loclist = getloclist(0)
 
     try
@@ -1614,7 +1598,7 @@ function! <SID>GetAMSRef(what, bibfile)
 
 	if !len(data) 
 	    echohl WarningMsg
-	    echomsg "Nothing found."
+	    echomsg "[ATP:] nothing found."
 	    echohl None
 	    return [0]
 	endif
@@ -1649,7 +1633,7 @@ function! <SID>GetAMSRef(what, bibfile)
 	call append(line('$'), bibdata)
 	normal GG
 	echohl WarningMsg
-	echomsg "Bibkey " . bibkey . " appended to: " . a:bibfile 
+	echomsg "[ATP:] bibkey " . bibkey . " appended to: " . a:bibfile 
 	echohl Normal
     else
 	" If the user is using \begin{bibliography} environment.
@@ -1661,7 +1645,7 @@ function! <SID>GetAMSRef(what, bibfile)
 	let data = getloclist(0)
 	if !len(data) 
 	    echohl WarningMsg
-	    echomsg "Nothing found."
+	    echomsg "[ATP:] nothing found."
 	    echohl None
 	    return [0]
 	elseif len(data) > 1
@@ -1673,7 +1657,7 @@ function! <SID>GetAMSRef(what, bibfile)
 	let bibdata = [ bibref ]
     endif
     let g:atp_bibdata = bibdata
-    call system("rm -rf " . fnamemodify(atpbib_WgetOutputFile, ":h"))
+    call delete(atpbib_WgetOutputFile)
     return bibdata
 endfunction
 catch /E127/
@@ -1701,12 +1685,12 @@ function! AMSRef(bang, what)
     elseif bibfile == "nobibfile" && return != [0] && return != ['NoUniqueMatch']
 	redraw
 	echohl WarningMsg
-	echomsg "Found bib data is in register " . g:atp_bibrefRegister
+	echomsg "[ATP:] found bib data is in register " . g:atp_bibrefRegister
 	echohl Normal
     elseif return[0] == 'NoUniqueMatch' 
 	redraw
 	echohl WarningMsg
-	echomsg "No Unique Match Found"
+	echomsg "[ATP:] no Unique Match Found"
 	echohl None
     endif
 endfunction
@@ -1769,14 +1753,14 @@ function! <SID>Wdiff(new_file, old_file)
 	let new_file	= readfile(a:new_file)
     catch /E484/
 	echohl ErrorMsg
-	echomsg "Can't open file " . a:new_file
+	echomsg "[ATP:] can't open file " . a:new_file
 	return 1
     endtry
     try
 	let old_file	= readfile(a:old_file)
     catch /E484/
 	echohl ErrorMsg
-	echomsg "Can't open file " . a:old_file
+	echomsg "[ATP:] can't open file " . a:old_file
 	return 1
     endtry
 
@@ -1875,10 +1859,314 @@ function! <SID>Wdiff(new_file, old_file)
     endfunction
     command! -buffer NiceDiff :call NiceDiff()
 endfunction "}}}
+
+" ATPUpdate
+try "{{{ UpdateATP
+function! <SID>UpdateATP(bang)
+    "DONE: add bang -> get stable/unstable latest release.
+    "DONE: check if the current version is newer than the available one
+    "		if not do not download and install (this saves time).
+
+	let s:ext = "tar.gz"
+	if a:bang == "!"
+	    echo "[ATP:] getting list of available snapshots ..."
+	else
+	    echo "[ATP:] getting list of available versions ..."
+	endif
+	let s:URLquery_path = globpath(&rtp, 'ftplugin/ATP_files/url_query.py')    
+
+	if a:bang == "!"
+	    let url = "http://sourceforge.net/projects/atp-vim/files/snapshots/"
+	else
+	    let url = "http://sourceforge.net/projects/atp-vim/files/releases/"
+	endif
+	let url_tempname=tempname()."_ATP.html"
+" 	let g:url_tempname=url_tempname
+	let cmd=g:atp_Python." ".s:URLquery_path." ".shellescape(url)." ".shellescape(url_tempname)
+" 	let g:cmd=cmd
+	call system(cmd)
+
+	let saved_loclist = getloclist(0)
+	exe 'lvimgrep /\C<a\s\+href=".*AutomaticTexPlugin_\d\+\%(\.\d\+\)*\.'.escape(s:ext, '.').'/jg '.url_tempname
+	call delete(url_tempname)
+	let list = map(getloclist(0), 'v:val["text"]')
+" 	let g:list = copy(list)
+	if a:bang == "!"
+	    call filter(list, 'v:val =~ ''\.tar\.gz\.\d\+-\d\+-\d\+_\d\+-\d\+''')
+	endif
+	call map(list, 'matchstr(v:val, ''<a\s\+href="\zshttp[^"]*download\ze"'')')
+	call setloclist(0,saved_loclist)
+	call filter(list, "v:val != ''")
+" 	let g:atp_versionlist = list
+	if !len(list)
+	    echoerr "No snapshot is available." 
+	    return
+	endif
+	let dict = {}
+	for item in list
+	    if a:bang == "!"
+		let key = matchstr(item, 'AutomaticTexPlugin_\d\+\%(\.\d\+\)*\.tar\.gz\.\zs[\-0-9_]\+\ze')
+		if key == ''
+		    let key = "00-00-00_00-00"
+		endif
+		call extend(dict, { key : item})
+	    else
+		call extend(dict, { matchstr(item, 'AutomaticTexPlugin_\zs\d\+\%(\.\d\+\)*\ze\.tar.gz') : item})
+	    endif
+	endfor
+	if a:bang == "!"
+	    let sorted_list = sort(keys(dict), "<SID>CompareStamps")
+	else
+	    let sorted_list = sort(keys(dict), "<SID>CompareVersions")
+	endif
+	let g:atp_debugUD_sorted_list = sorted_list
+	let g:atp_debugUD_dict = dict
+	"NOTE: this list might contain one item two times (I'm not filtering well the
+	" html sourcefore web page, but this is faster)
+
+	let dir = fnamemodify(globpath(&rtp, "ftplugin/tex_atp.vim"), ":h:h")
+	if dir == ""
+	    echoerr "[ATP:] Cannot find local .vim directory."
+	    return
+	endif
+
+	" Stamp of the local version
+	let saved_loclist = getloclist(0)
+	if a:bang == "!"
+	    try
+		exe '1lvimgrep /\C^"\s*Time\s\+Stamp:/gj '. globpath(&rtp, "ftplugin/tex_atp.vim")
+		let old_stamp = get(getloclist(0),0, {'text' : '00-00-00_00-00'})['text']
+		call setloclist(0, saved_loclist) 
+		let old_stamp=matchstr(old_stamp, '^"\s*Time\s\+Stamp:\s*\zs\%(\d\|_\|-\)*\ze')
+	    catch /E480:/
+		let old_stamp="00-00-00_00-00"
+	    endtry
+	else
+	    try
+		exe '1lvimgrep /(ver\.\=\%[sion]\s\+\d\+\%(\.\d\+\)*\s*)/gj ' . globpath(&rtp, "doc/automatic-tex-plugin.txt")
+		let old_stamp = get(getloclist(0),0, {'text' : '00-00-00_00-00'})['text']
+		call setloclist(0, saved_loclist) 
+		let old_stamp=matchstr(old_stamp, '(ver\.\=\%[sion]\s\+\zs\d\+\%(\.\d\+\)*\ze')
+	    catch /E480:/
+		let old_stamp="0.0"
+	    endtry
+	endif
+	let g:atp_debugUD_old_stamp = old_stamp
+
+	" a:bang == ""
+	    " Get latest snapshot, get time stamp from the tar.gz file, compare time
+	    " stamps
+	" a:bang == "!"
+	"   " latest snaphot time stamp is sorted_list[0]
+
+	function! <SID>GetLatestSnapshot(bang,url)
+	    " Get latest snapshot/version
+	    let url = a:url
+" 	    let s:ext = "tar.gz"
+	    " 	let g:url = url
+
+	    let s:ATPversion = matchstr(url, 'AutomaticTexPlugin_\zs\d\+\%(\.\d\+\)*\ze\.'.escape(s:ext, '.'))
+	    let g:atp_debugUD_version = s:ATPversion
+	    if a:bang == "!"
+		let ATPdate = matchstr(url, 'AutomaticTexPlugin_\d\+\%(\.\d\+\)*.'.escape(s:ext, '.').'.\zs[0-9-_]*\ze')
+	    else
+		let ATPdate = ""
+	    endif
+	    let s:atp_tempname = tempname()."_ATP.tar.gz"
+	    let g:atp_debugUD_tempname = s:atp_tempname
+	    let cmd=g:atp_Python." ".s:URLquery_path." ".shellescape(url)." ".shellescape(s:atp_tempname)
+	    if a:bang == "!"
+		echo "[ATP:] getting latest snapshot (unstable version) ..."
+	    else
+		echo "[ATP:] getting latest stable version ..."
+	    endif
+	    let g:atp_debugUD_cmd_get = cmd
+	    call system(cmd)
+	endfunction
+
+	let new_stamp = sorted_list[0]
+	let g:atp_debugUD_new_stamp = new_stamp
+	 
+	"Compare stamps:
+	" stamp format day-month-year_hour-minute
+	" if o_stamp is >= than n_stamp  ==> return
+	let l:return = 1
+	if a:bang == "!"
+	    let compare = <SID>CompareStamps(new_stamp, old_stamp)
+	else
+	    let compare = <SID>CompareVersions(new_stamp, old_stamp) 
+	endif
+	if a:bang == "!"
+	    if  compare == 1 || compare == 0
+		redraw
+		echomsg "You have the latest UNSTABLE version of ATP."
+		return
+	    endif
+	else
+	    if compare == 1
+		redraw
+		let l:return = input("You have UNSTABLE version of ATP.\nDo you want to DOWNGRADE to the last STABLE release? type yes/no [or y/n] and hit <Enter> ")
+		let l:return = (l:return !~? '^\s*y\%[es]\s*$')
+		if l:return
+		    call delete(s:atp_tempname)
+		    redraw
+		    return
+		endif
+	    elseif compare == 0
+		redraw
+		echomsg "You have the latest STABLE version of ATP."
+		call delete(s:atp_tempname)
+		return
+	    endif
+	endif
+
+	redraw
+	call  <SID>GetLatestSnapshot(a:bang, dict[sorted_list[0]])
+	echo "[ATP:] installing ..." 
+	call <SID>Tar(s:atp_tempname, dir)
+	call delete(s:atp_tempname)
+
+	" WINDOWS NOT COMPATIBLE (?)
+	exe "helptags " . dir . "/doc"
+	ReloadATP
+	redraw!
+	if a:bang == "!"
+	    echomsg "[ATP:] updated to version ".s:ATPversion." (snapshot date stamp ".new_stamp.")." 
+	    echo "See ':help atp-news' for changes!"
+	else
+	    echomsg "[ATP:] ".(l:return ? 'updated' : 'downgraded')." to release ".s:ATPversion
+	endif
+	if bufloaded(globpath(&rtp, "doc/automatic-tex-plugin.txt")) ||
+		    \ bufloaded(globpath(&rtp, "doc/bibtex_atp.txt"))
+	    echo "[ATP:] to reload the ATP help files (and see what's new!), close and reopen them."
+	endif
+endfunction 
+catch E127:
+endtry
+function! <SID>CompareStamps(new, old)
+    " newer stamp is smaller 
+    " vim sort() function puts smaller items first.
+    " new > old => -1
+    " new = old => 0
+    " new < old => 1
+    let new=substitute(a:new, '\.', '', 'g')
+    let old=substitute(a:old, '\.', '', 'g')
+    return ( new == old ? 0 : new > old ? -1 : 1 )
+endfunction
+function! <SID>CompareVersions(new, old)
+    " newer stamp is smaller 
+    " vim sort() function puts smaller items first.
+    " new > old => -1
+    " new = old => 0
+    " new < old => 1
+    let new=split(a:new, '\.')
+    let old=split(a:old, '\.')
+    let g:new=new
+    let g:old=old
+    let compare = []
+    for i in range(max([len(new), len(old)]))
+	let nr = (get(new,i,0) < get(old,i,0) ? 1 : ( get(new,i,0) == get(old,i,0) ? 0 : 2 ))
+	call add(compare, nr)
+    endfor
+    let comp = join(compare, "")
+    " comp =~ '^0*1' new is older version 
+    return ( comp == 0 ? 0 : ( comp =~ '^0*1' ? 1 : -1 ))
+
+"     return ( new == old ? 0 : new > old ? -1 : 1 )
+endfunction
+function! <SID>GetTimeStamp(file)
+python << END
+import vim, tarfile, re
+
+file_name	=vim.eval('a:file')
+tar_file	=tarfile.open(file_name, 'r:gz')
+def tex(name):
+    if re.search('ftplugin/tex_atp\.vim', str(name)):
+	return True
+    else:
+	return False
+member=filter(tex, tar_file.getmembers())[0]
+pfile=tar_file.extractfile(member)
+stamp=""
+for line in pfile.readlines():
+    if re.match('\s*"\s+Time\s+Stamp:\s+', line):
+	stamp=line
+	break
+try:
+    match=re.match('\s*"\s+Time\s+Stamp:\s+([0-9\-_]*)', stamp)
+    stamp=match.group(1)
+except AttributeError:
+    stamp="00-00-00_00-00"
+vim.command("let g:atp_stamp='"+stamp+"'")
+END
+endfunction
+function! <SID>Tar(file,path)
+python << END
+import tarfile, vim
+file_n=vim.eval("a:file")
+path=vim.eval("a:path")
+file_o=tarfile.open(file_n, "r:gz")
+file_o.extractall(path)
+END
+endfunction
+" function! Tar(file,path)
+" python << END
+" import tarfile, vim
+" file_n=vim.eval("a:file")
+" print(file_n)
+" path=vim.eval("a:path")
+" print(path)
+" file_o=tarfile.open(file_n, "r:gz")
+" file_o.extractall(path)
+" END
+" endfunction
+function! <SID>ATPversion()
+    " This function is used in opitons.vim
+    let saved_loclist = getloclist(0)
+    try
+	exe 'lvimgrep /\C^"\s*Time\s\+Stamp:/gj '. globpath(&rtp, "ftplugin/tex_atp.vim")
+	let stamp 	= get(getloclist(0),0, {'text' : '00-00-00_00-00'})['text']
+	let stamp	= matchstr(stamp, '^"\s*Time\s\+Stamp:\s*\zs\%(\d\|_\|-\)*\ze')
+    catch /E480:/
+	let stamp	= "(no stamp)"
+    endtry
+    try
+	exe 'lvimgrep /^\C\s*An\s\+Introduction\s\+to\s\+AUTOMATIC\s\+(La)TeX\s\+PLUGIN\s\+(ver\%(\.\|sion\)\=\s\+[0-9.]*)/gj '. globpath(&rtp, "doc/automatic-tex-plugin.txt")
+	let l:version = get(getloclist(0),0, {'text' : 'unknown'})['text']
+	let l:version = matchstr(l:version, '(ver\.\?\s\+\zs[0-9.]*\ze)')
+    catch /E480:/
+	let l:version = "(no version number)"
+    endtry
+    call setloclist(0, saved_loclist) 
+    redraw
+    let g:atp_version = l:version ." (".stamp.")" 
+    return "ATP version: ".l:version.", time stamp: ".stamp."."
+endfunction
+"}}}
+
+" Comment Lines
+function! Comment(arg) "{{{
+
+    " remember the column of the cursor
+    let col=col('.')
+     
+    if a:arg==1
+	call setline(line('.'),g:atp_CommentLeader . getline('.'))
+	let l:scol=l:col+len(g:atp_CommentLeader)-4
+	call cursor(line('.'),l:scol)
+    elseif a:arg==0 && getline('.') =~ '^\s*' . g:atp_CommentLeader
+	call setline(line('.'),substitute(getline('.'),g:atp_CommentLeader,'',''))
+	call cursor(line('.'),l:col-len(g:atp_CommentLeader))
+    endif
+
+endfunction "}}}
 endif "}}}
+
 
 " COMMANDS AND MAPS:
 " Maps: "{{{1
+map <buffer> <Plug>CommentLines					:call Comment(1)<CR>
+map <buffer> <Plug>UnCommentLines 				:call Comment(0)<CR>
 vmap <buffer> 	<Plug>WrapSelection				:<C-U>call <SID>WrapSelection('')<CR>i
 vmap <buffer> 	<Plug>InteligentWrapSelection			:<C-U>call <SID>InteligentWrapSelection('')<CR>i
 nnoremap <silent> <buffer> 	<Plug>ToggleStar		:call <SID>ToggleStar()<CR>
@@ -1888,12 +2176,13 @@ nnoremap <silent> <buffer> 	<Plug>ChangeEnv			:call <SID>ToggleEnvironment(1)<CR
 nnoremap <silent> <buffer> 	<Plug>TexDoc			:TexDoc 
 " Commands: "{{{1
 command! -buffer -nargs=* -complete=file Wdiff			:call <SID>Wdiff(<f-args>)
-command! -buffer -nargs=? -range WrapSelection			:call <SID>WrapSelection(<args>)
+command! -buffer -nargs=* -range WrapSelection			:call <SID>WrapSelection(<f-args>)
+command! -buffer -nargs=? -complete=customlist,EnvCompletion -range WrapEnvironment		:call <SID>WrapEnvironment(<f-args>)
 command! -buffer -nargs=? -range InteligentWrapSelection	:call <SID>InteligentWrapSelection(<args>)
 command! -buffer	TexAlign				:call TexAlign()
 command! -buffer 	ToggleStar   				:call <SID>ToggleStar()<CR>
 command! -buffer -nargs=? ToggleEnv	   			:call <SID>ToggleEnvironment(0, <f-args>)
-command! -buffer -nargs=* -complete=customlist,<SID>EnvCompletion ChangeEnv				:call <SID>ToggleEnvironment(1, <f-args>)
+command! -buffer -nargs=* -complete=customlist,EnvCompletion ChangeEnv				:call <SID>ToggleEnvironment(1, <f-args>)
 command! -buffer -nargs=* -complete=customlist,<SID>TeXdoc_complete TexDoc 	:call <SID>TexDoc(<f-args>)
 command! -buffer -bang 	Delete					:call <SID>Delete(<q-bang>)
 nmap <silent> <buffer>	 <Plug>Delete				:call <SID>Delete("")<CR>
@@ -1917,4 +2206,6 @@ command! -buffer ReloadATP					:call <SID>ReloadATP("!")
 command! -bang -buffer -nargs=1 AMSRef				:call AMSRef(<q-bang>, <q-args>)
 command! -buffer	Preambule				:call Preambule()
 command! -bang		WordCount				:call <SID>ShowWordCount(<q-bang>)
+command! -buffer -bang	UpadteATP				:call <SID>UpdateATP(<q-bang>)
+command! -buffer	ATPversion				:echo <SID>ATPversion()
 " vim:fdm=marker:tw=85:ff=unix:noet:ts=8:sw=4:fdc=1

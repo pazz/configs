@@ -6,26 +6,84 @@
 " Last Change:
 
 " Commands to library functions (autoload/atplib.vim)
+
+" <c-c> in insert mode doesn't trigger InsertLeave autocommands
+" this fixes this.
+if g:atp_MapCC
+    imap <buffer> <c-c> <c-[>
+endif
+
+if g:atp_MapUpdateToCLine
+    nmap <buffer> <silent> <C-F> <C-F>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <S-Down> <S-Down>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <PageDown> <PageDown>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> z+	z+:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <S-ScrollWheelUp> <S-ScrollWheelUp>:call UpdateToCLine()
+    nmap <buffer> <silent> <C-ScrollWheelUp> <C-ScrollWheelUp>:call UpdateToCLine()
+    nmap <buffer> <silent> <ScrollWheelUp> <ScrollWheelUp>:call UpdateToCLine()
+    nmap <buffer> <silent> <C-U> <C-U>:call UpdateToCLine()<CR>
+"     nmap <buffer> <silent> <C-E> <C-E>:call UpdateToCLine()<CR>
+
+    nmap <buffer> <silent> <C-B> <C-B>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <S-ScrollWheelDown> <S-ScrollWheelDown>:call UpdateToCLine()
+    nmap <buffer> <silent> <C-ScrollWheelDown> <C-ScrollWheelDown>:call UpdateToCLine()
+    nmap <buffer> <silent> <ScrollWheelDown> <ScrollWheelDown>:call UpdateToCLine()
+    nmap <buffer> <silent> <S-Up> <S-Up>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <PageUp> <PageUp>:call UpdateToCLine()<CR>
+    nmap <buffer> <silent> <C-D> <C-D>:call UpdateToCLine()<CR>
+"     nmap <buffer> <silent> <C-Y> <C-Y>:call YpdateToCLine()<CR>
+
+    nmap <buffer> <silent> gj	gj:call UpdateToCLine(1)<CR>
+    nmap <buffer> <silent> gk	gk:call UpdateToCLine(1)<CR>
+
+    if maparg('j', 'n') == ''
+	nmap <buffer> <silent> j	j:call UpdateToCLine(0)<CR>
+    elseif maparg('j', 'n') == 'gj'
+	nmap <buffer> <silent> j	gj:call UpdateToCLine(0)<CR>
+    endif
+
+    if maparg('k', 'n') == ''
+	nmap <buffer> <silent> k	k:call UpdateToCLine(1)<CR>
+    elseif maparg('j', 'n') == 'gj'
+	nmap <buffer> <silent> k	gk:call UpdateToCLine(1)<CR>
+    endif
+endif
+
+
 command! -buffer -bang -nargs=* FontSearch	:call atplib#FontSearch(<q-bang>, <f-args>)
 command! -buffer -bang -nargs=* FontPreview	:call atplib#FontPreview(<q-bang>,<f-args>)
 command! -buffer -nargs=1 -complete=customlist,atplib#Fd_completion OpenFdFile	:call atplib#OpenFdFile(<f-args>) 
 command! -buffer -nargs=* CloseLastEnvironment	:call atplib#CloseLastEnvironment(<f-args>)
 command! -buffer 	  CloseLastBracket	:call atplib#CloseLastBracket()
-let g:atp_map_list	= [ 
-	    \ [ g:atp_map_forward_motion_leader, 'i', 		':NInput<CR>', 			'nmap <buffer>' ],
-	    \ [ g:atp_map_backward_motion_leader, 'i', 		':NPnput<CR>', 			'nmap <buffer>' ],
-	    \ [ g:atp_map_forward_motion_leader, 'gf', 		':NInput<CR>', 			'nmap <buffer>' ],
-	    \ [ g:atp_map_backward_motion_leader, 'gf',		':NPnput<CR>', 			'nmap <buffer>' ],
-	    \ [ g:atp_map_forward_motion_leader, 'S', 		'<Plug>GotoNextSubSection',	'nmap <buffer>' ],
-	    \ [ g:atp_map_backward_motion_leader, 'S', 		'<Plug>vGotoNextSubSection', 	'nmap <buffer>' ],
-	    \ ] 
+" let g:atp_map_list	= [ 
+" 	    \ [ g:atp_map_forward_motion_leader, 'i', 		':NInput<CR>', 			'nmap <buffer>' ],
+" 	    \ [ g:atp_map_backward_motion_leader, 'i', 		':NPnput<CR>', 			'nmap <buffer>' ],
+" 	    \ [ g:atp_map_forward_motion_leader, 'gf', 		':NInput<CR>', 			'nmap <buffer>' ],
+" 	    \ [ g:atp_map_backward_motion_leader, 'gf',		':NPnput<CR>', 			'nmap <buffer>' ],
+" 	    \ [ g:atp_map_forward_motion_leader, 'S', 		'<Plug>GotoNextSubSection',	'nmap <buffer>' ],
+" 	    \ [ g:atp_map_backward_motion_leader, 'S', 		'<Plug>vGotoNextSubSection', 	'nmap <buffer>' ],
+" 	    \ ] 
 
+
+
+" MAPS:
 " Add maps, unless the user didn't want them.
 if ( !exists("g:no_plugin_maps") || exists("g:no_plugin_maps") && g:no_plugin_maps == 0 ) && 
 	    \ ( !exists("g:no_atp_maps") || exists("g:no_plugin_maps") && g:no_atp_maps == 0 ) 
 
+nmap <buffer> <silent>	Gs		:<C-U>keepjumps exe v:count1."Sec"<CR>
+nmap <buffer> <silent>	Gc		:<C-U>keepjumps exe v:count1."Chap"<CR>
+nmap <buffer> <silent>	Gp		:<C-U>keepjumps exe v:count1."Part"<CR>
+
+if g:atp_MapCommentLines    
+    nmap <buffer> <silent> <LocalLeader>c	<Plug>CommentLines
+    vmap <buffer> <silent> <LocalLeader>c	<Plug>CommentLines
+    nmap <buffer> <silent> <LocalLeader>u	<Plug>UnCommentLines
+    vmap <buffer> <silent> <LocalLeader>u	<Plug>UnCommentLines
+endif
+
 nmap <buffer> <silent> t 		<Plug>SyncTexKeyStroke
-nmap <buffer> <silent> <S-LeftMouse> 	<LeftMouse><Plug>SyncTexKeyStroke
+nmap <buffer> <silent> <S-LeftMouse> 	<LeftMouse><Plug>SyncTexMouse
 
 nmap <buffer> <silent> ]*	:SkipCommentForward<CR> 
 omap <buffer> <silent> ]*	:SkipCommentForward<CR> 
@@ -90,10 +148,6 @@ nmap <C-k> <Plug>TexJMotionBackward
 
     execute "map <buffer> ".g:atp_map_forward_motion_leader."e		<Plug>GotoNextEnvironment"
     execute "map <buffer> ".g:atp_map_backward_motion_leader."e		<Plug>GotoPreviousEnvironment"
-"     exe "map <buffer> ".g:atp_map_forward_motion_leader."  <Plug>GotoNextEnvironment"
-"     exe "map <buffer> ".g:atp_map_backward_motion_leader." <Plug>GotoPreviousEnvironment"
-"     map <buffer> ]m			<Plug>GotoNextInlineMath
-"     map <buffer> [m			<Plug>GotoPreviousInlineMath
     execute "map <buffer> ".g:atp_map_forward_motion_leader."m		<Plug>GotoNextMath"
     execute "map <buffer> ".g:atp_map_backward_motion_leader."m		<Plug>GotoPreviousMath"
     execute "map <buffer> ".g:atp_map_forward_motion_leader."M		<Plug>GotoNextDisplayedMath"
@@ -118,12 +172,12 @@ nmap <C-k> <Plug>TexJMotionBackward
 	" when this is set it also runs after the \l map: ?!?
 " 	nmap <silent> <buffer> <Tab>		:call atplib#TabCompletion(1,1)<CR>
 	nnoremap <silent> <buffer> <S-Tab>	:call atplib#TabCompletion(0,1)<CR> 
-	vnoremap <buffer> <silent> <F7> 	:WrapSelection '\{','}','begin'<CR>
+	vnoremap <buffer> <silent> <F7> 	:WrapSelection \{ } begin<CR>
     endif
 
     " Fonts:
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."f		:WrapSelection '{\\usefont{".g:atp_font_encoding."}{}{}{}\\selectfont ', '}', '".(len(g:atp_font_encoding)+11)."'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."mb		:WrapSelection '\\mbox{', '}', 'begin'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."f		:WrapSelection {\\usefont{".g:atp_font_encoding."}{}{}{}\\selectfont\\  } ".(len(g:atp_font_encoding)+11)."<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."mb	:WrapSelection \\mbox{ } begin<CR>"
 
 
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."te	:<C-U>InteligentWrapSelection ['\\textrm{'],['\\text{']<CR>"
@@ -137,47 +191,49 @@ nmap <C-k> <Plug>TexJMotionBackward
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."tt	:<C-U>InteligentWrapSelection ['\\texttt{'],['\\mathtt{']<CR>"
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."bf	:<C-U>InteligentWrapSelection ['\\textbf{'],['\\mathbf{']<CR>"
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."bb	:<C-U>InteligentWrapSelection ['\\textbf{'],['\\mathbb{']<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."sl	:<C-U>WrapSelection '\\textsl{'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."sc	:<C-U>WrapSelection '\\textsc{'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."up	:<C-U>WrapSelection '\\textup{'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."md	:<C-U>WrapSelection '\\textmd{'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."un	:<C-U>WrapSelection '\\underline{'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."ov	:<C-U>WrapSelection '\\overline{'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."sl	:<C-U>WrapSelection \\textsl{<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."sc	:<C-U>WrapSelection \\textsc{<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."up	:<C-U>WrapSelection \\textup{<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."md	:<C-U>WrapSelection \\textmd{<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."un	:<C-U>WrapSelection \\underline{<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."ov	:<C-U>WrapSelection \\overline{<CR>"
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."no	:<C-U>InteligentWrapSelection ['\\textnormal{'],['\\mathnormal{']<CR>"
     execute "vnoremap <buffer> ".g:atp_vmap_text_font_leader."cal	:<C-U>InteligentWrapSelection [''],['\\mathcal{']<CR>"
 
     " Environments:
-    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."C   :WrapSelection '"."\\"."begin{center}','"."\\"."end{center}','0','1'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."R   :WrapSelection '"."\\"."begin{flushright}','"."\\"."end{flushright}','0','1'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."L   :WrapSelection '"."\\"."begin{flushleft}','"."\\"."end{flushleft}','0','1'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."E   :WrapSelection '"."\\"."begin{equation=g:atp_StarMathEnvDefault<CR>}','"."\\"."end{equation=g:atp_StarMathEnvDefault<CR>}','0','1'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."A   :WrapSelection '"."\\"."begin{align=g:atp_StarMathEnvDefault<CR>}','"."\\"."end{align=g:atp_StarMathEnvDefault<CR>}','0','1'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."C   :WrapSelection \\begin{center} \\end{center} 0 1<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."R   :WrapSelection \\begin{flushright} \\end{flushright} 0 1<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."L   :WrapSelection \\begin{flushleft} \\end{flushleft} 0 1<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."E   :WrapSelection \\begin{equation=b:atp_StarMathEnvDefault<CR>} \\end{equation=b:atp_StarMathEnvDefault<CR>} 0 1<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_environment_leader."A   :WrapSelection \\begin{align=b:atp_StarMathEnvDefault<CR>} \\end{align=b:atp_StarMathEnvDefault<CR>} 0 1<CR>"
 
     " Math Modes:
-    vmap <buffer> m						:<C-U>WrapSelection '\(', '\)'<CR>
-    vmap <buffer> M						:<C-U>WrapSelection '\[', '\]'<CR>
+    vmap <buffer> m						:<C-U>WrapSelection \( \)<CR>
+    vmap <buffer> M						:<C-U>WrapSelection \[ \]<CR>
 
     " Brackets:
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."( 	:WrapSelection '(', ')', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."[ 	:WrapSelection '[', ']', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."\\{ 	:WrapSelection '\\{', '\\}', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."{ 	:WrapSelection '{', '}', 'begin'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."( 	:WrapSelection ( ) begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."[ 	:WrapSelection [ ] begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."\\{	:WrapSelection \\{ \\} begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."{ 	:WrapSelection { } begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."< 	:WrapSelection < > begin<CR>"
 "     execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."{	:<C-U>InteligentWrapSelection ['{', '}'],['\\{', '\\}']<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader.")	:WrapSelection '(', ')', 'end'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."]	:WrapSelection '[', ']', 'end'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."\\}	:WrapSelection '\\{', '\\}', 'end'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."}	:WrapSelection '{', '}', 'end'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader.")	:WrapSelection ( ) end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."]	:WrapSelection [ ] end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."\\}	:WrapSelection \\{ \\} end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."}	:WrapSelection { } end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_bracket_leader."> 	:WrapSelection < > end<CR>"
 
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."(	:WrapSelection '\\left(', '\\right)', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."[	:WrapSelection '\\left[', '\\right]', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."{	:WrapSelection '\\left\\{','\\right\\}', 'begin'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."(	:WrapSelection \\left( \\right) begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."[	:WrapSelection \\left[ \\right] begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."{	:WrapSelection \\left\\{ \\right\\} begin<CR>"
     " for compatibility:
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."\\{	:WrapSelection '\\left\\{','\\right\\}', 'begin'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader.")	:WrapSelection '\\left(', '\\right)', 'end'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."]	:WrapSelection '\\left[', '\\right]', 'end'<CR>"
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."}	:WrapSelection '\\left\\{', '\\right\\}', 'end'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."\\{	:WrapSelection \\left\\{ \\right\\} begin<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader.")	:WrapSelection \\left( \\right) end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."]	:WrapSelection \\left[ \\right] end<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."}	:WrapSelection \\left\\{ \\right\\} end<CR>"
     " for compatibility:
-    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."\\}	:WrapSelection '\\left\\{', '\\right\\}', 'end'<CR>"
+    execute "vnoremap <buffer> ".g:atp_vmap_big_bracket_leader."\\}	:WrapSelection \\left\\{ \\right\\} end<CR>"
 
     " Tex Align:
     nmap <Localleader>a	:TexAlign<CR>
@@ -224,14 +280,28 @@ nmap <C-k> <Plug>TexJMotionBackward
     vnoremap <silent><buffer> [% :<C-U>exe "normal! gv"<Bar>call search('\%(^\s*%.*\n\)\%(^\s*%\)\@!', "bW")<CR>
 
     " Select comment
-    vmap <silent><buffer> <LocalLeader>sc	<Plug>vSelectComment
+    vmap <silent><buffer> <LocalLeader>sc		<Plug>vSelectComment
+    nmap <silent><buffer> <LocalLeader>sc		v<Plug>vSelectComment
 
     " Normal mode maps (mostly)
-    nmap  <buffer> <LocalLeader>v		<Plug>ATP_ViewOutput
-    nmap  <buffer> <F2> 			<Plug>ToggleSpace
-    nmap  <buffer> <LocalLeader>s		<Plug>ToggleStar
-    " Todo: to doc:
-    nmap  <buffer> <LocalLeader>D		<Plug>ToggleDebugMode
+    if mapcheck('<LocalLeader>v') == ""
+	nmap  <buffer> <LocalLeader>v		<Plug>ATP_ViewOutput
+    endif
+"     nmap  <buffer> <F2> 			<Plug>ToggleSpace
+    nmap  <buffer> <F2> 			q/:call ATP_CmdwinToggleSpace('on')<CR>i
+    if mapcheck('Q/', 'n') == ""
+	nmap Q/					q/:call ATP_CmdwinToggleSpace('on')<CR>
+    endif
+    if mapcheck('Q?', 'n') == ""
+	nmap Q?					q?:call ATP_CmdwinToggleSpace('on')<CR>
+    endif
+    if mapcheck('<LocalLeader>s') == ""
+	nmap  <buffer> <LocalLeader>s		<Plug>ToggleStar
+    endif
+
+    nmap  <buffer> <LocalLeader><Localleader>d	<Plug>ToggledebugMode
+    nmap  <buffer> <LocalLeader><Localleader>D	<Plug>ToggleDebugMode
+    vmap  <buffer> <F4>				<Plug>WrapEnvironment
     nmap  <buffer> <F4>				<Plug>ChangeEnv
     nmap  <buffer> <S-F4>			<Plug>ToggleEnvForward
 "     nmap  <buffer> <S-F4>			<Plug>ToggleEnvBackward
@@ -246,7 +316,8 @@ nmap <C-k> <Plug>TexJMotionBackward
     nmap  <buffer> <LocalLeader>t		<Plug>ATP_TOC
     nmap  <buffer> <LocalLeader>L		<Plug>ATP_Labels
     nmap  <buffer> <LocalLeader>l 		<Plug>ATP_TeXCurrent
-    nmap  <buffer> <LocalLeader>d 		<Plug>ATP_TeXDebug
+    nmap  <buffer> <LocalLeader>d 		<Plug>ATP_TeXdebug
+    nmap  <buffer> <LocalLeader>D 		<Plug>ATP_TeXDebug
     "ToDo: imaps!
     nmap  <buffer> <F5> 			<Plug>ATP_TeXVerbose
     nmap  <buffer> <s-F5> 			<Plug>ToggleAuTeX
@@ -357,50 +428,50 @@ execute 'imap <buffer> '.g:atp_imap_third_leader.'b \begin{}<Left>'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'e \end{}<Left>'
 
 execute 'imap <buffer> '.g:atp_imap_third_leader.'c \begin{center}<CR>\end{center}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_fourth_leader.'c \begin{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'d \begin{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_fourth_leader.'c \begin{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'d \begin{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_fourth_leader.'u \begin{enumerate}'.g:atp_EnvOptions_enumerate.'<CR>\end{enumerate}<Esc>O\item'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'a \begin{align=(getline(".")[col(".")-2]=="*"?"":g:atp_StarMathEnvDefault)<CR>}<CR>\end{align=(getline(".")[col(".")-2]=="*"?"":g:atp_StarMathEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'a \begin{align=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<CR>\end{align=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'i \item'
 execute 'imap <buffer> '.g:atp_imap_fourth_leader.'i \begin{itemize}'.g:atp_EnvOptions_itemize.'<CR>\end{itemize}<Esc>O\item'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'l \begin{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'l \begin{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_fourth_leader.'p \begin{proof}<CR>\end{proof}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'p \begin{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'t \begin{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'p \begin{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'t \begin{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_fourth_leader.'t \begin{center}<CR>\begin{tikzpicture}<CR><CR>\end{tikzpicture}<CR>\end{center}<Up><Up>'
 
 	if g:atp_extra_env_maps == 1
-execute 'imap <buffer> '.g:atp_imap_third_leader.'r \begin{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'r \begin{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_fourth_leader.'l \begin{flushleft}<CR>\end{flushleft}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'r \begin{flushright}<CR>\end{flushright}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'f \begin{frame}<CR>\end{frame}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_fourth_leader.'q \begin{equation=(getline(".")[col(".")-2]=="*"?"":g:atp_StarMathEnvDefault)<CR>}<CR>\end{equation=(getline(".")[col(".")-2]=="*"?"":g:atp_StarMathEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'n \begin{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'o \begin{=g:atp_EnvNameObservation<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameObservation<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'x \begin{example=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{example=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_fourth_leader.'q \begin{equation=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<CR>\end{equation=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'n \begin{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'o \begin{=g:atp_EnvNameObservation<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameObservation<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'x \begin{example=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{example=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 	endif
     else
     " New mapping for the insert mode. 
 execute 'imap <buffer> '.g:atp_imap_third_leader.'b \begin{}<Left>'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'e \end{}<Left>'
 
-execute 'imap <buffer> '.g:atp_imap_third_leader.'t \begin{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'d \begin{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'P \begin{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'l \begin{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'r \begin{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'C \begin{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'t \begin{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameTheorem<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'d \begin{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameDefinition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'P \begin{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameProposition<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'l \begin{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameLemma<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'r \begin{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameRemark<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'C \begin{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameCorollary<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'p \begin{proof}<CR>\end{proof}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'x \begin{example=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{example=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'n \begin{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'x \begin{example=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{example=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'n \begin{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{=g:atp_EnvNameNote<CR>=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 
 execute 'imap <buffer> '.g:atp_imap_third_leader.'E \begin{enumerate}'.g:atp_EnvOptions_enumerate.'<CR>\end{enumerate}<Esc>O\item'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'I \begin{itemize}'.g:atp_EnvOptions_itemize.'<CR>\end{itemize}<Esc>O\item'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'i 	<Esc>:call InsertItem()<CR>a'
 
 
-execute 'imap <buffer> '.g:atp_imap_third_leader.'a \begin{align=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{align=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
-execute 'imap <buffer> '.g:atp_imap_third_leader.'q \begin{equation=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<CR>\end{equation=(getline(".")[col(".")-2]=="*"?"":g:atp_StarEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'a \begin{align=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<CR>\end{align=(getline(".")[col(".")-2]=="*"?"":b:atp_StarMathEnvDefault)<CR>}<Esc>O'
+execute 'imap <buffer> '.g:atp_imap_third_leader.'q \begin{equation=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<CR>\end{equation=(getline(".")[col(".")-2]=="*"?"":b:atp_StarEnvDefault)<CR>}<Esc>O'
 
 execute 'imap <buffer> '.g:atp_imap_third_leader.'c \begin{center}<CR>\end{center}<Esc>O'
 execute 'imap <buffer> '.g:atp_imap_third_leader.'L \begin{flushleft}<CR>\end{flushleft}<Esc>O'
