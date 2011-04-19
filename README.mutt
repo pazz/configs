@@ -12,3 +12,11 @@ Gmail:
 GPG:
   works out of the box, I set my ui preferences in ~/.mutt/rc/gpg
   and individually set pgp_sign_as per config
+
+notmuch mail indexing:
+
+  apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+  git clone git://notmuchmail.org/git/notmuch
+
+  then, for mutt integration:
+  http://git.upsilon.cc/r/utils/mutt-notmuch.git
