@@ -4,6 +4,7 @@ set timeout=15
 set quit=yes
 set print_command="muttprint %s"
 set include=yes
+set delete=yes
 
 set alias_file= ~/.mutt/aliases
 set sort_alias= alias
