@@ -299,31 +299,31 @@ baticon.image = image(beautiful.widget_bat_hi)
 battery = widget({ type = "textbox" }) --display battery state and charge
 vicious.register(battery, vicious.widgets.bat,
 function (widget, args)
-        if args[1] == "↯" or args[1] == "⌃" then
+        if args[1] == "↯" or args[1] == "+" then
 		baticon.image = image(beautiful.widget_bat_plug)
 		return fg(yellow,  args[2] .. args[1])
         elseif args[2] >= 70 and args [2] < 90 then
 		baticon.image = image(beautiful.widget_bat_4)
 		return fg(green,  args[2] .. args[1])
-	elseif args[2] >= 50 and args[2] < 70 then
+	elseif args[2] >= 60 and args[2] < 70 then
 		baticon.image = image(beautiful.widget_bat_3)
 		return fg(yellow, args[2] .. args[1])
-	elseif args[2] >= 30 and args[2] < 50 then
+	elseif args[2] >= 50 and args[2] < 60 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
-	elseif args[2] >= 10 and args[2] < 30 then
+	elseif args[2] >= 47 and args[2] < 50 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
-	elseif args[2] < 10 then
+	elseif args[2] < 47 then
 		baticon.image = image(beautiful.widget_bat_empty)
-		naughty.notify({ text = "Battery critical!", title = "Battery Critical", fg = beautiful.fg_urgent, bg = beautiful.bg_urgent })
+		naughty.notify({ text = "will die soon!", title = "Battery Critical", u='critical'})
 	else
 		baticon.image = image(beautiful.widget_bat_full)
 		return fg(green, args[2] .. args[1])
 	end
 
 end
-		, 61, "BAT1")
+		, 31, "BAT1")
 -- Audio Volume 
 sndicon = widget({ type = "imagebox" })
 volbar  = awful.widget.progressbar({layout = awful.widget.layout.horizontal.rightleft})
@@ -636,7 +636,9 @@ client.add_signal("unfocus", function(c) c.border_color = beautiful.border_norma
 
 naughty.config.presets.normal.timeout     = 15
 naughty.config.presets.critical.timeout     = 15
-naughty.config.presets.critical.bg     = beautiful.fg_urgent or '#535d6c'
+naughty.config.presets.critical.margin  = 4
+naughty.config.presets.critical.bg     = beautiful.bg_urgent
+naughty.config.presets.critical.fg     = beautiful.fg_urgent
 naughty.config.screen = screen.count()
 
 os.execute("export $(gnome-keyring-daemon -s)")
