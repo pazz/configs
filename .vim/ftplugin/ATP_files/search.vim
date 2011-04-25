@@ -289,7 +289,7 @@ endfunction
 
 function! <SID>SearchInTree(tree, branch, what)
     if g:atp_debugSIT
-	redir! >> /tmp/atp_debugSIT
+	exe "redir! > ".g:atp_TempDir."/SearchInTree.log"
 	silent! echo "___SEARCH_IN_TREE___"
 	silent! echo "a:branch=". a:branch
 	silent! echo "a:what=" . a:what
@@ -325,14 +325,12 @@ function! <SID>SearchInTree(tree, branch, what)
 	" The following variable is used as a return value in
 	" RecursiveSearch!
 	let g:ATP_branch	= branchArg
-" 	let g:ATP_branch_line	= a:tree[a:branch][0][a:what][1]
 	let g:ATP_branch_line	= get(branch, whatArg, get(branch, whatArgN, ['', 'ERROR']))[1]
 	if g:atp_debugSIT
 	    silent! echo "g:ATP_branch=" . g:ATP_branch . "   g:ATP_branch_line=" . g:ATP_branch_line
 	    redir END
 	endif
 	return branchArg
-" 	return a:branch
     else
 	for new_branch in keys(branch)
 	    call <SID>SearchInTree(branch, new_branch, whatArg)
@@ -341,7 +339,7 @@ function! <SID>SearchInTree(tree, branch, what)
     if g:atp_debugSIT
 	redir END
     endif
-    return "X"
+    return
 endfunction
 " }}}
 
@@ -418,9 +416,9 @@ function! <SID>RecursiveSearch(main_file, start_file, maketree, tree, cur_branch
 	    " Redirect debuggin messages:
 	    if g:atp_debugRS
 		if a:wrap_nr == 1 && a:call_nr == 1
-		    redir! > /tmp/ATP_rs_debug
+		    exe "redir! > ".g:atp_TempDir."/RecursiveSearch.log"
 		else
-		    redir! >> /tmp/ATP_rs_debug 
+		    exe "redir! >> ".g:atp_TempDir."/RecursiveSearch.log"
 		endif
 		silent echo "________________"
 		silent echo "Args: a:pattern:".a:pattern." call_nr:".a:call_nr. " wrap_nr:".a:wrap_nr . " cwd=" . getcwd()
@@ -824,7 +822,7 @@ function! <SID>RecursiveSearch(main_file, start_file, maketree, tree, cur_branch
 		return
 	    endif
 	    if g:atp_debugRS >= 2
-		redir! >> /tmp/ATP_rs_debug
+		exe "redir! >> ".g:atp_TempDir."/RecursiveSearch.log"
 		silent echo "TIME ***goto UP after open*** " . reltimestr(reltime(time0))
 	    endif
 " 	    call RestoreProjectVariables(projectScript)
@@ -1164,7 +1162,7 @@ function! BibSearch(bang,...)
     let @/			= pattern
 
     if g:atp_debugBS
-	redir! >> /tmp/ATP_log 
+	exe "redir! > ".g:atp_TempDir."/Bibsearch.log"
 	silent! echo "==========BibSearch=========================="
 	silent! echo "b:BibSearch_pattern=" . pattern
 	silent! echo "b:BibSearch bang="    . a:bang

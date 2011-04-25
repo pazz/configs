@@ -275,7 +275,6 @@ function! TreeOfFiles(main_file,...)
     " This prevents from long runs on package files
     " for example babel.sty has lots of input files.
     if expand("%:e") != 'tex'
-	redir END
 	return [ {}, [], {}, {} ]
     endif
     let run_nr		= a:0 >= 3	? a:3 : 1 
@@ -304,9 +303,9 @@ function! TreeOfFiles(main_file,...)
 
 	if g:atp_debugToF
 	    if run_nr == 1
-		redir! > /tmp/tof_log
+		exe "redir! > ".g:atp_TempDir."/TreeOfFiles.log"
 	    else
-		redir! >> /tmp/tof_log
+		exe "redir! >> ".g:atp_TempDir."/TreeOfFiles.log"
 	    endif
 	endif
 
@@ -482,9 +481,7 @@ function! TreeOfFiles(main_file,...)
 	exe "lcd " . fnameescape(cwd)
     endif
 
-    redir END
     if g:atp_debugToF && run_nr == 1
-	redir! >> /tmp/tof_log
 	silent! echo "========TreeOfFiles========================"
 	silent! echo "TreeOfFiles b:ListOfFiles=" . string(b:ListOfFiles)
 	redir END

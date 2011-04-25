@@ -544,6 +544,10 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 	let g:debugPC_bang	=a:bang
     endif
 
+    if !exists("t:atp_DebugMode")
+	let t:atp_DebugMode = g:atp_DefaultDebugMode
+    endif
+
     if t:atp_DebugMode != 'verbose' && a:verbose != 'verbose'
 	let b:atp_LastLatexPID = -1
     endif
@@ -672,7 +676,7 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
     endif
 
     if g:atp_debugCompiler
-	exe "redir! >> ".g:atp_Tempdir."/Compiler.log"
+	exe "redir! > ".g:atp_Tempdir."/Compiler.log"
 	silent echomsg "________ATP_COMPILER_LOG_________"
 	silent echomsg "changedtick=" . b:changedtick . " atp_changedtick=" . b:atp_changedtick
 	silent echomsg "a:bibtex=" . a:bibtex . " a:start=" . a:start . " a:runs=" . a:runs . " a:verbose=" . a:verbose . " a:command=" . a:command . " a:filename=" . a:filename . " a:bang=" . a:bang
@@ -686,6 +690,9 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
     	" IF b:atp_TexCompiler is not compatible with the viewer
 	" ToDo: (move this in a better place). (luatex can produce both pdf and dvi
 	" files according to options so this is not the right approach.) 
+	if !exists("t:atp_DebugMode")
+	    let t:atp_DebugMode = g:atp_DefaultDebugMode
+	endif
 	if t:atp_DebugMode !=? "silent" && b:atp_TexCompiler !~? "luatex" &&
 		    \ (b:atp_TexCompiler =~ "^\s*\%(pdf\|xetex\)" && b:atp_Viewer == "xdvi" ? 1 :  
 		    \ b:atp_TexCompiler !~ "^\s*pdf" && b:atp_TexCompiler !~ "xetex" &&  (b:atp_Viewer == "xpdf" || b:atp_Viewer == "epdfview" || b:atp_Viewer == "acroread" || b:atp_Viewer == "kpdf"))
@@ -1079,7 +1086,9 @@ function! <SID>TeX(runs, bang, ...)
 
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
 
-"     echomsg "TEX_1 CHANGEDTICK=" . b:changedtick . " " . b:atp_running
+    if !exists("t:atp_DebugMode")
+	let t:atp_DebugMode = g:atp_DefaultDebugMode
+    endif
 
     if a:0 >= 1
 	let mode = ( a:1 != 'default' ? a:1 : t:atp_DebugMode )
