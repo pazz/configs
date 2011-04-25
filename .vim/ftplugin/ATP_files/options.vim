@@ -11,7 +11,9 @@
 " Some options (functions) should be set once:
 let s:did_options 	= exists("s:did_options") ? 1 : 0
 
-let g:atp_reload	= 0
+if !exists("g:atp_reload")
+    let g:atp_reload	= 0
+endif
 "{{{ tab-local variables
 " We need to know bufnumber and bufname in a tabpage.
 " ToDo: we can set them with s: and call them using <SID> stack
@@ -169,6 +171,17 @@ if maparg("K", "n") != ""
 	nunmap K
     endtry
 endif
+
+exe "setlocal complete+=".
+	    \ "k".globpath(&rtp, "ftplugin/ATP_files/dictionaries/greek").
+	    \ ",k".globpath(&rtp, "ftplugin/ATP_files/dictionaries/dictionary").
+	    \ ",k".globpath(&rtp, "ftplugin/ATP_files/dictionaries/SIunits")
+" The ams_dictionary is added after g:atp_amsmath variable is defined.
+
+setlocal suffixes+=pdf
+" As a base we use the standard value defined in 
+" The suffixes option is also set after g:atp_tex_extensions is set.
+
 " Borrowed from tex.vim written by Benji Fisher:
     " Set 'comments' to format dashed lists in comments
     setlocal com=sO:%\ -,mO:%\ \ ,eO:%%,:%
@@ -190,9 +203,9 @@ endif
 	    \ . '\|DeclareFixedFont\s*{\s*'
     let g:filetype = &l:filetype
     if &l:filetype != "plaintex"
-	setlocal include=\\\\input\\(\\s*{\\)\\=\\\\|\\\\include\\s*{
+	setlocal include=^[^%]*\\%(\\\\input\\(\\s*{\\)\\=\\\\|\\\\include\\s*{\\)
     else
-	setlocal include=\\\\input
+	setlocal include=^[^%]*\\\\input
     endif
     setlocal suffixesadd=.tex
 
@@ -224,8 +237,9 @@ let s:optionsDict= {
 		\ "atp_XpdfServer" 		: fnamemodify(b:atp_MainFile,":t:r"), 
 		\ "atp_okularOptions"		: "--unique",
 		\ "atp_OutDir" 			: substitute(fnameescape(fnamemodify(resolve(expand("%:p")),":h")) . "/", '\\\s', ' ' , 'g'),
-		\ "atp_TmpDir"			: substitute(b:atp_OutDir . "/.tmp", '\/\/', '\/', 'g'),
+		\ "atp_TempDir"			: substitute(b:atp_OutDir . "/.tmp", '\/\/', '\/', 'g'),
 		\ "atp_TexCompiler" 		: &filetype == "plaintex" ? "pdftex" : "pdflatex",	
+		\ "atp_BibCompiler"		: ( getline(atplib#SearchPackage('biblatex')) =~ '\<backend\s*=\s*biber\>' ? 'biber' : "bibtex" ),
 		\ "atp_auruns"			: "1",
 		\ "atp_TruncateStatusSection"	: "40", 
 		\ "atp_LastBibPattern"		: "",
@@ -233,12 +247,15 @@ let s:optionsDict= {
 		\ "atp_StarEnvDefault"		: "",
 		\ "atp_StarMathEnvDefault"	: "",
 		\ "atp_LatexPIDs"		: [],
+		\ "atp_BibtexPIDs"		: [],
+		\ "atp_MakeindexPIDs"		: [],
 		\ "atp_LastLatexPID"		: 0,
 		\ "atp_VerboseLatexInteractionMode" : "errorstopmode",
 		\ "atp_BibtexReturnCode"	: 0,
 		\ "atp_ProgressBar"		: {},
 		\ "atp_BibtexOutput"		: ""}
 
+" 		\ "atp_BibCompiler"		: ( getline(atplib#SearchPackage('biblatex')) =~ '\<backend\s*=\s*biber\>' ? 'biber' : "bibtex" ),
 " 		\ "atp_TexCompilerVariable"	: "",
 " 			\.";TEXINPUT="
 " 			\.($TEXINPUTS == "" ? b:atp_OutDir : b:atp_OutDir.":".$TEXINPUTS)
@@ -255,6 +272,7 @@ let s:ask = { "ask" : "0" }
 function! s:SetOptions()
 
     let s:optionsKeys		= keys(s:optionsDict)
+    let g:optionsKeys		= copy(s:optionsKeys)
     let s:optionsinuseDict	= getbufvar(bufname("%"),"")
 
     "for each key in s:optionsKeys set the corresponding variable to its default
@@ -298,6 +316,9 @@ call s:SetOptions()
 
 " Global Variables: (almost all)
 " {{{ global variables 
+if !exists("g:atp_MapSelectComment")
+    let g:atp_MapSelectComment = "_c"
+endif
 if exists("g:atp_latexpackages")
     " Transition to nicer name:
     let g:atp_LatexPackages = g:atp_latexpackages
@@ -312,7 +333,10 @@ if !exists("g:atp_Python")
     " This might be a name of python executable or full path to it (if it is not in
     " the $PATH) 
     if has("win32") || has("win64")
-	let g:atp_Python = "python.exe"
+	" TO BE TESTED:
+	" see why to use "pythonw.exe" on:
+	" "http://docs.python.org/using/windows.html".
+	let g:atp_Python = "pythonw.exe"
     else
 	let g:atp_Python = "python"
     endif
@@ -338,9 +362,7 @@ endif
 if !exists("g:atp_DefaultErrorFormat") || g:atp_reload
     let g:atp_DefaultErrorFormat = "erc"
 endif
-unlockvar g:atp_ErrorFormat
-let g:atp_ErrorFormat = g:atp_DefaultErrorFormat
-lockvar g:atp_ErrorFormat
+let b:atp_ErrorFormat = g:atp_DefaultErrorFormat
 if !exists("g:atp_DefiSearchMaxWindowHeight") || g:atp_reload
     let g:atp_DefiSearchMaxWindowHeight=15
 endif
@@ -662,28 +684,37 @@ endif
 if !exists("g:atp_autex_check_if_closed") || g:atp_reload
     let g:atp_autex_check_if_closed = 1
 endif
-if ( !exists("g:rmcommand") || g:atp_reload ) && executable("perltrash")
-    let g:rmcommand="perltrash"
-elseif !exists("g:rmcommand") || g:atp_reload   
-    let g:rmcommand		= "rm"
-endif
 if !exists("g:atp_env_maps_old") || g:atp_reload
     let g:atp_env_maps_old	= 0
 endif
 if !exists("g:atp_amsmath") || g:atp_reload
     let g:atp_amsmath=atplib#SearchPackage('ams')
 endif
+if atplib#SearchPackage('amsmath') || g:atp_amsmath != 0 || atplib#DocumentClass(b:atp_MainFile) =~ '^ams'
+    exe "setlocal complete+=k".globpath(&rtp, "ftplugin/ATP_files/dictionaries/ams_dictionary")
+endif
 if !exists("g:atp_no_math_command_completion") || g:atp_reload
     let g:atp_no_math_command_completion = 0
 endif
 if !exists("g:atp_tex_extensions") || g:atp_reload
-    let g:atp_tex_extensions	= ["tex.project.vim", "aux", "log", "bbl", "blg", "spl", "snm", "nav", "thm", "brf", "out", "toc", "mpx", "idx", "ind", "ilg", "maf", "glo", "mtc[0-9]", "mtc1[0-9]", "pdfsync", "synctex.gz" ]
+    let g:atp_tex_extensions	= ["tex.project.vim", "aux", "log", "bbl", "blg", "bcf", "run.xml", "spl", "snm", "nav", "thm", "brf", "out", "toc", "mpx", "idx", "ind", "ilg", "maf", "glo", "mtc[0-9]", "mtc1[0-9]", "pdfsync", "synctex.gz" ]
 endif
+for ext in g:atp_tex_extensions
+    let suffixes = split(&suffixes, ",")
+    if index(suffixes, ".".ext) == -1
+	exe "setlocal suffixes+=.".ext
+    endif
+endfor
 if !exists("g:atp_delete_output") || g:atp_reload
     let g:atp_delete_output	= 0
 endif
 if !exists("g:keep") || g:atp_reload
-    let g:keep=[ "log", "aux", "toc", "bbl", "ind", "pdfsync", "synctex.gz" ]
+    let g:keep=[ "log", "aux", "toc", "bbl", "ind", "pdfsync", "synctex.gz", "blg" ]
+    " biber stuff is added before compelation, this makes it possible to change 
+    " to biber on the fly
+    if b:atp_BibCompiler =~ '^\s*biber\>'
+	let g:keep += [ "run.xml", "bcf" ]
+    endif
 endif
 if !exists("g:atp_ssh") || g:atp_reload
     " WINDOWS NOT COMPATIBLE
@@ -782,7 +813,9 @@ if !exists("g:atp_ProjectLocalVariables") || g:atp_reload
 		\ "b:atp_MainFile", 	"g:atp_mapNn", 		"b:atp_autex", 
 		\ "b:atp_TexCompiler", 	"b:atp_TexFlavor", 	"b:atp_OutDir" , 
 		\ "b:atp_auruns", 	"b:atp_ReloadOnErr", 	"b:atp_OpenViewer", 
-		\ "b:atp_XpdfServer",	"b:atp_ProjectDir", 	"b:atp_Viewer"
+		\ "b:atp_XpdfServer",	"b:atp_ProjectDir", 	"b:atp_Viewer",
+		\ "b:TreeOfFiles",	"b:ListOfFiles", 	"b:TypeDict",
+		\ "b:LevelDict", 	"b:atp_BibCompiler"
 		\ ] 
 endif
 " the variable a:1 is the name of the variable which stores the list of variables to
@@ -799,9 +832,15 @@ function! SaveProjectVariables(...)
 endfunction
 function! RestoreProjectVariables(variables_Dict)
     for var in keys(a:variables_Dict)
- 	let g:cmd =  "let " . var . "=" . string(a:variables_Dict[var])
-" 	echo g:cmd
-	exe "let " . var . "=" . string(a:variables_Dict[var])
+ 	let cmd =  "let " . var . "=" . string(a:variables_Dict[var])
+	try
+	    exe cmd
+	catch E741:
+	    "if the variable was locked
+	    exe "unlockvar ".var
+	    exe cmd
+	    exe "lockvar ".var 
+	endtry
     endfor
 endfunction
 " }}}1
@@ -1182,7 +1221,7 @@ function! ATP_ToggleDebugMode(mode,...)
     if a:mode != ""
 	let set_new 		= 1
 	let new_debugmode 	= ( t:atp_DebugMode ==# a:mode ? g:atp_DefaultDebugMode : a:mode )
-	let copen 		= ( a:mode =~# '^D\%[ebug]' && t:atp_DebugMode !=# 'Debug' && !t:atp_QuickFixOpen )
+	let copen 		= ( a:mode =~? '^d\%[ebug]' && t:atp_DebugMode !=? 'debug' && !t:atp_QuickFixOpen )
 	let on 			= ( a:mode !=# t:atp_DebugMode )
 	if t:atp_DebugMode ==# 'Debug' && a:mode ==# 'debug' || t:atp_DebugMode ==# 'debug' && a:mode ==# 'Debug'
 	    let change_menu 	= 0
@@ -1282,7 +1321,9 @@ function! ATP_ToggleDebugMode(mode,...)
 	endif
 	let winnr = bufwinnr("%")
 	if copen
+	    let efm=b:atp_ErrorFormat
 	    silent copen
+	    exe "ErrorFormat ".efm
 	    silent! cg
 	    exe winnr . " wincmd w"
 	endif
@@ -1362,6 +1403,7 @@ catch /E741:/
 endtry
 
 if !exists("g:atp_completion_modes_normal_mode") || g:atp_reload
+    unlockvar g:atp_completion_modes_normal_mode
     let g:atp_completion_modes_normal_mode=[ 
 		\ 'close environments' , 'brackets', 'algorithmic' ]
     lockvar g:atp_completion_modes_normal_mode
@@ -1878,7 +1920,10 @@ endfunction
 
     augroup ATP_deltmpdir
 	au!
-	au VimLeave *.tex :call <SID>Rmdir(b:atp_TmpDir)
+	" Remove b:atp_TempDir (where compelation is done).
+	au VimLeave *.tex :call <SID>Rmdir(b:atp_TempDir)
+	" Remove TempDir for debug files.
+	au VimLeave *.tex :call <SID>RmTempDir()
     augroup END
 
     augroup ATP_updatetime
@@ -2261,6 +2306,7 @@ endfunction
 "}}}1
 
 " Python test if libraries are present
+" {{{
 function! <SID>TestPythonLibs()
 python << END
 import vim
@@ -2301,4 +2347,49 @@ if g:atp_Compiler == "python"
 	call <SID>TestPythonLibs()
     endif
 endif
+" }}}
+
+"Make g:atp_TempDir, where log files are stored.
+"{{{
+function! <SID>TempDir() 
+    " Return temporary directory, unique for each user.
+if has("python") && executable(g:atp_Python)
+function! ATP_SetTempDir(tmp)
+    let g:atp_TempDir=a:tmp
+endfunction
+python << END
+import tempfile, os
+USER=os.getenv("USER")
+tmp=tempfile.mkdtemp(suffix="", prefix="ATP_"+USER+"_")
+vim.eval("ATP_SetTempDir('"+tmp+"')")
+END
+delfunction ATP_SetTempDir
+else
+    let g:atp_TempDir=substitute(tempname(), '\d\+$', "ATP_debug", '')
+    call mkdir(g:atp_TempDir, "p", 0700)
+endif
+endfunction
+call <SID>TempDir()
+"}}}
+
+" Remove g:atp_TempDir tree where log files are stored.
+" {{{
+function! <SID>RmTempDir()
+if has("python") && executable(g:atp_Python)
+python << END
+import shutil
+temp=vim.eval("g:atp_TempDir")
+print(temp)
+shutil.rmtree(temp)
+END
+elseif has("unix") && has("macunix")
+    call system("rm -rf ".shellescape(g:atp_TempDir))
+else
+    echohl ErrorMsg
+    echomsg "[ATP:] Leaving temporary directory ".g:atp_TempDir
+    echohl Normal
+endif
+endfunction "}}}
+
 " vim:fdm=marker:tw=85:ff=unix:noet:ts=8:sw=4:fdc=1
+
