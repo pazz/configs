@@ -3,7 +3,7 @@
 " Note:	       This file is a part of Automatic Tex Plugin for Vim.
 " URL:	       https://launchpad.net/automatictexplugin
 " Language:    tex
-" Last Change: Sun Apr 24 02:00  2011 W
+" Last Change: Mon Apr 25 09:00  2011 W
 
 let s:sourced 	= exists("s:sourced") ? 1 : 0
 
@@ -992,7 +992,7 @@ function! s:OpenLog()
 		" readable file name.
 		let [ startline, startcol ] = searchpairpos('(', '', ')', 'bW') 
 		if g:atp_debugST
-		    redir! >> /tmp/SyncTex_log
+		    exe "redir! > ".g:atp_TempDir."/SyncTex.log"
 		    let g:startline = startline
 		    silent! echomsg " [ startline, startcol ] " . string([ startline, startcol ])
 		endif
@@ -1872,6 +1872,9 @@ function! <SID>UpdateATP(bang)
     "DONE: check if the current version is newer than the available one
     "		if not do not download and install (this saves time).
 
+	if g:atp_debugUpdateATP
+	    exe "redir! > ".g:atp_TempDir."/UpdateATP.log"
+	endif
 	let s:ext = "tar.gz"
 	if a:bang == "!"
 	    echo "[ATP:] getting list of available snapshots ..."
@@ -1886,25 +1889,36 @@ function! <SID>UpdateATP(bang)
 	    let url = "http://sourceforge.net/projects/atp-vim/files/releases/"
 	endif
 	let url_tempname=tempname()."_ATP.html"
-" 	let g:url_tempname=url_tempname
 	let cmd=g:atp_Python." ".s:URLquery_path." ".shellescape(url)." ".shellescape(url_tempname)
-" 	let g:cmd=cmd
+	if g:atp_debugUpdateATP
+	    let g:cmd=cmd
+	    silent echo "url_tempname=".url_tempname
+	    silent echo "cmd=".cmd
+	endif
 	call system(cmd)
 
 	let saved_loclist = getloclist(0)
 	exe 'lvimgrep /\C<a\s\+href=".*AutomaticTexPlugin_\d\+\%(\.\d\+\)*\.'.escape(s:ext, '.').'/jg '.url_tempname
 	call delete(url_tempname)
 	let list = map(getloclist(0), 'v:val["text"]')
-" 	let g:list = copy(list)
+	if g:atp_debugUpdateATP
+	    silent echo "list=".string(list)
+	endif
 	if a:bang == "!"
 	    call filter(list, 'v:val =~ ''\.tar\.gz\.\d\+-\d\+-\d\+_\d\+-\d\+''')
 	endif
 	call map(list, 'matchstr(v:val, ''<a\s\+href="\zshttp[^"]*download\ze"'')')
 	call setloclist(0,saved_loclist)
 	call filter(list, "v:val != ''")
-" 	let g:atp_versionlist = list
+	if g:atp_debugUpdateATP
+	    silent echo "atp_versionlist=".string(list)
+	endif
+
 	if !len(list)
 	    echoerr "No snapshot is available." 
+	    if g:atp_debugUpdateATP
+		redir END
+	    endif
 	    return
 	endif
 	let dict = {}
@@ -1924,14 +1938,19 @@ function! <SID>UpdateATP(bang)
 	else
 	    let sorted_list = sort(keys(dict), "<SID>CompareVersions")
 	endif
-	let g:atp_debugUD_sorted_list = sorted_list
-	let g:atp_debugUD_dict = dict
+	if g:atp_debugUpdateATP
+	    silent echo "dict=".string(dict)
+	    silent echo "sorted_list=".string(sorted_list)
+	endif
 	"NOTE: this list might contain one item two times (I'm not filtering well the
 	" html sourcefore web page, but this is faster)
 
 	let dir = fnamemodify(globpath(&rtp, "ftplugin/tex_atp.vim"), ":h:h")
 	if dir == ""
 	    echoerr "[ATP:] Cannot find local .vim directory."
+	    if g:atp_debugUpdateATP
+		redir END
+	    endif
 	    return
 	endif
 
@@ -1956,41 +1975,41 @@ function! <SID>UpdateATP(bang)
 		let old_stamp="0.0"
 	    endtry
 	endif
-	let g:atp_debugUD_old_stamp = old_stamp
-
-	" a:bang == ""
-	    " Get latest snapshot, get time stamp from the tar.gz file, compare time
-	    " stamps
-	" a:bang == "!"
-	"   " latest snaphot time stamp is sorted_list[0]
+	if g:atp_debugUpdateATP
+	    silent echo "old_stamp=".old_stamp
+	endif
 
 	function! <SID>GetLatestSnapshot(bang,url)
 	    " Get latest snapshot/version
 	    let url = a:url
-" 	    let s:ext = "tar.gz"
-	    " 	let g:url = url
 
 	    let s:ATPversion = matchstr(url, 'AutomaticTexPlugin_\zs\d\+\%(\.\d\+\)*\ze\.'.escape(s:ext, '.'))
-	    let g:atp_debugUD_version = s:ATPversion
 	    if a:bang == "!"
 		let ATPdate = matchstr(url, 'AutomaticTexPlugin_\d\+\%(\.\d\+\)*.'.escape(s:ext, '.').'.\zs[0-9-_]*\ze')
 	    else
 		let ATPdate = ""
 	    endif
 	    let s:atp_tempname = tempname()."_ATP.tar.gz"
-	    let g:atp_debugUD_tempname = s:atp_tempname
+	    if g:atp_debugUpdateATP
+		silent echo "tempname=".s:atp_tempname
+	    endif
 	    let cmd=g:atp_Python." ".s:URLquery_path." ".shellescape(url)." ".shellescape(s:atp_tempname)
+	    let g:get_cmd=cmd
 	    if a:bang == "!"
 		echo "[ATP:] getting latest snapshot (unstable version) ..."
 	    else
 		echo "[ATP:] getting latest stable version ..."
 	    endif
-	    let g:atp_debugUD_cmd_get = cmd
+	    if g:atp_debugUpdateATP
+		silent echo "cmd=".cmd
+	    endif
 	    call system(cmd)
 	endfunction
 
 	let new_stamp = sorted_list[0]
-	let g:atp_debugUD_new_stamp = new_stamp
+	if g:atp_debugUpdateATP
+	    silent echo "new_stamp=".new_stamp
+	endif
 	 
 	"Compare stamps:
 	" stamp format day-month-year_hour-minute
@@ -2005,6 +2024,9 @@ function! <SID>UpdateATP(bang)
 	    if  compare == 1 || compare == 0
 		redraw
 		echomsg "You have the latest UNSTABLE version of ATP."
+		if g:atp_debugUpdateATP
+		    redir END
+		endif
 		return
 	    endif
 	else
@@ -2015,12 +2037,18 @@ function! <SID>UpdateATP(bang)
 		if l:return
 		    call delete(s:atp_tempname)
 		    redraw
+		    if g:atp_debugUpdateATP
+			redir END
+		    endif
 		    return
 		endif
 	    elseif compare == 0
 		redraw
 		echomsg "You have the latest STABLE version of ATP."
 		call delete(s:atp_tempname)
+		if g:atp_debugUpdateATP
+		    redir END
+		endif
 		return
 	    endif
 	endif

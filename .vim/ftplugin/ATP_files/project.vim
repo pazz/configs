@@ -101,7 +101,7 @@ if !s:sourced || g:atp_reload_functions "{{{
 function! <SID>LoadScript(bang, project_script, type, load_variables, ...) "{{{
 
     if g:atp_debugProject
-	redir! >> /tmp/ATP_ProjectScriptDebug.vim
+	exe "redir! > ".g:atp_TempDir."/LoadScript.log"
 	let hist_time	= reltime()
 	echomsg "\n"
 	echomsg "ATP_ProjectScript: LoadScript " . a:type . " file " . string(a:project_script)
@@ -277,7 +277,7 @@ endfunction "}}}
 function! <SID>LoadProjectScript(bang,...)
 
     if ( exists("g:atp_ProjectScript") && !g:atp_ProjectScript || exists("b:atp_ProjectScript") && ( !b:atp_ProjectScript && (!exists("g:atp_ProjectScript") || exists("g:atp_ProjectScript") && !g:atp_ProjectScript )) )
-	redir! >> /tmp/ATP_rs_debug 
+	exe "redir! > ".g:atp_TempDir."/LoadProjectScript.log"
 	silent echo "+++ SCIPING : LOAD PROJECT SCRIPT +++"
 	redir END
 	return
@@ -384,7 +384,7 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 
     if g:atp_debugProject
 	echomsg "\n"
-	redir! >> /tmp/ATP_ProjectScriptDebug.vim
+	exe "redir! > ".g:atp_TempDir."/WriteProjectScript.log"
 	echomsg "ATP_ProjectScript: WriteProjectScript " . a:type
 	let time = reltime()
     endif

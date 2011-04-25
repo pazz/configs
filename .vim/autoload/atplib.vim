@@ -136,7 +136,7 @@ function! atplib#CallBack(mode,...)
     let BIBTEX = ( BIBTEX == "True" || BIBTEX == 1 ? 1 : 0 )
     if g:atp_debugCB
 	" WINDOWS NOT COMPATIBLE:
-	redir! > /tmp/atp_callback
+	exe "redir! > " . g:atp_Temp."/CallBack.log"
 " 	silent echo "BIBTEX =".BIBTEX
     endif
 
@@ -496,7 +496,7 @@ endfunction
 " 		vim --servername VIM
 " and use servername VIM in the Command above.		
 function! atplib#ServerListOfFiles()
-    redir! > /tmp/atp_ServerListOfFiles.debug
+    exe "redir! > " . g:atp_Temp."/ServerListOfFiles.log"
     let file_list = []
     for nr in range(1, bufnr('$')-1)
 	let files 	= getbufvar(nr, "ListOfFiles")
@@ -517,7 +517,7 @@ function! atplib#FindAndOpen(file, line, ...)
     let col		= ( a:0 >= 1 ? a:1 : 1 )
     let file		= ( fnamemodify(a:file, ":e") == "tex" ? a:file : fnamemodify(a:file, ":p:r") . ".tex" )
     let server_list	= split(serverlist(), "\n")
-    redir! > /tmp/atp_FindAndOpen.debug
+    exe "redir! >".g:atp_TempDir."/FindAndOpen.log"
     echo "server list=".string(server_list)
     if len(server_list) == 0
 	return 1
@@ -1050,7 +1050,7 @@ function! atplib#searchbib(pattern, ...)
     let pattern_b.='\)\s*='
 
     if g:atp_debugBS
-	redir! >> /tmp/ATP_log 
+	exe "redir! >>".g:atp_TempDir."/BibSearch.log"
 	silent! echo "==========atplib#searchbib==================="
 	silent! echo "atplib#searchbib_bibfiles=" . string(s:bibfiles)
 	silent! echo "a:pattern=" . a:pattern
@@ -1058,7 +1058,6 @@ function! atplib#searchbib(pattern, ...)
 	silent! echo "pattern_b=" . pattern_b
 	silent! echo "bang=" . bang
 	silent! echo "flat=" . flat
-	redir END
     endif
 
     unlet bibentry
@@ -1086,9 +1085,7 @@ function! atplib#searchbib(pattern, ...)
     endfor
 
     if g:atp_debugBS
-	redir! >> /tmp/ATP_log
 	silent! echo "values(l:bibdict) len(l:bibdict[v:val]) = " . string(map(deepcopy(l:bibdict), "len(v:val)"))
-	redir END
     endif
 
     if a:pattern != ""
@@ -1115,10 +1112,8 @@ function! atplib#searchbib(pattern, ...)
 		if line_without_ligatures =~? a:pattern
 
 		    if g:atp_debugBS
-			redir! >> /tmp/ATP_log 
 			silent! echo "line_without_ligatures that matches " . line_without_ligatures
 			silent! echo "____________________________________"
-			redir END
 		    endif
 
 		    let l:true=1
@@ -1127,9 +1122,7 @@ function! atplib#searchbib(pattern, ...)
 			let l:tnr=l:nr-l:t
 
 			    if g:atp_debugBS
-				redir! >> /tmp/ATP_log 
 				silent! echo " l:tnr=" . string(l:tnr) . " l:bibdict[". string(l:f) . "][" . string(l:tnr-1) . "]=" . string(l:bibdict[l:f][l:tnr-1])
-				redir END
 			    endif
 
 			" go back until the line will match pattern (which
@@ -1147,9 +1140,7 @@ function! atplib#searchbib(pattern, ...)
 	    endfor
 
 	    if g:atp_debugBS
-		redir! >> /tmp/ATP_log 
 		silent! echo "A l:list=" . string(l:list)
-		redir END
 	    endif
 
     " CLEAR THE l:list FROM ENTRIES WHICH APPEAR TWICE OR MORE --> l:clist
@@ -1170,17 +1161,13 @@ function! atplib#searchbib(pattern, ...)
 " 	    call sort(filter(l:list, "count(l:list, v:val) == 1"), "atplib#CompareNumbers")
 
 	    if g:atp_debugBS
-		redir! >> /tmp/ATP_log 
 		silent! echo "B l:list=" . string(l:list)
-		redir END
 	    endif
 
 	    let b:bibentryline=extend(b:bibentryline,{ l:f : l:list })
 
 	    if g:atp_debugBS
-		redir! >> /tmp/ATP_log 
 		silent! echo "atplib#bibsearch b:bibentryline= (pattern != '') " . string(b:bibentryline)
-		redir END
 	    endif
 
 	endfor
@@ -1247,9 +1234,7 @@ function! atplib#searchbib(pattern, ...)
 	let g:bibresults=l:bibresults
 
 	if g:atp_debugBS
-	    redir! >> /tmp/ATP_log 
 	    silent! echo "atplib#searchbib_bibresults A =" . l:bibresults
-	    redir END
 	endif
 
 	return l:bibresults
@@ -1348,7 +1333,6 @@ function! atplib#searchbib(pattern, ...)
     let g:bibresults=l:bibresults
 
     if g:atp_debugBS
-	redir! >> /tmp/ATP_log 
 	silent! echo "atplib#searchbib_bibresults A =" . string(l:bibresults)
 	redir END
     endif
@@ -1430,14 +1414,14 @@ function! atplib#showresults(bibresults, flags, pattern)
     if len(a:bibresults) == count(a:bibresults, {})
 	echo "BibSearch: no bib fields matched."
 	if g:atp_debugBS
-	    redir! >> /tmp/ATP_log 
+	    exe "redir! >> ".g:atp_TempDir."/BibSeach.log"
 	    silent! echo "==========atplib#showresults================="
 	    silent! echo "atplib#showresults return A - no bib fields matched. "
 	    redir END
 	endif
 	return 0
     elseif g:atp_debugBS
-	    redir! >> /tmp/ATP_log 
+	    exe "redir! >> ".g:atp_TempDir."/BibSearch.log"
 	    silent! echo "==========atplib#showresults================="
 	    silent! echo "atplib#showresults return B - found something. "
 	    redir END
@@ -2413,7 +2397,9 @@ function! atplib#CloseLastEnvironment(...)
     let l:bpos_env	= a:0 >= 4 ? a:4 : [0, 0]
 
     if g:atp_debugCLE
+	exe "redir! > " . g:atp_TempDir."/CloseLastEnvironment.log"
 	let g:args 	= l:com . " " . l:close . " " . l:env_name . " " . string(l:bpos_env)
+	silent echo "args=".g:args
 	let g:com	= l:com
 	let g:close 	= l:close
 	let g:env_name	= l:env_name
@@ -2456,6 +2442,8 @@ function! atplib#CloseLastEnvironment(...)
 	if g:atp_debugCLE
 	    let g:synstackCLE	= deepcopy(synstack)
 	    let g:openCLE	= getline(".")[col(".")-1] . getline(".")[col(".")]
+	    silent echo "synstack=".string(synstack)
+	    silent echo "g:openCLE=".string(g:openCLE)
 	endif
 	let bound_1		= getline(".")[col(".")-1] . getline(".")[col(".")] =~ '^\\\%((\|)\)$'
 	let math_1		= (index(synstack, 'texMathZoneV') != -1 && !bound_1 ? 1  : 0 )   
@@ -2514,6 +2502,10 @@ function! atplib#CloseLastEnvironment(...)
 		let g:math_{i} = math_{i}
 		call add(g:math, math_{i})
 	    endfor
+	    silent echo "g:begin_line=".g:begin_line
+	    silent echo "g:bound=".string(g:bound)
+	    silent echo "g:math=".string(g:math)
+	    silent echo "math_mode=".( exists("math_mode") ? math_mode : "None" )
 	endif
     elseif ( l:close == "0" || l:close == "math" )
 	let string = getline(l:bpos_env[0])[l:bpos_env[1]-2] . getline(l:bpos_env[0])[l:bpos_env[1]-1] . getline(l:bpos_env[0])[l:bpos_env[1]]
@@ -2547,6 +2539,7 @@ function! atplib#CloseLastEnvironment(...)
 	if g:atp_debugCLE
 	    if exists("math_mode")
 		let g:math_mode  	= math_mode
+		silent echo "math_mode=".math_mode
 	    endif
 	    let g:math 	= []
 	    let g:string = string
@@ -2555,10 +2548,21 @@ function! atplib#CloseLastEnvironment(...)
 		let g:math_{i} = math_{i}
 		call add(g:math, math_{i})
 	    endfor
+	    silent echo "g:begin_line".g:begin_line
+	    silent echo "g:math=".string(g:math)
 	endif
 	if exists("math_mode")
 	    let l:begin_line 	= l:bpos_env[0]
+	    if g:atp_debugCLE
+		silent echo "math_mode=".math_mode
+		silent echo "l:begin_line=".l:begin_line
+		redir END
+	    endif
 	else
+	    if g:atp_debugCLE
+		silent echo "Given coordinates are closed."
+		redir END
+	    endif
 	    return " Given coordinates are closed."
 	endif
     endif
@@ -2577,11 +2581,16 @@ if a:0 <= 1
 endif
 if g:atp_debugCLE
     let g:close = l:close
+    silent echo "g:close=".string(l:close)
 endif
 let l:env=l:env_name
 "}}}2
 
 if l:close == "0" || l:close == 'math' && !exists("begin_line")
+    if g:atp_debugCLE
+	silent echo "there was nothing to close"
+	redir END
+    endif
     return "there was nothing to close"
 endif
 if ( &filetype != "plaintex" && b:atp_TexFlavor != "plaintex" && exists("math_4") && math_4 )
@@ -2589,9 +2598,17 @@ if ( &filetype != "plaintex" && b:atp_TexFlavor != "plaintex" && exists("math_4"
     echomsg "[ATP:] $$:$$ in LaTeX are deprecated (this breaks some LaTeX packages)" 
     echomsg "       You can set b:atp_TexFlavor = 'plaintex', and ATP will ignore this. "
     echohl Normal
+    if g:atp_debugCLE
+	silent echo "return A"
+	redir END
+    endif
     return 
 endif
 if l:env_name =~ '^\s*document\s*$'
+    if g:atp_debugCLE
+	silent echo "return B"
+	redir END
+    endif
     return ""
 endif
 let l:cline	= getline(".")
@@ -2604,6 +2621,7 @@ endif
 
     if g:atp_debugCLE
 	let g:line = exists("l:line") ? l:line : 0
+	silent echo "g:line=".g:line
     endif
 
 " Copy the indentation of what we are closing.
@@ -2712,6 +2730,10 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			
 		if getline(l:line_nr) =~ '\%(%.*\)\@<!\%(\\def\|\%(re\)\?newcommand\)' && l:line_nr != line(".")
 " 		    let b:cle_return="def"
+		    if g:atp_debugCLE
+			silent echo "return C"
+			redir END
+		    endif
 		    return
 		endif
 
@@ -2763,6 +2785,10 @@ let l:eindent=atplib#CopyIndentation(l:line)
 		    " Do not append empty lines (l:str is empty if all l:uenv
 		    " belongs to the g:atp_no_complete list.
 		    if len(l:str) == 0
+			if g:atp_debugCLE
+			    silent echo "return D"
+			    redir END
+			endif
 			return 0
 		    endif
 		    let l:eindent=atplib#CopyIndentation(getline(l:line_nr))
@@ -2843,9 +2869,17 @@ let l:eindent=atplib#CopyIndentation(l:line)
 				call setpos(".",[0,l:pos_saved[1]+1,len(l:eindent.l:str)+1,0])
 			    endif
 			endif 
+			if g:atp_debugCLE
+			    silent echo "return E"
+			    redir END
+			endif
 			return 1
 		    endif
 		else
+		    if g:atp_debugCLE
+			silent echo "return F"
+			redir END
+		    endif
 		    return "this is too hard?"
 		endif
 		unlet! l:env_names
@@ -2943,6 +2977,10 @@ let l:eindent=atplib#CopyIndentation(l:line)
 	    endif
 	endif "}}3
     endif
+    if g:atp_debugCLE
+	silent echo "return G"
+	redir END
+    endif
     "}}}2
 endfunction
 " imap <F7> <Esc>:call atplib#CloseLastEnvironment()<CR>
@@ -3008,6 +3046,11 @@ function! atplib#CheckBracket(bracket_dict)
     let [ s:open_line, s:open_col, s:opening_bracket ] 	= [ open_line, open_col, bracket_list[open_bracket_nr] ]
     if g:atp_debugCLB
 	let [ g:open_lineCB, g:open_colCB, g:opening_bracketCB ] = [ open_line, open_col, bracket_list[open_bracket_nr] ]
+	silent echo "return:"
+	silent echo "open_line=".open_line
+	silent echo "open_col=".open_col
+	silent echo "opening_bracketCB=".g:opening_bracketCB
+	redir END
     endif
     return [ open_line, open_col, bracket_list[open_bracket_nr] ]
 endfunction
@@ -3043,8 +3086,11 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
     let pattern_o	= '\%('.join(map(keys(a:bracket_dict),'escape(v:val,"\\[]")'),'\|').'\)'
 
     if g:atp_debugCLB
+	exe "redir! > ".g:atp_TempDir."/CloseLastBracket.log"
 	let g:pattern_b	= pattern_b
 	let g:pattern_o	= pattern_o
+	silent echo "pattern_b=".pattern_b
+	silent echo "pattern_o=".pattern_o
     endif
 
     let limit_line	= max([1,(line(".")-g:atp_completion_limits[1])])
@@ -3074,6 +3120,8 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
    if g:atp_debugCLB
        let g:open_line	= open_line
        let g:open_col	= open_col 
+       silent echo "open_line=".open_line
+       silent echo "open_col=".open_col
    endif
 
     "}}}3
@@ -3082,7 +3130,8 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
    if getline(open_line)[open_col-3] . getline(open_line)[open_col-2] . getline(open_line)[open_col-1] =~ '\\\@<!\\\%((\|\[\)$'
        call atplib#CloseLastEnvironment('i', 'math', '', [ open_line, open_col ])
        if g:atp_debugCLB
-	   let b:atp_debugCLB = "call atplib#CloseLastEnvironment('i', 'math', '', [ open_line, open_col ])"
+	   let b:atp_debugCLB = "call atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
+	   silent echo "calling atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
        endif
        return
    endif
@@ -3095,6 +3144,8 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	if g:atp_debugCLB
 	    let g:bline = bline
 	    let g:eline = eline
+	    silent echo "bline=".bline
+	    silent echo "eline=".eline
 	endif
 
 	let opening_size=matchstr(bline,'\zs'.pattern_b.'\ze\s*$')
@@ -3113,6 +3164,9 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 		let g:bbline		= bbline
 		let g:opening_size2	= opening_size2
 		let g:closing_size2	= closing_size2
+		silent echo "bbline=".bbline
+		silent echo "opening_size2=".opening_size2
+		silent echo "closing_size2=".closing_size2
 	    endif
 	endif
 
@@ -3121,12 +3175,19 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	" DEBUG:
 	if g:atp_debugCLB
 	    let g:o_bra		= opening_bracket
+	    silen echo "opening_bracket=".opening_bracket
 	    let g:o_size	= opening_size
+	    silen echo "opening_size=".opening_size
 	    let g:bline		= bline
+	    silent echo "bline=".bline
 	    let g:line		= line
+	    silent echo "line=".line
 	    let g:eline		= eline
+	    silent echo "eline=".eline
 	    let g:opening_size	= opening_size
+	    silent echo "opening_size=".opening_size
 	    let g:closing_size	= closing_size
+	    silent echo "closing_size=".closing_size
 	endif
 
 	let cline=getline(line("."))

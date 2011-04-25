@@ -43,6 +43,10 @@ endif
 
 " ATP Debug Variables: (to debug atp behaviour)
 " {{{ debug variables
+if !exists("g:atp_debugUpdateATP")
+    " debug UpdateATP (various.vim)
+    let g:atp_debugUpdateATP = 0
+endif
 if !exists("g:atp_debugPythonCompiler")
     " debug MakeLatex (compiler.vim)
     let g:atp_debugPythonCompiler = 0
@@ -316,20 +320,20 @@ call s:SetOptions()
 
 " Global Variables: (almost all)
 " {{{ global variables 
-if !exists("g:atp_MapSelectComment")
+if !exists("g:atp_MapSelectComment") || g:atp_reload
     let g:atp_MapSelectComment = "_c"
 endif
-if exists("g:atp_latexpackages")
+if exists("g:atp_latexpackages") || g:atp_reload
     " Transition to nicer name:
     let g:atp_LatexPackages = g:atp_latexpackages
     unlet g:atp_latexpackages
 endif
-if exists("g:atp_latexclasses")
+if exists("g:atp_latexclasses") || g:atp_reload
     " Transition to nicer name:
     let g:atp_LatexClasses = g:atp_latexclasses
     unlet g:atp_latexclasses
 endif
-if !exists("g:atp_Python")
+if !exists("g:atp_Python") || g:atp_reload
     " This might be a name of python executable or full path to it (if it is not in
     " the $PATH) 
     if has("win32") || has("win64")
@@ -341,7 +345,7 @@ if !exists("g:atp_Python")
 	let g:atp_Python = "python"
     endif
 endif
-if !exists("g:atp_MapUpdateToCLine")
+if !exists("g:atp_MapUpdateToCLine") || g:atp_reload
     let g:atp_MapUpdateToCLine = 1
 endif
 if !exists("g:atp_DeleteWithBang") || g:atp_reload
@@ -2369,7 +2373,9 @@ else
     call mkdir(g:atp_TempDir, "p", 0700)
 endif
 endfunction
-call <SID>TempDir()
+if g:atp_reload == 0
+    call <SID>TempDir()
+endif
 "}}}
 
 " Remove g:atp_TempDir tree where log files are stored.
