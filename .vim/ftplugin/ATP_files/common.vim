@@ -279,11 +279,28 @@ function! TreeOfFiles(main_file,...)
 	return [ {}, [], {}, {} ]
     endif
     let run_nr		= a:0 >= 3	? a:3 : 1 
+    let biblatex	= 0
 
-    let pattern		= a:0 >= 1 	? a:1 : g:atp_inputfile_pattern
-    if run_nr == 1 && '\subfile{' !~ g:atp_inputfile_pattern && atplib#SearchPackage('subfiles')
-	let g:atp_inputfile_pattern = '^[^%]*\\\(input\s*{\=\|include\s*{\|bibliography\s*{\|subfile\s*{\)'
+    " Adjust g:atp_inputfile_pattern if it is not set right 
+    if run_nr == 1 
+	let pattern = '^[^%]*\\\(input\s*{\=\|include\s*{'
+	if '\subfile{' !~ g:atp_inputfile_pattern && atplib#SearchPackage('subfiles')
+	    let pattern .= '\|subfiles\s*{'
+	endif
+	let biblatex = atplib#SearchPackage('biblatex')
+	if biblatex
+	    " If biblatex is present, search for bibliography files only in the
+	    " preambule.
+	    if '\addbibresource' =~ g:atp_inputfile_pattern || '\addglobalbib' =~ g:atp_inputfile_pattern || '\addsectionbib' =~ g:atp_inputfile_pattern || '\bibliography' =~ g:atp_inputfile_pattern
+		echo "[ATP:] You might remove biblatex patterns from g:atp_inputfile_pattern if you use biblatex package."
+	    endif
+	    let biblatex_pattern = '^[^%]*\\\%(bibliography\s*{\|addbibresource\s*\%(\[[^]]*\]\)\?\s*{\|addglobalbib\s*\%(\[[^]]*\]\)\?\s*{\|addsectionbib\s*\%(\[[^]]*\]\)\?\s*{\)'
+	else
+	    let pattern .= '\|bibliography\s*{'
+	endif
+	let pattern .= '\)'
     endif
+    let pattern		= a:0 >= 1 	? a:1 : g:atp_inputfile_pattern
 
 	if g:atp_debugToF
 	    if run_nr == 1
@@ -316,18 +333,27 @@ function! TreeOfFiles(main_file,...)
 	catch /E480:/
 	endtry
 	let end_preamb	= get(get(getloclist(0), 0, {}), 'lnum', 0)
+	call setloclist(0,[])
+	if biblatex
+	    try
+		silent execute 'lvimgrep /'.biblatex_pattern.'\%<'.end_preamb.'l/j ' . fnameescape(a:main_file)
+	    catch /E480:/
+	    endtry
+	endif
     else
 	let end_preamb	= 0
+	call setloclist(0,[])
     endif
 
     try
-	silent execute "lvimgrep /".pattern."/jg " . fnameescape(a:main_file)
+	silent execute "lvimgrepadd /".pattern."/jg " . fnameescape(a:main_file)
     catch /E480:/
-    catch /E683:/ 
+"     catch /E683:/ 
 " 	let g:pattern = pattern
 " 	let g:filename = fnameescape(a:main_file)
     endtry
     let loclist	= getloclist(0)
+    let g:loclist1 = loclist
     call setloclist(0, saved_llist)
     let lines	= map(loclist, "[ v:val['text'], v:val['lnum'], v:val['col'] ]")
 
@@ -340,6 +366,9 @@ function! TreeOfFiles(main_file,...)
 	    let [ line, lnum, cnum ] = entry
 	    " input name (iname) as appeared in the source file
 	    let iname	= substitute(matchstr(line, pattern . '\(''\|"\)\=\zs\f\%(\f\|\s\)*\ze\1\='), '\s*$', '', '') 
+	    if iname == ""  
+		let iname	= substitute(matchstr(line, biblatex_pattern . '\(''\|"\)\=\zs\f\%(\f\|\s\)*\ze\1\='), '\s*$', '', '') 
+	    endif
 	    if g:atp_debugToF
 		silent echo run_nr . ") iname=".iname
 	    endif
@@ -366,10 +395,10 @@ function! TreeOfFiles(main_file,...)
 	    endif
 
 	    " type: preambule,bib,input.
-	    if lnum < end_preamb && run_nr == 1
-		let type	= "preambule"
-	    elseif strpart(line, cnum-1)  =~ '^\s*\\bibliography'
+	    if strpart(line, cnum-1)  =~ '^\s*\(\\bibliography\>\|\\addglobalbib\>\|\\addsectionbib\>\|\\addbibresource\>\)'
 		let type	= "bib"
+	    elseif lnum < end_preamb && run_nr == 1
+		let type	= "preambule"
 	    else
 		let type	= "input"
 	    endif
@@ -556,21 +585,21 @@ endfunction
 
 " There is a copy of this variable in compiler.vim
 
-function! LatexRunning()
-python << EOL
-import psutil, vim
-if vim.eval("exists('b:atp_LastLatexPID')"):
-	lpid = int(vim.eval("exists('b:atp_LastLatexPID') ? b:atp_LastLatexPID : -1"))
-	if lpid != -1:
-                try:
-			name=psutil.Process(lpid).name
-                except psutil.NoSuchProcess:
-			lpid=0
-	vim.command(":let b:atp_LastLatexPID="+str(lpid))
-else:
-	vim.command(":let b:atp_LastLatexPID=0")
-EOL
-endfunction
+" function! LatexRunning()
+" python << EOL
+" import psutil, vim
+" if vim.eval("exists('b:atp_LastLatexPID')"):
+" 	lpid = int(vim.eval("exists('b:atp_LastLatexPID') ? b:atp_LastLatexPID : -1"))
+" 	if lpid != -1:
+"                 try:
+" 			name=psutil.Process(lpid).name
+"                 except psutil.NoSuchProcess:
+" 			lpid=0
+" 	vim.command(":let b:atp_LastLatexPID="+str(lpid))
+" else:
+" 	vim.command(":let b:atp_LastLatexPID=0")
+" EOL
+" endfunction
 
 function! ATPRunning() "{{{
 
@@ -582,11 +611,20 @@ function! ATPRunning() "{{{
     if g:atp_Compiler == "python" 
         " For python compiler
 	" This is very fast:
-	call LatexRunning()
+" 	call LatexRunning()
+	call atplib#PIDsRunning("b:atp_LatexPIDs")
+	call atplib#PIDsRunning("b:atp_BibtexPIDs")
+" 	call atplib#PIDsRunning("b:atp_MakeindexPIDs")
 " 	let atp_running= ( b:atp_LastLatexPID != 0 ? 1 : 0 ) * len(b:atp_LatexPIDs) 
-	let atp_running= len(b:atp_LatexPIDs) 
+	if exists("b:atp_LatexPIDs")
+	    let atp_running= len(b:atp_LatexPIDs) 
+	elseif exists("b:atp_BibtexPIDs")
+	    let atp_running= len(b:atp_BibtexPIDs)
+	else
+	    return ''
+	endif
 	" This is slower (so the status line is updated leter)
-" 	call atplib#LatexRunning()
+" 	call atplib#PIDsRunning("b:atp_LatexPIDs")
 " 	let atp_running= len(b:atp_LatexPIDs)
 " 	let atp_running= ( b:atp_LastLatexPID != 0 ? 1 : 0 ) * len(b:atp_LatexPIDs)
     else
@@ -594,29 +632,26 @@ function! ATPRunning() "{{{
 	let atp_running=b:atp_running
     endif
 
-    let g:atp_running = atp_running
 
-    if exists("b:atp_running") && exists("g:atp_callback") && atp_running && g:atp_callback
-" 	let b:atp_running	= b:atp_running < 0 ? 0 : b:atp_running
-" 	redrawstatus
+    if exists("g:atp_callback") && g:atp_callback
+	if exists("b:atp_LatexPIDs") && len(b:atp_LatexPIDs)>0  
 
-	for cmd in keys(g:CompilerMsg_Dict) 
-	    if b:atp_TexCompiler =~ '^\s*' . cmd . '\s*$'
-		let Compiler = g:CompilerMsg_Dict[cmd]
-		break
+	    for cmd in keys(g:CompilerMsg_Dict) 
+		if b:atp_TexCompiler =~ '^\s*' . cmd . '\s*$'
+		    let Compiler = g:CompilerMsg_Dict[cmd]
+		    break
+		else
+		    let Compiler = b:atp_TexCompiler
+		endif
+	    endfor
+
+	    if exists("b:atp_ProgressBar") && b:atp_ProgressBar != {}
+		let max = max(values(b:atp_ProgressBar))
+		let progress_bar="[".max."]".( g:atp_statusOutDir ? " " : "" )
 	    else
-		let Compiler = b:atp_TexCompiler
+		let progress_bar=""
 	    endif
-	endfor
 
-	if exists("b:atp_ProgressBar") && b:atp_ProgressBar != {}
-	    let max = max(values(b:atp_ProgressBar))
-	    let progress_bar="[".max."]".( g:atp_statusOutDir ? " " : "" )
-	else
-	    let progress_bar=""
-	endif
-
-" 	if atp_running
 	    if atp_running >= 2
 		return atp_running." ".Compiler." ".progress_bar
 	    elseif atp_running >= 1
@@ -624,9 +659,13 @@ function! ATPRunning() "{{{
 	    else
 		return ""
 	    endif
-" 	endif
+	elseif exists("b:atp_BibtexPIDs") && len(b:atp_BibtexPIDs)>0
+	    return b:atp_BibCompiler
+	elseif exists("b:atp_MakeindexPIDs") && len(b:atp_MakeindexPIDs)>0
+	    return "makeindex"
+	endif
     endif
-    return ''
+    return ""
 endfunction "}}}
 
 " {{{ Syntax and Hilighting
@@ -736,6 +775,7 @@ function! ATPStatus(bang) "{{{
 
     let g:atp_StatusLine= '%<%f '.status_KeyMap.'%(%h%m%r%) %='.status_CTOC." ".status_NotifHi.status_Notif.status_NotifHiPost.'%{g:status_OutDir} %-14.16(%l,%c%V%)%P'
     set statusline=%!g:atp_StatusLine
+
 endfunction
 
     try
@@ -758,15 +798,21 @@ call SetProjectName()
 " and shouldn't use \zs:\ze. 
 if !exists("g:atp_inputfile_pattern") || g:atp_reload
     if &filetype == 'plaintex'
-	let g:atp_inputfile_pattern = '^[^%]*\\input\s*'
+	let g:atp_inputfile_pattern = '^[^%]*\\input\>\s*'
     else
 	if atplib#SearchPackage("subfiles")
-	    let g:atp_inputfile_pattern = '^[^%]*\\\(input\s*{\=\|include\s*{\|bibliography\s*{\|subfile\s*{\)'
+	    let g:atp_inputfile_pattern = '^[^%]*\\\(input\s*{\=\|include\s*{\|subfile\s*{'
 	else
-	    let g:atp_inputfile_pattern = '^[^%]*\\\(input\s*{\=\|include\s*{\|bibliography\s*{\)'
+	    let g:atp_inputfile_pattern = '^[^%]*\\\(input\s*{\=\|include\s*{'
+	endif
+	if atplib#SearchPackage("biblatex")
+	    let g:atp_inputfile_pattern .= '\)'
+	else
+	    let g:atp_inputfile_pattern .= '\|bibliography\s*{\)'
 	endif
     endif
 endif
+
 
 call s:SetOutDir(0, 1)
 if expand("%:e") == "tex"

@@ -205,7 +205,7 @@ function! atplib#CallBack(mode,...)
 	endif
 
 	cclose
-	call add(msg_list,["[ATP:] ".b:atp_TexCompiler." returned without errors (atp_ErrorFormat=".g:atp_ErrorFormat.")".(g:atp_DefaultDebugMode=='silent'&&atp_DebugMode!='silent'?"\ngoing out of debuging mode.": "."), "Normal", "after"]) 
+	call add(msg_list,["[ATP:] ".b:atp_TexCompiler." returned without errors [b:atp_ErrorFormat=".b:atp_ErrorFormat."]".(g:atp_DefaultDebugMode=='silent'&&atp_DebugMode!='silent'?"\ngoing out of debuging mode.": "."), "Normal", "after"]) 
 	let showed_message 	= 1
 	let t:atp_DebugMode 	= g:atp_DefaultDebugMode
 	if g:atp_DefaultDebugMode == "silent" && t:atp_QuickFixOpen
@@ -326,29 +326,44 @@ endfunction "}}}
 "Store LatexPIDs in a variable
 function! atplib#LatexPID(pid)
     call add(b:atp_LatexPIDs, a:pid)
-    call atplib#LatexRunning()
+"     call atplib#PIDsRunning("b:atp_BitexPIDs")
     let b:atp_LastLatexPID =a:pid
 endfunction "}}}
-"{{{ LatexRunning
-function! atplib#LatexRunning()
+"{{{ BibtexPID
+"Store BibtexPIDs in a variable
+function! atplib#BibtexPID(pid)
+    call add(b:atp_BibtexPIDs, a:pid)
+"     call atplib#PIDsRunning("b:atp_BibtexPIDs")
+endfunction "}}}
+"{{{ MakeindexPID
+"Store MakeindexPIDs in a variable
+function! atplib#MakeindexPID(pid)
+    call add(b:atp_MakeindexPIDs, a:pid)
+    let b:atp_LastMakeindexPID =a:pid
+endfunction "}}}
+"{{{ PIDsRunning
+function! atplib#PIDsRunning(var)
+" a:var is a string, and might be one of 'b:atp_LatexPIDs', 'b:atp_BibtexPIDs' or
+" 'b:atp_MakeindexPIDs'
 python << EOL
 import psutil, re, sys, vim
-pids = vim.eval("b:atp_LatexPIDs")
+var  = vim.eval("a:var")
+pids = vim.eval(var)
 if len(pids) > 0:
     ps_list=psutil.get_pid_list()
     rmpids=[]
     for lp in pids:
 	run=False
 	for p in ps_list:
-	    if str(lp) == str(p):
+            if str(lp) == str(p):
 		run=True
 		break
 	if not run:
-	    rmpids.append(lp)
+            rmpids.append(lp)
     rmpids.sort()
     rmpids.reverse()
     for pid in rmpids:
-	vim.eval("filter(b:atp_LatexPIDs, 'v:val !~ \""+str(pid)+"\"')")
+	vim.eval("filter("+var+", 'v:val !~ \""+str(pid)+"\"')")
 EOL
 endfunction "}}}
 "{{{ ProgressBar
@@ -363,6 +378,16 @@ function! atplib#ProgressBar(value,pid)
     redrawstatus
 "     redraw
 "     echomsg a:value
+endfunction "}}}
+"{{{ redrawstatus
+function! atplib#redrawstatus()
+    redrawstatus
+endfunction "}}}
+"{{{ echo
+function! atplib#Echo(msg,cmd,hlgroup)
+    exe "echohl ".a:hlgroup
+    exe a:cmd." '".a:msg."'"
+    echohl Normal
 endfunction "}}}
 " }}}
 
@@ -1641,7 +1666,7 @@ function! atplib#showresults(bibresults, flags, pattern)
 endfunction
 "}}}
 "}}}
-" URL query: (by some strange reason this is not working moved to URLquery.py)
+" URL query: (by some strange reason this is not working moved to url_query.py)
 " function! atplib#URLquery(url) "{{{
 " python << EOF
 " import urllib2, tempfile, vim
@@ -2021,9 +2046,6 @@ function! atplib#SearchPackage(name,...)
 
     if getbufvar("%", "atp_MainFile") == ""
 	call SetProjectName()
-	let g:PName = 0 . " " . atp_MainFile
-    else
-	let g:PName = 1 . " " . atp_MainFile
     endif
 
 "     let time	= reltime()
@@ -2067,7 +2089,6 @@ function! atplib#SearchPackage(name,...)
 	    keepjumps let ret = search('^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW', stop_line)
 	    keepjump call setpos(".",saved_pos)
 
-" 	    echo reltimestr(reltime(time))
 	    exe "lcd " . fnameescape(cwd)
 	    return ret
 
@@ -2077,7 +2098,6 @@ function! atplib#SearchPackage(name,...)
 	    keepjumps let ret = search('^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW')
 	    keepjump call setpos(".", saved_pos)
 
-" 	    echo reltimestr(reltime(time))
 	    exe "lcd " . fnameescape(cwd)
 	    return ret
 
@@ -2092,7 +2112,6 @@ function! atplib#SearchPackage(name,...)
 		silent! call remove(s:Preambule, stop_line+1, -1)
 	    endif
 	endif
-	let g:preambule = s:Preambule
 	let lnum = 1
 	for line in s:Preambule
 	    if line =~ '^[^%]*\\'.com."\s*{[^}]*".a:name

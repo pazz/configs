@@ -230,6 +230,9 @@ function! s:buflist()
     " this names are used in TOC and passed to s:maketoc, which
     " makes a dictionary whose keys are the values of name defined
     " just below:
+    if !exists("t:buflist")
+	let t:buflist = []
+    endif
     let name=resolve(fnamemodify(bufname("%"),":p"))
     " add an entry to the list t:buflist if it is not there.
     if bufname("") =~ ".tex" && index(t:buflist,name) == -1
@@ -1312,9 +1315,12 @@ function! GotoFile(bang,file,...)
 	" So that bib, cls, sty files will have their file type (bib/plaintex).
 	let filetype	= &l:filetype
 	let old_file	= expand("%:p")
-	let atp_LastLatexPID 	= ( exists("b:atp_LastLatexPID") ? b:atp_LastLatexPID : 0 )
-	let atp_LatexPIDs	= ( exists("b:atp_LatexPIDs") 	? b:atp_LatexPIDs : [] )
-	let atp_ProgressBar	= ( exists("b:atp_ProgressBar") ? b:atp_ProgressBar : {} )
+	let atp_ErrorFormat	= b:atp_ErrorFormat
+	let atp_LastLatexPID 	= ( exists("b:atp_LastLatexPID") 	? b:atp_LastLatexPID 	: 0 )
+	let atp_LatexPIDs	= ( exists("b:atp_LatexPIDs") 		? b:atp_LatexPIDs 	: [] )
+	let atp_BibtexPIDs	= ( exists("b:atp_BibtexPIDs") 		? b:atp_BibtexPIDs 	: [] )
+	let atp_MakeindexPIDs	= ( exists("b:atp_MakeindexPIDs") 	? b:atp_MakeindexPIDs 	: [] )
+	let atp_ProgressBar	= ( exists("b:atp_ProgressBar") 	? b:atp_ProgressBar 	: {} )
 	execute "edit " . fnameescape(file)
 	if &l:filetype =~ 'tex$' && file =~ '\.tex$' && &l:filetype != filetype  
 	    let &l:filetype	= filetype
@@ -1329,11 +1335,16 @@ function! GotoFile(bang,file,...)
 	" Set the main file variable and pass the TreeOfFiles variables to the new
 	" buffer.
 	call RestoreProjectVariables(projectVarDict)
+	if exists("b:atp_ErrorFormat")
+	    unlockvar b:atp_ErrorFormat
+	endif
+	let b:atp_ErrorFormat	= atp_ErrorFormat
 	let [ b:TreeOfFiles, b:ListOfFiles, b:TypeDict, b:LevelDict ]	= deepcopy([tree_d, file_l_orig, type_d, level_d ])
 	if exists("b:atp_ProgressBar")
 	    unlockvar b:atp_ProgressBar
 	endif
 	let [ b:atp_LastLatexPID, b:atp_LatexPIDs, b:atp_ProgressBar ] = [ atp_LastLatexPID, atp_LatexPIDs, atp_ProgressBar ]
+	let [ b:atp_BibtexPIDs, b:atp_MakeindexPIDs ] = [ atp_BibtexPIDs, atp_MakeindexPIDs ]
 	lockvar b:atp_ProgressBar
 	if !&l:autochdir
 	    exe "lcd " . fnameescape(cwd)
@@ -1657,7 +1668,7 @@ nnoremap <silent> <buffer> <Plug>GotoPreviousInlineMath		:<C-U>call <SID>GotoEnv
 nnoremap <silent> <buffer> <Plug>GotoNextDisplayedMath	 	:<C-U>call <SID>GotoEnvironment('sW',v:count1,'displayedmath')<CR>
 nnoremap <silent> <buffer> <Plug>GotoPreviousDisplayedMath	:<C-U>call <SID>GotoEnvironment('bsW',v:count1,'displayedmath')<CR>
 
-nnoremap <silent> <Plug>GotoNextSubSection	:<C-U>call <SID>GotoSection("", v:count1, "s", '"\\\\\\%(subsection\\\\|section\\\\|chapter\\\\|part\\)\\s*{", ( g:atp_mapNn ? 'atp' : 'vim' ), 'n', '')<CR>
+nnoremap <silent> <Plug>GotoNextSubSection	:<C-U>call <SID>GotoSection("", v:count1, "s", "\\\\\\%(subsection\\\\|section\\\\|chapter\\\\|part\\)\\s*{", ( g:atp_mapNn ? 'atp' : 'vim' ), 'n', '')<CR>
 onoremap <silent> <Plug>GotoNextSubSection	:<C-U>call <SID>GotoSection("", v:count1, "s","\\\\\\%(subsection\\\\|section\\\\|chapter\\\\|part\\)\\s*{", 'vim')<CR>
 vnoremap <silent> <Plug>vGotoNextSubSection	m':<C-U>exe "normal! gv"<Bar>exe "normal! w"<Bar>call search('^\([^%]\|\\\@<!\\%\)*\\\%(subsection\\|section\\|chapter\\|part\)\s*{\\|\\end\s*{\s*document\s*}', 'W')<Bar>exe "normal! b"<CR>
 
