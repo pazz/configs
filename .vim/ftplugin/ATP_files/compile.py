@@ -25,31 +25,31 @@ except ImportError:
 usage   = "usage: %prog [options]"
 parser  = OptionParser(usage=usage)
 
-parser.add_option("-c", "--command",    dest="command",         default="pdflatex",     help="tex compiler")
-parser.add_option("--bibcommand",       dest="bibcommand",      default="bibtex",       help="bibtex compiler")
-parser.add_option("--progname",         dest="progname",        default="gvim",         help="vim v:progname")
-parser.add_option("-a", "--aucommand",  dest="aucommand",       default=False, action="store_true", help="if the command was called from an autocommand (background compilation - this sets different option for call back.) ")
-parser.add_option("--tex-options",      dest="tex_options",     default="-synctex=1,-interaction=nonstopmode", help="comma separeted list of tex options")
-parser.add_option("--verbose",          dest="verbose",         default="silent", help="atp verbose mode: silent/debug/verbose")
-parser.add_option("-f", "--file",       dest="mainfile",                        help="full path to file to compile")
-parser.add_option("-o", "--output-format", dest="output_format", default="pdf", help="format od the output file: dvi or pdf (it is not checked consistency with --command")
-parser.add_option("-r", "--runs",       dest="runs", help="how many times run tex consecutively", type="int", default=1 )
-parser.add_option("--servername",       dest="servername", help="vim server to communicate with")
-parser.add_option("-v", "--view", "--start", dest="start",      default=0, type="int", help="start viewer: values 0,1,2")
-parser.add_option("--viewer",           dest="viewer",          default="xpdf", help="output viewer to use")
-parser.add_option("--xpdf-server",      dest="xpdf_server", help="xpdf_server")
-parser.add_option("--viewer-options",   dest="viewer_opt",      default="", help="comma separated list of viewer options")
-parser.add_option("-k", "--keep",       dest="keep", help="comma separated list of extensions (see :help g:keep in vim)", default="aux,toc,bbl,ind,pdfsync,synctex.gz")
-parser.add_option("--env",              dest="env", default="default", help="a comma separated list environment variables and its values: var1=val1,var2=val2")
+parser.add_option("--command",          dest="command",         default="pdflatex"                      )
+parser.add_option("--bibcommand",       dest="bibcommand",      default="bibtex"                        )
+parser.add_option("--progname",         dest="progname",        default="gvim"                          )
+parser.add_option("--aucommand",        dest="aucommand",       default=False, action="store_true"      )
+parser.add_option("--tex-options",      dest="tex_options",     default="-synctex=1,-interaction=nonstopmode")
+parser.add_option("--verbose",          dest="verbose",         default="silent"                        )
+parser.add_option("--file",             dest="mainfile",                                                )
+parser.add_option("--output-format",    dest="output_format",   default="pdf"                           )
+parser.add_option("--runs",             dest="runs",            default=1,             type="int"       )
+parser.add_option("--servername",       dest="servername",                                              )
+parser.add_option("--start",            dest="start",           default=0,             type="int"       )
+parser.add_option("--viewer",           dest="viewer",          default="xpdf"                          )
+parser.add_option("--xpdf-server",      dest="xpdf_server",                                             )
+parser.add_option("--viewer-options",   dest="viewer_opt",      default=""                              )
+parser.add_option("--keep",             dest="keep",            default="aux,toc,bbl,ind,pdfsync,synctex.gz")
+parser.add_option("--env",              dest="env", default="default"  )
 parser.add_option("--logdir",           dest="logdir")
 # Boolean switches:
 parser.add_option("--reload-viewer",    action="store_true",    default=False,  dest="reload_viewer")
-parser.add_option("-b", "--bibtex",     action="store_true",    default=False,  dest="bibtex", help="run bibtex")
-parser.add_option("--reload-on-error",  action="store_true",    default=False,  dest="reload_on_error", help="reload Xpdf if compilation had errors")
-parser.add_option("--bang",             action="store_false",   default=False,  dest="bang", help="force reloading on error (Xpdf only)")
-parser.add_option("--gui-running", "-g", action="store_true",   default=False,  dest="gui_running", help="if vim gui is running (has('gui_running'))")
-parser.add_option("--no-progress-bar",  action="store_false",   default=True,   dest="progress_bar", help="send progress info back to gvim")
-parser.add_option("--bibliographies",                           default="",     dest="bibliographies", help="command separated list of bibliographies")
+parser.add_option("--bibtex",           action="store_true",    default=False,  dest="bibtex"           )
+parser.add_option("--reload-on-error",  action="store_true",    default=False,  dest="reload_on_error"  )
+parser.add_option("--bang",             action="store_false",   default=False,  dest="bang"             )
+parser.add_option("--gui-running",      action="store_true",    default=False,  dest="gui_running"      )
+parser.add_option("--no-progress-bar",  action="store_false",   default=True,   dest="progress_bar"     )
+parser.add_option("--bibliographies",                           default="",     dest="bibliographies"   )
 
 (options, args) = parser.parse_args()
 
@@ -63,7 +63,7 @@ def nonempty(string):
         return True
 
 logdir          = options.logdir
-script_logfile  = os.path.join(logdir, 'compile.py.log')
+script_logfile  = os.path.join(logdir, 'compile.log')
 command         = options.command
 bibcommand      = options.bibcommand
 progname        = options.progname
@@ -85,7 +85,7 @@ start           = options.start
 viewer          = options.viewer
 XpdfServer      = options.xpdf_server
 viewer_rawopt   = options.viewer_opt.split(',')
-viewer_it       =list(filter(nonempty,viewer_rawopt))
+viewer_it       = list(filter(nonempty,viewer_rawopt))
 viewer_opt      =[]
 for opt in viewer_it:
     viewer_opt.append(opt)
@@ -247,7 +247,7 @@ if os.path.islink(mainfile_fp):
     mainfile    = os.path.basename(mainfile_fp)
     mainfile_dir= os.path.dirname(mainfile_fp)
 
-mainfile_dir    = os.path.normcase(mainfile_dir+os.sep)
+mainfile_dir    = os.path.normcase(mainfile_dir)
 [basename, ext] = os.path.splitext(mainfile)
 output_fp       = os.path.splitext(mainfile_fp)[0]+extension
 
@@ -259,13 +259,13 @@ try:
 #
 ####################################
     cwd     = os.getcwd()
-    if not os.path.exists(str(mainfile_dir)+".tmp"+os.sep):
+    if not os.path.exists(os.path.join(mainfile_dir,".tmp")):
             # This is the main tmp dir (./.tmp) 
             # it will not be deleted by this script
             # as another instance might be using it.
             # it is removed by Vim on exit.
-        os.mkdir(str(mainfile_dir)+".tmp"+os.sep)
-    tmpdir  = tempfile.mkdtemp(prefix=str(mainfile_dir)+".tmp"+os.sep)
+        os.mkdir(os.path.join(mainfile_dir,".tmp"))
+    tmpdir  = tempfile.mkdtemp(dir=os.path.join(mainfile_dir,".tmp"),prefix="")
     debug_file.write("TMPDIR: "+tmpdir+"\n")
     tmpaux  = os.path.join(tmpdir,basename+".aux")
 
@@ -277,11 +277,9 @@ try:
 # Copy important files to output directory:
 # /except the log file/
     os.chdir(mainfile_dir)
-    debug_file.write('COPY BEG '+os.getcwd()+"\n")
     for ext in filter(keep_filter_log,keep):
         file_cp=basename+"."+ext
         if os.path.exists(file_cp):
-            debug_file.write(file_cp+' ')
             shutil.copy(file_cp, tmpdir)
 
     tempdir_list = os.listdir(tmpdir)

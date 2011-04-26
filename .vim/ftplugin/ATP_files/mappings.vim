@@ -326,6 +326,7 @@ nmap <C-k> <Plug>TexJMotionBackward
     nmap  <silent> <buffer> <LocalLeader>l 		<Plug>ATP_TeXCurrent
     nmap  <silent> <buffer> <LocalLeader>d 		<Plug>ATP_TeXdebug
     nmap  <silent> <buffer> <LocalLeader>D 		<Plug>ATP_TeXDebug
+    nmap           <buffer> <c-l>			<Plug>ATP_MakeLatex
     "ToDo: imaps!
     nmap  <silent> <buffer> <F5> 			<Plug>ATP_TeXVerbose
     nmap  <silent> <buffer> <s-F5> 			<Plug>ToggleAuTeX
