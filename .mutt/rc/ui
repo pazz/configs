@@ -13,6 +13,9 @@ source $alias_file
 
 auto_view text/html
 
+set mime_forward=no  #forward mails inline 
+set mime_forward_rest=yes #undecodable attachments will be forwarded
+
 
 
 macro index <F8> \
