@@ -1,6 +1,6 @@
 *automatic-tex-plugin.txt* 	For Vim version 7.3	Last change: 25 April 2011
 
-	    An Introduction to AUTOMATIC (La)TeX PLUGIN (ver. 9.3.9)
+	    An Introduction to AUTOMATIC (La)TeX PLUGIN (ver. 9.3.10)
 			by Marcin Szamotulski
 		    mszamot [AT] gmail [DOT] com
 		----------------------------------------
@@ -134,6 +134,7 @@ NEWS							*atp-news*
  Changes in version 9.4
 <
  |atp-:MakeLatex| is rewritten in python. The "!" is not yet implemented.
+ <C-L> nmap to call this command.
 
  All python scripts are compatible with Python 3.1. Traceback info is
  forwarded to vim (and log file) in case exceptions are handled.
@@ -891,6 +892,7 @@ map \d
 	This is equivalent to ':TEX debug'.
 
 :MakeLatex[!]						*atp-:MakeLatex*
+nmap <C-L>
 	With one command you can make your whole document: cross references,
 	bibliography (with or without bibtex), index, table of contents, table
 	of figures, table of theorems ([ntheorem package]), table of

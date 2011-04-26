@@ -438,21 +438,42 @@ endfunction "}}}
 " Makes references and bibliographies (supports bibtex), indexes.  
 "{{{ MakeLatex
 " Function Arguments:
-function! <SID>MakeLatex(bang, verbose)
+function! <SID>MakeLatex(bang, verbose, start)
     " a:verbose and a:bang are not yet used by makelatex.py
     let PythonMakeLatexPath = globpath(&rtp, "ftplugin/ATP_files/makelatex.py")
     let interaction 	    = ( a:verbose=="verbose" ? b:atp_VerboseLatexInteractionMode : 'nonstopmode' )
     let tex_options	    = shellescape(b:atp_TexOptions.',-interaction='.interaction)
+    let ext			= get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf") 
+    let ext			= substitute(ext, '\.', '', '')
+    let global_options 		= exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : ""
+    let local_options 		= getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options")
+    if global_options !=  "" 
+	let viewer_options  	= global_options.",".local_options
+    else
+	let viewer_options  	= local_options
+    endif
+    let reload_viewer 		= ( index(g:atp_ReloadViewers, b:atp_Viewer)+1  ? ' --reload-viewer ' : '' )
+    let reload_on_error 	= ( b:atp_ReloadOnError ? ' --reload-on-error ' : '' )
+    let bibliographies 		= join(keys(filter(copy(b:TypeDict), "v:val == 'bib'")), ',')
+
     let cmd=g:atp_Python." ".PythonMakeLatexPath.
 		\ " --texfile ".atplib#FullPath(b:atp_MainFile).
+		\ " --start ".a:start.
+		\ " --output-format ".ext.
 		\ " --cmd ".b:atp_TexCompiler.
 		\ " --bibcmd ".b:atp_BibCompiler.
+		\ " --bibliographies ".shellescape(bibliographies).
 		\ " --outdir ".b:atp_OutDir.
+		\ " --keep ". shellescape(join(g:keep, ',')).
 		\ " --tex-options ".tex_options.
 		\ " --servername ".v:servername.
+		\ " --viewer ".b:atp_Viewer.
+		\ " --xpdf-server ".b:atp_XpdfServer.
+		\ " --viewer-options ".shellescape(viewer_options).
 		\ " --progname ".v:progname.
 		\ " --tempdir ".g:atp_TempDir.
-		\ (t:atp_DebugMode=='verbose'||a:verbose=='verbose'?' --env ""': " --env ".shellescape(b:atp_TexCompilerVariable))
+		\ (t:atp_DebugMode=='verbose'||a:verbose=='verbose'?' --env ""': " --env ".shellescape(b:atp_TexCompilerVariable)).
+		\ reload_viewer . reload_on_error
     unlockvar g:atp_TexCommand
     let g:atp_TexCommand=cmd
     lockvar g:atp_TexCommand
@@ -607,7 +628,7 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 		\ ." --output-format ".ext
 		\ ." --runs ".a:runs
 		\ ." --servername ".v:servername
-		\ ." --view ".a:start 
+		\ ." --start ".a:start 
 		\ ." --viewer ".b:atp_Viewer
 		\ ." --xpdf-server ".b:atp_XpdfServer
 		\ ." --viewer-options ".shellescape(viewer_options) 
@@ -1013,6 +1034,7 @@ function! <SID>auTeX()
 	else
 	    let cond = ( s:compare(readfile(expand("%"))) )
 	endif
+	let g:cond=cond
 	if cond
 	    " This is for changedtick only
 	    let b:atp_changedtick = b:changedtick + 1
@@ -1491,7 +1513,8 @@ command! -buffer 		KillAll			:call <SID>KillAll(b:atp_LatexPIDs)
 command! -buffer -nargs=? 	ViewOutput		:call <SID>ViewOutput(<f-args>)
 command! -buffer 		SyncTex			:call <SID>SyncTex(0)
 command! -buffer 		PID			:call <SID>GetPID()
-command! -buffer -bang 		MakeLatex		:call <SID>SetBiberSettings() | call <SID>MakeLatex(<q-bang>, 'silent')
+command! -buffer -bang 		MakeLatex		:call <SID>SetBiberSettings() | call <SID>MakeLatex(<q-bang>, 'silent', 0)
+nmap <buffer> <Plug>ATP_MakeLatex		:MakeLatex<CR>
 command! -buffer -nargs=? -bang -count=1 -complete=custom,DebugComp TEX	:call <SID>TeX(<count>, <q-bang>, <f-args>)
 command! -buffer -count=1	DTEX			:call <SID>TeX(<count>, <q-bang>, 'debug') 
 command! -buffer -bang -nargs=? -complete=custom,BibtexComp Bibtex		:call <SID>Bibtex(<q-bang>, <f-args>)

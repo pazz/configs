@@ -708,7 +708,7 @@ endfunction
 " a:bang = "!" do not regenerate labels if not necessary
 function! <SID>Labels(bang)
     let t:atp_bufname	= bufname("%")
-    let error		= len(getqflist())
+    let error		= ( exists("b:atp_TexReturnCode") ? b:atp_TexReturnCode : 0 )
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
 
     " Generate the dictionary with labels
