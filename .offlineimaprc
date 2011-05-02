@@ -31,7 +31,7 @@ holdconnectionopen = yes
 localrepository = uoedir
 remoterepository = uoeimap
 autorefresh = 1
-postsynchook = notmuch new
+postsynchook = sup-sync
 
 [Repository uoedir]
 type = Maildir
