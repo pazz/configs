@@ -66,6 +66,7 @@ addtolength
 addvspace
 aleph
 align
+align*
 alph
 amalg
 amsmath
@@ -111,12 +112,16 @@ bigg
 biggl
 biggm
 biggr
+Biggr
 bigl
+Bigl
 bigm
+Bigm
 bigodot
 bigoplus
 bigotimes
 bigr
+Bigr
 bigskip
 bigskipamount
 bigsum
@@ -127,9 +132,12 @@ bigwedge
 binom
 blacksquare
 blg
+bmatrix
+Bmatrix
 boldmath
 boldsymbol
 book
+booklet
 bot
 botfigrule
 bottmofraction
@@ -146,6 +154,7 @@ cap
 capt-of
 caption
 caption2
+capt-of
 cases
 cc
 ccaption
@@ -171,10 +180,12 @@ clock
 closing
 clubsuit
 cm
+COLON
 columnsep
 columnseprule
 columnwidth
 complement
+conference
 cong
 contentsline
 contentsname
@@ -244,6 +255,7 @@ enumiv
 eqnarray
 eqref
 equation
+equation*
 equiv
 errorstopmode
 eth
@@ -357,6 +369,7 @@ index
 indexentry
 indexname
 indexspace
+infty
 input
 inputenc
 int
@@ -547,6 +560,7 @@ notin
 notitlepage
 nouppercase
 nu
+num
 numberline
 numline
 numprint

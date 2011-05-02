@@ -9,12 +9,8 @@
 
 let s:sourced 	= exists("s:sourced") ? 1 : 0
 
-if !exists("g:atp_reload")
-    let g:atp_reload 	= 0
-endif
-
 " {{{ Variables
-if !exists("g:askfortheoutdir") || g:atp_reload
+if !exists("g:askfortheoutdir") || g:atp_reload_variables
     let g:askfortheoutdir = 0
 endif
 if !exists("g:atp_raw_texinputs")
@@ -23,7 +19,7 @@ if !exists("g:atp_raw_texinputs")
 endif
 
 " atp tex and bib inputs directories (kpsewhich)
-if !exists("g:atp_texinputs") || g:atp_reload
+if !exists("g:atp_texinputs") || g:atp_reload_variables
     let path_list	= split(g:atp_raw_texinputs, ',')
     let idx		= index(path_list, '.')
     if idx != -1
@@ -37,14 +33,14 @@ if !exists("g:atp_texinputs") || g:atp_reload
 endif
 " a list where tex looks for bib files
 " It must be defined before SetProjectName function.
-if !exists("g:atp_raw_bibinputs") || g:atp_reload
+if !exists("g:atp_raw_bibinputs") || g:atp_reload_variables
     let g:atp_raw_bibinputs=substitute(substitute(substitute(
 		\ system("kpsewhich -show-path bib"),
 		\ '\/\/\+',	'\/',	'g'),	
 		\ '!\|\n',	'',	'g'),
 		\ ':',		',' ,	'g')
 endif
-if !exists("g:atp_bibinputs") || g:atp_reload
+if !exists("g:atp_bibinputs") || g:atp_reload_variables
     let path_list	= split(g:atp_raw_bibinputs, ',')
     let idx		= index(path_list, '.')
     if idx != -1
@@ -302,10 +298,12 @@ function! TreeOfFiles(main_file,...)
     let pattern		= a:0 >= 1 	? a:1 : g:atp_inputfile_pattern
 
 	if g:atp_debugToF
-	    if run_nr == 1
-		exe "redir! > ".g:atp_TempDir."/TreeOfFiles.log"
-	    else
-		exe "redir! >> ".g:atp_TempDir."/TreeOfFiles.log"
+	    if exists("g:atp_TempDir")
+		if run_nr == 1
+		    exe "redir! > ".g:atp_TempDir."/TreeOfFiles.log"
+		else
+		    exe "redir! >> ".g:atp_TempDir."/TreeOfFiles.log"
+		endif
 	    endif
 	endif
 
@@ -365,7 +363,7 @@ function! TreeOfFiles(main_file,...)
 	    let [ line, lnum, cnum ] = entry
 	    " input name (iname) as appeared in the source file
 	    let iname	= substitute(matchstr(line, pattern . '\(''\|"\)\=\zs\f\%(\f\|\s\)*\ze\1\='), '\s*$', '', '') 
-	    if iname == ""  
+	    if iname == "" && biblatex 
 		let iname	= substitute(matchstr(line, biblatex_pattern . '\(''\|"\)\=\zs\f\%(\f\|\s\)*\ze\1\='), '\s*$', '', '') 
 	    endif
 	    if g:atp_debugToF
@@ -609,13 +607,17 @@ function! ATPRunning() "{{{
         " For python compiler
 	" This is very fast:
 " 	call LatexRunning()
-	call atplib#PIDsRunning("b:atp_LatexPIDs")
-	call atplib#PIDsRunning("b:atp_BibtexPIDs")
+        for var in [ "Latex", "Bibtex", "Python" ] 
+	    if !exists("b:atp_".var."PIDs")
+		let b:atp_{var}PIDs = []
+	    endif
+	    call atplib#PIDsRunning("b:atp_".var."PIDs")
+	endfor
 " 	call atplib#PIDsRunning("b:atp_MakeindexPIDs")
 " 	let atp_running= ( b:atp_LastLatexPID != 0 ? 1 : 0 ) * len(b:atp_LatexPIDs) 
-	if exists("b:atp_LatexPIDs")
+	if len(b:atp_LatexPIDs) > 0
 	    let atp_running= len(b:atp_LatexPIDs) 
-	elseif exists("b:atp_BibtexPIDs")
+	elseif len(b:atp_BibtexPIDs) > 0
 	    let atp_running= len(b:atp_BibtexPIDs)
 	else
 	    return ''
@@ -754,7 +756,7 @@ let s:errormsg = 0
 function! ATPStatus(bang) "{{{
 
     let g:status_OutDir	= a:bang == "" && g:atp_statusOutDir || a:bang == "!" && !g:atp_statusOutDir ? s:StatusOutDir() : ""
-    let status_CTOC	= &filetype =~ '^\(ams\)\=tex' ? CTOC("return") : ''
+    let status_CTOC	= &filetype =~ '^\(ams\)\=tex' ? 'CTOC("return")' : ''
     if g:atp_statusNotifHi > 9 || g:atp_statusNotifHi < 0
 	let g:atp_statusNotifHi = 9
 	if !s:errormsg
@@ -770,7 +772,7 @@ function! ATPStatus(bang) "{{{
     let status_KeyMap	= ( has("keymap") && g:atp_babel && exists("b:keymap_name") 	
 								\ ? b:keymap_name 	: '' )
 
-    let g:atp_StatusLine= '%<%f '.status_KeyMap.'%(%h%m%r%) %='.status_CTOC." ".status_NotifHi.status_Notif.status_NotifHiPost.'%{g:status_OutDir} %-14.16(%l,%c%V%)%P'
+    let g:atp_StatusLine= '%<%f '.status_KeyMap.'%(%h%m%r%) %=%{'.status_CTOC."} ".status_NotifHi.status_Notif.status_NotifHiPost.'%{g:status_OutDir} %-14.16(%l,%c%V%)%P'
     set statusline=%!g:atp_StatusLine
 
 endfunction
@@ -793,7 +795,7 @@ call SetProjectName()
 
 " The pattern g:atp_inputfile_pattern should match till the begining of the file name
 " and shouldn't use \zs:\ze. 
-if !exists("g:atp_inputfile_pattern") || g:atp_reload
+if !exists("g:atp_inputfile_pattern") || g:atp_reload_variables
     if &filetype == 'plaintex'
 	let g:atp_inputfile_pattern = '^[^%]*\\input\>\s*'
     else

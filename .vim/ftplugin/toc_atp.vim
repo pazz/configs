@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:    tex
 " Maintainer:  Marcin Szamotulski
-" Last Change: Fri Apr 08 07:00  2011 W
+" Last Change: Sat Apr 30 08:00  2011 W
 " Note:	       This file is a part of Automatic Tex Plugin for Vim.
 " URL:	       https://launchpad.net/automatictexplugin
 
@@ -536,9 +536,14 @@ if expand("%") == "__ToC__"
 	endif
 
 	execute 'normal '.register.'y'
-" 	call cursor(saved_pos[1:2])
 	call winrestview(winview)
 	execute toc_winnr . "wincmd w"
+	execute "let yanked_section=@".register
+	let yanked_section_list= split(yanked_section, '\n')
+	if yanked_section_list[0] !~ '^\s*$' 
+	    call extend(yanked_section_list, [' '], 0)  
+	endif
+	call extend(t:atp_SectionStack, [[title, type, yanked_section_list, section_nr]],0)
     endfunction
     command! -buffer -nargs=? YankSection	:call <SID>YankSection(<f-args>)
 
