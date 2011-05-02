@@ -6,7 +6,7 @@
 " Language:	tex
 " Last Change:
 
-if exists("b:did_indent")
+if exists("b:did_indent") && !g:atp_reload_functions
 	finish
 endif
 

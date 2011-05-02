@@ -3,11 +3,12 @@
 # This file is a part of Automatic TeX Plugin for Vim.
 
 import sys, errno, os.path, shutil, subprocess, psutil, re, tempfile, optparse, glob
-import traceback
+import traceback, atexit
 
 from os import chdir, mkdir, putenv, devnull
 from optparse import OptionParser
 from collections import deque
+
 
 # readlink is not available on Windows.
 readlink=True
@@ -48,6 +49,7 @@ parser.add_option("--bibtex",           action="store_true",    default=False,  
 parser.add_option("--reload-on-error",  action="store_true",    default=False,  dest="reload_on_error"  )
 parser.add_option("--bang",             action="store_false",   default=False,  dest="bang"             )
 parser.add_option("--gui-running",      action="store_true",    default=False,  dest="gui_running"      )
+parser.add_option("--autex_wait",       action="store_true",    default=False,  dest="autex_wait"       )
 parser.add_option("--no-progress-bar",  action="store_false",   default=True,   dest="progress_bar"     )
 parser.add_option("--bibliographies",                           default="",     dest="bibliographies"   )
 
@@ -64,6 +66,14 @@ def nonempty(string):
 
 logdir          = options.logdir
 script_logfile  = os.path.join(logdir, 'compile.log')
+debug_file      = open(script_logfile, 'w')
+
+# Cleanup on exit:
+def cleanup(debug_file):
+    debug_file.close()
+    shutil.rmtree(tmpdir)
+atexit.register(cleanup, debug_file)
+
 command         = options.command
 bibcommand      = options.bibcommand
 progname        = options.progname
@@ -72,7 +82,7 @@ if aucommand_bool:
     aucommand="AU"
 else:
     aucommand="COM"
-command_opt     = list(filter(nonempty,options.tex_options.split(',')))
+command_opt     = list(filter(nonempty,re.split('\s*,\s*', options.tex_options)))
 mainfile_fp     = options.mainfile
 output_format   = options.output_format
 if output_format == "pdf":
@@ -83,8 +93,9 @@ runs            = options.runs
 servername      = options.servername
 start           = options.start
 viewer          = options.viewer
+autex_wait      = options.autex_wait
 XpdfServer      = options.xpdf_server
-viewer_rawopt   = options.viewer_opt.split(',')
+viewer_rawopt   = re.split('\s*;\s*', options.viewer_opt)
 viewer_it       = list(filter(nonempty,viewer_rawopt))
 viewer_opt      =[]
 for opt in viewer_it:
@@ -123,7 +134,6 @@ reload_on_error = options.reload_on_error
 gui_running     = options.gui_running
 progress_bar    = options.progress_bar
 
-debug_file      = open(script_logfile, 'w')
 debug_file.write("COMMAND "+command+"\n")
 debug_file.write("BIBCOMMAND "+bibcommand+"\n")
 debug_file.write("AUCOMMAND "+aucommand+"\n")
@@ -168,7 +178,13 @@ def latex_progress_bar(cmd):
     debug_file.write("latex pid "+str(pid)+"\n")
     stack = deque([])
     while True:
-        out = child.stdout.read(1).decode()
+        try:
+            out = child.stdout.read(1).decode()
+        except UnicodeDecodeError:
+            debug_file.write("UNICODE DECODE ERROR:\n")
+            debug_file.write(child.stdout.read(1))
+            debug_file.write("\n")
+            out = ""
         if out == '' and child.poll() != None:
             break
         if out != '':
@@ -252,6 +268,8 @@ mainfile_dir    = os.path.normcase(mainfile_dir)
 output_fp       = os.path.splitext(mainfile_fp)[0]+extension
 
 try:
+    # Send pid to ATP:
+    vim_remote_expr(servername, "atplib#PythonPID("+str(os.getpid())+")")
 ####################################
 #
 #       Make temporary directory,
@@ -480,5 +498,5 @@ except Exception:
     error_str=re.sub("'", "''",re.sub('"', '\\"', traceback.format_exc()))
     traceback.print_exc(None, debug_file)
     vim_remote_expr(servername, "atplib#Echo(\"[ATP:] error in compile.py, catched python exception:\n"+error_str+"[ATP info:] this error message is recorded in compile.py.log under g:atp_TempDir\",'echo','ErrorMsg')")
-debug_file.close()
-shutil.rmtree(tmpdir)
+
+sys.exit(latex_returncode)

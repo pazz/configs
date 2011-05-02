@@ -40,10 +40,8 @@ function! <SID>ViewOutput(...)
     let ext		= get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf") 
 
     " Read the global options from g:atp_{b:atp_Viewer}Options variables
-    let global_options 	= exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : ""
-    let local_options 	= getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options")
-
-"     let g:options	= global_options ." ". local_options
+    let global_options 	= join((exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : []), " ")
+    let local_options 	= join((exists("b:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") : []), " ")
 
     " Follow the symbolic link
     let link=resolve(atp_MainFile)
@@ -56,15 +54,17 @@ function! <SID>ViewOutput(...)
     if b:atp_Viewer == "xpdf"	
 	let viewer	= b:atp_Viewer . " -remote " . shellescape(b:atp_XpdfServer)
     else
-	let viewer	= b:atp_Viewer
+	let viewer	= b:atp_Viewer . " "
     endif
 
 
     let sync_args 	= ( fwd_search ?  <SID>SyncTex(0,1) : "" )
-    let g:global_options = global_options
-    let g:local_options = local_options
-    let g:sync_args	= sync_args
-    let g:viewer	= viewer
+    if g:atp_debugV
+	let g:global_options = global_options
+	let g:local_options = local_options
+	let g:sync_args	= sync_args
+	let g:viewer	= viewer
+    endif
     if b:atp_Viewer =~ '\<okular\>' && fwd_search
 	let view_cmd	= "(".viewer." ".global_options." ".local_options." ".sync_args.")&"
     elseif b:atp_Viewer =~ '^\s*xdvi\>'
@@ -445,10 +445,10 @@ function! <SID>MakeLatex(bang, verbose, start)
     let tex_options	    = shellescape(b:atp_TexOptions.',-interaction='.interaction)
     let ext			= get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf") 
     let ext			= substitute(ext, '\.', '', '')
-    let global_options 		= exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : ""
-    let local_options 		= getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options")
+    let global_options 		= join((exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : []), ";")
+    let local_options 		= join((exists("b:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") : []), ";")
     if global_options !=  "" 
-	let viewer_options  	= global_options.",".local_options
+	let viewer_options  	= global_options.";".local_options
     else
 	let viewer_options  	= local_options
     endif
@@ -457,7 +457,7 @@ function! <SID>MakeLatex(bang, verbose, start)
     let bibliographies 		= join(keys(filter(copy(b:TypeDict), "v:val == 'bib'")), ',')
 
     let cmd=g:atp_Python." ".PythonMakeLatexPath.
-		\ " --texfile ".atplib#FullPath(b:atp_MainFile).
+		\ " --texfile ".shellescape(atplib#FullPath(b:atp_MainFile)).
 		\ " --start ".a:start.
 		\ " --output-format ".ext.
 		\ " --cmd ".b:atp_TexCompiler.
@@ -467,11 +467,11 @@ function! <SID>MakeLatex(bang, verbose, start)
 		\ " --keep ". shellescape(join(g:keep, ',')).
 		\ " --tex-options ".tex_options.
 		\ " --servername ".v:servername.
-		\ " --viewer ".b:atp_Viewer.
+		\ " --viewer ".shellescape(b:atp_Viewer).
 		\ " --xpdf-server ".b:atp_XpdfServer.
 		\ " --viewer-options ".shellescape(viewer_options).
 		\ " --progname ".v:progname.
-		\ " --tempdir ".g:atp_TempDir.
+		\ " --tempdir ".shellescape(g:atp_TempDir).
 		\ (t:atp_DebugMode=='verbose'||a:verbose=='verbose'?' --env ""': " --env ".shellescape(b:atp_TexCompilerVariable)).
 		\ reload_viewer . reload_on_error
     unlockvar g:atp_TexCommand
@@ -490,34 +490,46 @@ endfunction
 
 " This function kills all running latex processes.
 " a slightly better approach would be to kill compile.py scripts
-"{{{ s:KillAll
+"{{{ <SID>KillAll
 " the argument is a list of pids
 " a:1 if present supresses a message.
-function! <SID>KillAll(pids,...)
-    if g:atp_Compiler != 'python'  
-	echohl WarningMsg
-	echomsg "[ATP:] This works only with python compiler (see :help atp-compile.py)" 
-	echohl Normal
-	return
-    endif
+function! <SID>KillPIDs(pids,...)
     if len(a:pids) == 0 && a:0 == 0
-	echo "[ATP:] No instance of ".get(g:CompilerMsg_Dict,b:atp_TexCompiler,'TeX')." is running."
+	return
     endif
 python << END
 import os, signal
-from signal import SIGTERM
+from signal import SIGKILL
 pids=vim.eval("a:pids")
 for pid in pids:
     try:
-	os.kill(int(pid),SIGTERM)
+	os.kill(int(pid),SIGKILL)
     except OSError, e:
 	if e.errno == 3:
-            # No such process error.
-            pass
-	else:
-            raise
+             # No such process error.
+             pass
+        else:
+             raise
 END
-endfunction "}}}
+endfunction 
+function! <SID>Kill(bang)
+    if !has("python")
+	if a:bang != "!"
+	    echohl WarningMsg
+	    echomsg "[ATP:] you need python suppor" 
+	    echohl Normal
+	endif
+	return
+    endif
+    if len(b:atp_PythonPIDs)
+	call <SID>KillPIDs(b:atp_PythonPIDs)
+    endif
+    if len(b:atp_LatexPIDs)
+	call <SID>KillPIDs(b:atp_LatexPIDs)
+    endif
+endfunction
+
+"}}}
 
 function! <SID>SetBiberSettings()
     if b:atp_BibCompiler !~# '^\s*biber\>'
@@ -547,7 +559,7 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 
 	" This is not working: (I should kill compile.py scripts)
 	echomsg "[ATP:] killing all instances of ".get(g:CompilerMsg_Dict,b:atp_TexCompiler,'TeX')
-	call <SID>KillAll(b:atp_LatexPIDs,1)
+	call <SID>KillPIDs(b:atp_LatexPIDs,1)
 	sleep 1
 	PID
     endif
@@ -599,15 +611,15 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 
     " Set options for compile.py
     let interaction 		= ( a:verbose=="verbose" ? b:atp_VerboseLatexInteractionMode : 'nonstopmode' )
-    let tex_options		= shellescape(b:atp_TexOptions.',-interaction='.interaction)
+    let tex_options		= b:atp_TexOptions.',-interaction='.interaction
 "     let g:tex_options=tex_options
     let ext			= get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf") 
     let ext			= substitute(ext, '\.', '', '')
 
-    let global_options 		= exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : ""
-    let local_options 		= getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options")
+    let global_options 		= join((exists("g:atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? g:atp_{matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')}Options : []), ";") 
+    let local_options 		= join(( exists("atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") ? getbufvar(bufnr("%"), "atp_".matchstr(b:atp_Viewer, '^\s*\zs\S\+\ze')."Options") : []), ";")
     if global_options !=  "" 
-	let viewer_options  	= global_options.",".local_options
+	let viewer_options  	= global_options.";".local_options
     else
 	let viewer_options  	= local_options
     endif
@@ -617,28 +629,30 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
     let gui_running 		= ( has("gui_running") ? ' --gui-running ' : '' )
     let reload_viewer 		= ( index(g:atp_ReloadViewers, b:atp_Viewer)+1  ? ' --reload-viewer ' : '' )
     let aucommand 		= ( a:command == "AU" ? ' --aucommand ' : '' )
-    let progress_bar 		= ( g:atp_ProgressBar ? '' : ' --no-progress-bar ' )
+    let no_progress_bar 	= ( g:atp_ProgressBar ? '' : ' --no-progress-bar ' )
     let bibliographies 		= join(keys(filter(copy(b:TypeDict), "v:val == 'bib'")), ',')
+    let autex_wait		= ( b:atp_autex_wait ? ' --autex_wait ' : '') 
 
     " Set the command
     let cmd=g:atp_Python." ".g:atp_PythonCompilerPath." --command ".b:atp_TexCompiler
-		\ ." --tex-options ".tex_options
+		\ ." --tex-options ".shellescape(tex_options)
 		\ ." --verbose ".a:verbose
 		\ ." --file ".shellescape(atplib#FullPath(a:filename))
 		\ ." --output-format ".ext
 		\ ." --runs ".a:runs
 		\ ." --servername ".v:servername
 		\ ." --start ".a:start 
-		\ ." --viewer ".b:atp_Viewer
-		\ ." --xpdf-server ".b:atp_XpdfServer
+		\ ." --viewer ".shellescape(b:atp_Viewer)
+		\ ." --xpdf-server ".shellescape(b:atp_XpdfServer)
 		\ ." --viewer-options ".shellescape(viewer_options) 
 		\ ." --keep ". shellescape(join(g:keep, ','))
 		\ ." --progname ".v:progname
 		\ ." --bibcommand ".b:atp_BibCompiler
 		\ ." --bibliographies ".shellescape(bibliographies)
-		\ ." --logdir ".g:atp_TempDir 
+		\ ." --logdir ".shellescape(g:atp_TempDir)
 		\ .(t:atp_DebugMode=='verbose'||a:verbose=='verbose'?' --env ""': " --env ".shellescape(b:atp_TexCompilerVariable))
-		\ . bang . bibtex . reload_viewer . reload_on_error . gui_running . aucommand . progress_bar
+		\ . bang . bibtex . reload_viewer . reload_on_error . gui_running . aucommand . no_progress_bar
+		\ . autex_wait
 
     " Write file
     let backup=&backup
@@ -666,7 +680,7 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
     if a:verbose == "verbose"
 	exe ":!".cmd
     elseif g:atp_debugPythonCompiler && has("unix") 
-	call system(cmd." 2>/tmp/atp_pc.debug &")
+	call system(cmd." 2".g:atp_TempDir."/PythonCompiler.log &")
     elseif has("win16") || has("win32") || has("win64")
 	call system(cmd)
     else
@@ -697,7 +711,7 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
     endif
 
     if g:atp_debugCompiler
-	exe "redir! > ".g:atp_Tempdir."/Compiler.log"
+	exe "redir! > ".g:atp_TempDir."/Compiler.log"
 	silent echomsg "________ATP_COMPILER_LOG_________"
 	silent echomsg "changedtick=" . b:changedtick . " atp_changedtick=" . b:atp_changedtick
 	silent echomsg "a:bibtex=" . a:bibtex . " a:start=" . a:start . " a:runs=" . a:runs . " a:verbose=" . a:verbose . " a:command=" . a:command . " a:filename=" . a:filename . " a:bang=" . a:bang
@@ -734,11 +748,19 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
 
 	let tmpdir=b:atp_TempDir . matchstr(tempname(), '\/\w\+\/\d\+')
 	let tmpfile=atplib#append(tmpdir, "/") . fnamemodify(a:filename,":t:r")
-	if exists("*mkdir")
-	    call mkdir(tmpdir, "p", 0700)
-	else
-	    echoerr "Your vim doesn't have mkdir function"
+	if g:atp_debugCompiler
+	    let g:tmpdir=tmpdir
+	    let g:tmpfile=tmpfile
+	    silent echo "tmpdir=".tmpdir
+	    silent echo "tmpfile=".tmpfile
 	endif
+	call system("mkdir -m 0700 -p ".shellescape(tmpdir))
+" 	if exists("*mkdir")
+" 	    call mkdir(tmpdir, "p", 0700)
+" 	else
+" 	    echoerr "[ATP:] Your vim doesn't have mkdir function, please try the python compiler."
+" 	    return
+" 	endif
 
 	" SET THE NAME OF OUTPUT FILES
 	" first set the extension pdf/dvi
@@ -822,7 +844,7 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
 " 	IF OPENING NON EXISTING OUTPUT FILE
 "	only xpdf needs to be run before (we are going to reload it)
 	if a:start && b:atp_Viewer == "xpdf"
-	    let xpdf_options	= ( exists("g:atp_xpdfOptions")  ? g:atp_xpdfOptions : "" )." ".getbufvar(0, "atp_xpdfOptions")
+	    let xpdf_options	= ( exists("g:atp_xpdfOptions")  ? join(g:atp_xpdfOptions, " ") : "" )." ".(exists("b:xpdfOptions") ? join(getbufvar(0, "atp_xpdfOptions"), " ") : " ")
 	    let start 	= b:atp_Viewer . " -remote " . shellescape(b:atp_XpdfServer) . " " . xpdf_options . " & "
 	else
 	    let start = ""	
@@ -1010,7 +1032,41 @@ augroup ATP_changedtick
     au BufWritePost 	*.tex 	:let b:atp_changedtick = b:changedtick
 augroup END 
 
-function! <SID>auTeX()
+function! <SID>auTeX(...)
+
+    if mode()=='i' && g:atp_updatetime_insert == 0 ||
+		\ mode()=='n' && g:atp_updatetime_normal == 0
+	return "autex is off for the mode: ".mode()." (see :help mode())"
+    endif
+
+    " Wait if the compiler is running. The problem is that CursorHoldI autocommands
+    " are not triggered more than once after 'updatetime'.
+"     echomsg "***"
+"     echomsg "b:atp_autex_wait=".b:atp_autex_wait
+"     echomsg "mode=".mode()
+    if index(split(g:atp_autex_wait, ','), mode()) != -1
+" 	\ !b:atp_autex_wait
+	if g:atp_Compiler == "python"
+	    call atplib#PIDsRunning("b:atp_PythonPIDs")
+	    echomsg string(b:atp_PythonPIDs)
+	else
+	    call atplib#PIDsRunning("b:atp_LatexPIDs")
+	endif
+	call atplib#PIDsRunning("b:atp_BibtexPIDs")
+	echo string(b:atp_BibtexPIDs)
+	if g:atp_Compiler == "python" && len(b:atp_PythonPIDs) ||
+	    \ g:atp_Compiler == "bash" && len(b:atp_LatexPIDs) ||
+	    \ len(b:atp_BibtexPIDs)
+" 	    unlockvar b:atp_autex_wait
+" 	    let b:atp_autex_wait=1
+" 	    lockvar b:atp_autex_wait
+	    return
+	endif
+"     else
+" 	unlockvar b:atp_autex_wait
+" 	let b:atp_autex_wait=0
+" 	lockvar b:atp_autex_wait
+    endif
 
 
     " Using vcscommand plugin the diff window ends with .tex thus the autocommand
@@ -1032,7 +1088,7 @@ function! <SID>auTeX()
 	if g:atp_Compare == "changedtick"
 	    let cond = ( b:changedtick != b:atp_changedtick )
 	else
-	    let cond = ( s:compare(readfile(expand("%"))) )
+	    let cond = ( <SID>compare(readfile(expand("%"))) )
 	endif
 	let g:cond=cond
 	if cond
@@ -1086,14 +1142,15 @@ function! <SID>auTeX()
     endif
     return "files does not differ"
 endfunction
+" function! ATP_auTeX()
+"     call <SID>auTeX()
+" endfunction
 
 " This is set by SetProjectName (options.vim) where it should not!
 augroup ATP_auTeX
     au!
     au CursorHold 	*.tex call s:auTeX()
-    if g:atp_updatetime_insert
-	au CursorHoldI 	*.tex call s:auTeX()
-    endif
+    au CursorHoldI 	*.tex call s:auTeX()
 augroup END 
 "}}}
 
@@ -1509,7 +1566,7 @@ endif "}}}
 
 " Commands: 
 " {{{
-command! -buffer 		KillAll			:call <SID>KillAll(b:atp_LatexPIDs)
+command! -buffer -bang 		Kill			:call <SID>Kill(<q-bang>)
 command! -buffer -nargs=? 	ViewOutput		:call <SID>ViewOutput(<f-args>)
 command! -buffer 		SyncTex			:call <SID>SyncTex(0)
 command! -buffer 		PID			:call <SID>GetPID()
@@ -1519,7 +1576,7 @@ command! -buffer -nargs=? -bang -count=1 -complete=custom,DebugComp TEX	:call <S
 command! -buffer -count=1	DTEX			:call <SID>TeX(<count>, <q-bang>, 'debug') 
 command! -buffer -bang -nargs=? -complete=custom,BibtexComp Bibtex		:call <SID>Bibtex(<q-bang>, <f-args>)
 command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A SetErrorFormat 	:call <SID>SetErrorFormat(<f-args>,1)
-augroup ATP_QuickFixCmds_1
+augroup ATP_QuickFix_1
     au!
     au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A SetErrorFormat :call <SID>SetErrorFormat(<q-args>,1) | cg
     au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A ErrorFormat :call <SID>SetErrorFormat(<q-args>,1) | cg
