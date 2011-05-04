@@ -103,7 +103,6 @@ function! <SID>LoadScript(bang, project_script, type, load_variables, ...) "{{{
     if g:atp_debugProject
 	exe "redir! > ".g:atp_TempDir."/LoadScript.log"
 	let hist_time	= reltime()
-	echomsg "\n"
 	echomsg "ATP_ProjectScript: LoadScript " . a:type . " file " . string(a:project_script)
     endif
 
@@ -292,7 +291,7 @@ function! <SID>LoadProjectScript(bang,...)
 	call s:LoadScript(a:bang,s:common_project_script, 'global', 0, '', 1)
 	if g:atp_debugLPS
 	    let g:LPS_time = reltimestr(reltime(time))
-	    echomsg "LPS time (common): " . g:LPS_time
+	    echomsg "Load Project Script time (common): " . g:LPS_time
 	endif
 	return
     endif
@@ -383,7 +382,6 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
     endif
 
     if g:atp_debugProject
-	echomsg "\n"
 	exe "redir! > ".g:atp_TempDir."/WriteProjectScript.log"
 	echomsg "ATP_ProjectScript: WriteProjectScript " . a:type
 	let time = reltime()
@@ -396,7 +394,7 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 	    echomsg "no variable exists"
 	endif
 	if g:atp_debugProject >= 2
-	    echomsg "time " . reltimestr(reltime(time))
+	    echomsg "Write Project Script time " . reltimestr(reltime(time))
 	endif
 	return
     endif
@@ -409,7 +407,7 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 	    let g:return = 1
 	endif
 	if g:atp_debugProject >= 2
-	    echomsg "time " . reltimestr(reltime(time))
+	    echomsg "Write Project Script time " . reltimestr(reltime(time))
 	endif
 	return
     endif
@@ -427,7 +425,7 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 	    let g:return = 2
 	endif
 	if g:atp_debugProject >= 2
-	    echomsg "time " . reltimestr(reltime(time))
+	    echomsg "Write Project Script time " . reltimestr(reltime(time))
 	endif
 	return
     endif
@@ -518,13 +516,13 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 	if cond == 0
 	    if g:atp_debugProject
 		silent echomsg "Project script not changed " . "\n"
-		silent echo "time = " . reltimestr(reltime(time)) . "\n"
+		silent echo "Write Project Script time = " . reltimestr(reltime(time)) . "\n"
 	    endif
 	    if g:atp_debugProject
 		let g:return = 3
 	    endif
 	    if g:atp_debugProject >= 2
-		echomsg "time " . reltimestr(reltime(time))
+		echomsg "Write Project Script time " . reltimestr(reltime(time))
 	    endif
 	    return
 	endif
@@ -586,7 +584,7 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
 	    let g:return = 4
 	endif
 	if g:atp_debugProject >= 2
-	    echomsg "time " . reltimestr(reltime(time))
+	    echomsg "Write Project Script time " . reltimestr(reltime(time))
 	endif
 	return 
     endtry
@@ -630,11 +628,11 @@ function! <SID>WriteProjectScript(bang, project_script, cached_variables, type)
     call winrestview(winsaveview)
 
     if g:atp_debugProject
-	silent echo "time = " . reltimestr(reltime(time))
+	silent echo "Write Project Script time = " . reltimestr(reltime(time))
 	redir END
     endif
     if g:atp_debugProject >= 2
-	echomsg "time " . reltimestr(reltime(time))
+	echomsg "Write Project Script time " . reltimestr(reltime(time))
     endif
 endfunction
 catch /E127:/

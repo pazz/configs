@@ -72,11 +72,8 @@ function! atplib#FormatListinColumns(list,s)
     " a:s is the number of spaces between columns
     " for example of usage see atplib#PrintTable
     let max_len=max(map(copy(a:list), 'len(v:val)'))
-    let g:list=a:list
-    let g:max_len=max_len+a:s
     let new_list=[]
     let k=&l:columns/(max_len+a:s)
-    let g:k=k
     let len=len(a:list)
     let column_len=len/k
     for i in range(0, column_len)
@@ -98,9 +95,6 @@ function! atplib#PrintTable(list, spaces)
     let nr_of_columns = max(map(copy(list), 'len(v:val)'))
     let spaces_list = ( nr_of_columns == 1 ? [0] : map(range(1,nr_of_columns-1), 'a:spaces') )
 
-    let g:spaces_list=spaces_list
-    let g:nr_of_columns=nr_of_columns
-    
     return atplib#Table(list, spaces_list)
 endfunction
 "}}}
@@ -222,7 +216,6 @@ function! atplib#CallBack(mode,...)
 		let g:debugCB .= 4
 	    endif
 
-	    let g:debug		= 1
 	    let &l:cmdheight 	= g:atp_DebugModeCmdHeight
 		let showed_message 	= 1
 		if b:atp_ReloadOnError || b:atp_Viewer !~ '^\s*xpdf\>'
@@ -268,7 +261,6 @@ function! atplib#CallBack(mode,...)
 	let msg_len += (BIBTEX ? len(split(b:atp_BibtexOutput, "\\n")) - 1 : - 1 )
     endif
     let msg_len		+= ((len(getqflist()) <= 7 && !t:atp_QuickFixOpen) ? len(getqflist()) : 0 )
-    let g:msg_len	= msg_len
 
     " Show messages/clist
     
@@ -341,6 +333,18 @@ function! atplib#MakeindexPID(pid)
     call add(b:atp_MakeindexPIDs, a:pid)
     let b:atp_LastMakeindexPID =a:pid
 endfunction "}}}
+"{{{ PythonPID
+"Store PythonPIDs in a variable
+function! atplib#PythonPID(pid)
+    call add(b:atp_PythonPIDs, a:pid)
+"     call atplib#PIDsRunning("b:atp_PythonPIDs")
+endfunction "}}}
+"{{{ MakeindexPID
+"Store MakeindexPIDs in a variable
+function! atplib#PythonPIDs(pid)
+    call add(b:atp_PythonPIDs, a:pid)
+    let b:atp_LastPythonPID =a:pid
+endfunction "}}}
 "{{{ PIDsRunning
 function! atplib#PIDsRunning(var)
 " a:var is a string, and might be one of 'b:atp_LatexPIDs', 'b:atp_BibtexPIDs' or
@@ -383,6 +387,16 @@ endfunction "}}}
 function! atplib#redrawstatus()
     redrawstatus
 endfunction "}}}
+"{{{ CursorMoveI
+" function! atplib#CursorMoveI()
+"     if mode() != "i"
+" 	return
+"     endif
+"     let cursor_pos=[ line("."), col(".")]
+"     call feedkeys("\<left>", "n")
+"     call cursor(cursor_pos)
+" endfunction "}}}
+
 "{{{ echo
 function! atplib#Echo(msg,cmd,hlgroup)
     exe "echohl ".a:hlgroup
@@ -594,7 +608,6 @@ silent! function! atplib#GrepAuxFile(...)
     " Equation counter depedns on the option \numberwithin{equation}{section}
     " /now this only supports article class.
     let equation = len(atplib#GrepPreambule('^\s*\\numberwithin{\s*equation\s*}{\s*section\s*}'))
-    let g:equation = equation
 "     for line in aux_file
     for line in loc_list
 " 	if line =~ '^\\newlabel' 
@@ -827,8 +840,7 @@ function! atplib#showlabels(labels)
 	let tabstop	= max([tabstop, max(map(copy(dict), "len(v:val[2])")) + 1])
 	unlet dict
     endfor
-    let g:tabstop	= tabstop " DEBUG
-    let g:labelswinnr	= l:labelswinnr
+"     let g:labelswinnr	= l:labelswinnr
     let saved_view	= winsaveview()
 
     if l:labelswinnr != -1
@@ -882,7 +894,7 @@ function! atplib#showlabels(labels)
 	    let space	= join(map(range(space_len), '" "'), "")
 	    let set_line 	= label[2] . "\t[" . label[3][0] . "] " . label[1] . space . "(" . label[0] . ")"
 	    call setline(line_nr, set_line ) 
-	    cal extend(b:atp_Labels, { line_nr : [ file, label[0] ]}) 
+	    call extend(b:atp_Labels, { line_nr : [ file, label[0] ]}) 
 	    let line_nr+=1
 	endfor
     endfor
@@ -1440,8 +1452,6 @@ function! atplib#showresults(bibresults, flags, pattern)
 	    let l:flagslist=[]
 	    let l:kwflagslist=[]
 
-	let  g:aflags = a:flags
-
     " flags o and i are synonims: (but refer to different entry keys): 
 	if a:flags =~# 'i' && a:flags !~# 'o'
 	    let l:flags=substitute(a:flags,'i','io','') 
@@ -1455,7 +1465,6 @@ function! atplib#showresults(bibresults, flags, pattern)
 "  		else
  		    let l:flags=b:atp_LastBibFlags . substitute(a:flags, 'L', '', 'g')
 "  		endif
-		let g:flags_a= deepcopy(l:flags)
 		let g:atp_LastBibFlags = deepcopy(b:atp_LastBibFlags)
 	    else
 		if a:flags == "" 
@@ -1466,7 +1475,6 @@ function! atplib#showresults(bibresults, flags, pattern)
 		    let l:flags=g:defaultbibflags . strpart(a:flags,1)
 		endif
 	    endif
-	    let g:flags = flags
 	    let b:atp_LastBibFlags=substitute(l:flags,'+\|L','','g')
 		if l:flags != ""
 		    let l:expr='\C[' . g:bibflagsstring . ']' 
@@ -1499,8 +1507,6 @@ function! atplib#showresults(bibresults, flags, pattern)
 		endif
 	    endfor
 	endif
-
-	let g:flagslist = deepcopy(l:flagslist)
 
 	"NEW: if there are only keyword flags append default flags
 	if len(l:kwflagslist) > 0 && len(l:flagslist) == 0 
@@ -2319,7 +2325,6 @@ function! atplib#KpsewhichFindFile(format, name, ...)
 	call filter(path_list, 'v:val !~ a:5')
 	let path	= join(path_list, ',')
     endif
-    let g:path = path
 
     if l:count >= 1
 	let result	= findfile(a:name, path, l:count)
@@ -2637,14 +2642,14 @@ let l:eindent=atplib#CopyIndentation(l:line)
 	" unless it starts in a serrate line,
 	" \( \): close in the same line. 
 	"{{{3 close environment in the same line
-	if l:line !~ '^\s*\%(\$\|\$\$\|[^\\]\\(\|\\\@<!\\\[\)\?\s*\\begin\s*{[^}]*}\s*\%(([^)]*)\s*\|{[^}]*}\s*\|\[[^\]]*\]\s*\)\{,3}\%(\\label\s*{[^}]*}\s*\)\?$'
+	if l:line !~ '^\s*\%(\$\|\$\$\|[^\\]\\(\|\\\@<!\\\[\)\?\s*\\begin\s*{[^}]*}\s*\%(([^)]*)\s*\|{[^}]*}\s*\|\[[^\]]*\]\s*\)\{,3}\%(\s*\\label\s*{[^}]*}\s*\|\s*\\hypertarget\s*{[^}]*}\s*{[^}]*}\s*\)\{0,2}$'
 " 	    	This pattern matches:
 " 	    		^ $
 " 	    		^ $$
 " 	    		^ \(
 " 	    		^ \[
-" 	    		^ (one of above or space) \begin { env_name } ( args1 ) [ args2 ] { args3 } \label {label}
-" 	    		There are at most 3 args of any type with any order \label is matched optionaly.
+" 	    		^ (one of above or space) \begin { env_name } ( args1 ) [ args2 ] { args3 } \label {label} \hypertarget {} {}
+" 	    		There are at most 3 args of any type with any order \label and \hypertarget are matched optionaly.
 " 	    		Any of these have to be followd by white space up to end of line.
 	    "
 	    " The line above cannot contain "\|^\s*$" pattern! Then the
@@ -2702,6 +2707,9 @@ let l:eindent=atplib#CopyIndentation(l:line)
 
 		let l:pos=getpos(".")
 		let l:pos_saved=deepcopy(l:pos)
+		if g:atp_debugCLE
+		    let g:pos_saved0 = copy(l:pos_saved)
+		endif
 
 		while l:line_nr >= 0
 			let l:line_nr=search('\%(%.*\)\@<!\\begin\s*{','bW')
@@ -2801,7 +2809,9 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			" pair (below l:pos[1]). (I assume every env is in
 			" a seprate line!
 			let l:end=atplib#CheckClosed('\%(%.*\)\@<!\\begin\s*{','\%(%.*\)\@<!\\end\s*{',l:line_nr,g:atp_completion_limits[2],1)
-" 			let g:info= " l:max=".l:max." l:end=".l:end." line('.')=".line(".")." l:line_nr=".l:line_nr
+			if g:atp_debugCLE
+			    let g:info= " l:max=".l:max." l:end=".l:end." line('.')=".line(".")." l:line_nr=".l:line_nr
+			endif
 			" if the line was found append just befor it.
 			if l:end != 0 
 				if line(".") <= l:max
@@ -2843,8 +2853,11 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			" found
 			keepjumps call setpos(".",[0,l:line_nr,len(getline(l:line_nr)),0])
 			let l:cline	= getline(l:pos_saved[1])
-			let g:cline	= l:cline
-			let g:line	= l:pos_saved[1]
+			if g:atp_debugCLE
+			    let g:cline		= l:cline
+			    let g:pos_saved 	= copy(l:pos_saved)
+			    let g:line		= l:pos_saved[1]
+			endif
 			let l:iline=searchpair('\\begin{','','\\end{','nW')
 			if l:iline > l:line_nr && l:iline <= l:pos_saved[1]
 			    call append(l:iline-1, l:eindent . l:str)
@@ -2865,8 +2878,13 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			    else
 				call append(l:pos_saved[1], l:eindent . l:str)
 				echomsg "[ATP:] closing " . l:env_name . " from line " . l:bpos_env[0] . " at line " . l:pos_saved[1]+1
-				let l:pos_saved[2]+=len(l:str)
-				call setpos(".",[0,l:pos_saved[1]+1,len(l:eindent.l:str)+1,0])
+				" Do not move corsor if: '\begin{env_name}<Tab>'
+				if l:cline !~  '\\begin\s*{\s*\%('.l:uenv.'\)\s*}'
+				    let l:pos_saved[2]+=len(l:str)
+				    call setpos(".",[0,l:pos_saved[1]+1,len(l:eindent.l:str)+1,0])
+				else
+				    call setpos(".", l:pos_saved)
+				endif
 			    endif
 			endif 
 			if g:atp_debugCLE
@@ -3345,7 +3363,8 @@ function! atplib#TabCompletion(expert_mode,...)
 	\ begin !~ '{\|}\|,\|-\|\^\|\$\|(\|)\|&\|-\|+\|=\|#\|:\|;\|\.\|,\||\|?$' &&
 	\ begin !~ '^\[\|\]\|-\|{\|}\|(\|)' &&
 	\ cbegin =~ '^\\' && !normal_mode &&
-	\ l !~ '\\\%(no\)\?cite[^}]*$'
+	\ l !~ '\\\%(no\)\?cite[^}]*$' &&
+	\ l !~ '\\ref\s*{\S*$'
 
 	" in this case we are completing a command
 	" the last match are the things which for sure do not ends any
@@ -3379,7 +3398,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	" DEBUG:
 	let b:comp_method='colors'
     "{{{3 --------- label
-    elseif pline =~ '\\\%(eq\)\?ref\s*$' && strpart(l, 0, col(".")) !~ '\\\%(eq\)\?ref\s*{[^}]*}$' && !normal_mode
+    elseif l =~ '\\\%(eq\)\?ref\s*{[^}]*$' && !normal_mode
 	if index(g:atp_completion_active_modes, 'labels') != -1 
 	    let completion_method='labels'
 	    " DEBUG:
@@ -3409,8 +3428,9 @@ function! atplib#TabCompletion(expert_mode,...)
 	    return ''
 	endif
     "{{{3 --------- tikzpicture
-    elseif search('\%(\\def\>.*\|\\\%(re\)\?newcommand\>.*\|%.*\)\@<!\\begin{tikzpicture}','bnW') > search('[^%]*\\end{tikzpicture}','bnW') ||
-	\ !atplib#CompareCoordinates(searchpos('[^%]*\zs\\tikz{','bnw'),searchpos('}','bnw'))
+    elseif ( search('\%(\\def\>.*\|\\\%(re\)\?newcommand\>.*\|%.*\)\@<!\\begin{tikzpicture}','bnW') > search('[^%]*\\end{tikzpicture}','bnW') ||
+	\ !atplib#CompareCoordinates(searchpos('[^%]*\zs\\tikz{','bnw'),searchpos('}','bnw')) )
+" 	\ && ( l =~ '\%(\s\|\[\|{\|}\|,\|\.\|=\|:\)' . tbegin . '$' || l =~ '\\' . tbegin  . '$' )
 	"{{{4 ----------- tikzpicture keywords
 	if l =~ '\%(\s\|\[\|{\|}\|,\|\.\|=\|:\)' . tbegin . '$' && !normal_mode
 	    if index(g:atp_completion_active_modes, 'tikzpicture keywords') != -1 
@@ -3433,6 +3453,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	    endif
 	"{{{4 ----------- close_env tikzpicture
 	else
+	    let begParen = atplib#CheckBracket(g:atp_bracket_dict)
+	    if begParen[0]
+		return g:atp_bracket_dict[begParen[2]]
+	    endif
 	    if (!normal_mode &&  index(g:atp_completion_active_modes, 'close environments') != -1 ) ||
 			\ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'close environments') != -1 )
 		" DEBUG:
@@ -3628,19 +3652,15 @@ function! atplib#TabCompletion(expert_mode,...)
 		    let begMathZone = searchpos(pattern, 'bnW')
 " 		    let g:begMathZone = copy(begMathZone)
 		    if atplib#CompareCoordinates([ begParen[0], begParen[1] ], begMathZone)
-" 			let g:debug = 1
 			call atplib#CloseLastEnvironment(append, 'math')
 		    else
-" 			let g:debug = 2
 			call atplib#CloseLastBracket(g:atp_bracket_dict, 0, 1)
 		    endif
 		else
-" 		    let g:debug = 3
 		    call atplib#CloseLastBracket(g:atp_bracket_dict, 0, 1)
 		endif
 		return '' 
 	    else
-" 		let g:debug = 4
 		let b:comp_method='brackets fast return'
 		return ''
 	    endif
@@ -3872,7 +3892,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	endif
 	 
 	" Are we in the math mode?
-	let math_is_opened	= atplib#CheckSyntaxGroups(g:atp_MathZones)
+	let math_is_opened	= atplib#CheckSyntaxGroups(g:atp_MathZones) && !atplib#CheckSyntaxGroups(['texMathText'])
 
    	"{{{4 -------------------- picture
 	if searchpair('\\begin\s*{picture}','','\\end\s*{picture}','bnW',"", max([ 1, (line(".")-g:atp_completion_limits[2])]))
@@ -4076,7 +4096,6 @@ function! atplib#TabCompletion(expert_mode,...)
 	let completion_list = g:atp_BeamerFontThemes
     "{{{3 ------------ FONT FAMILY
     elseif completion_method == 'font family'
-	let g:debug =1
 	let bpos=searchpos('\\selectfon\zst','bnW',line("."))[1]
 	let epos=searchpos('\\selectfont','nW',line("."))[1]-1
 	if epos == -1
@@ -4169,6 +4188,7 @@ function! atplib#TabCompletion(expert_mode,...)
 		let col -= 1
 	endwhile
 	let pat=strpart(l,col)
+	let g:pat=pat
 	let bibitems_list=values(atplib#searchbib(pat))
 	if g:atp_debugTC
 	    let g:pat = pat
@@ -4333,10 +4353,11 @@ function! atplib#TabCompletion(expert_mode,...)
 		
 		let aux_data	= atplib#GrepAuxFile()
 		let completions = []
+		let pattern 	= matchstr(l, '\%(.\|\\ref\)*\\ref\s*{\zs\S*$')  
 		for data in aux_data
 		    " match label by string or number
-		    if ( data[0] =~ '^' . begin || data[1] =~ '^'. begin . '$' ) && a:expert_mode || 
-				\ ( data[0] =~ begin || data[1] =~ '^'. begin ) && !a:expert_mode
+		    if ( data[0] =~ '^' . pattern || data[1] =~ '^'. pattern . '$' ) && a:expert_mode || 
+				\ ( data[0] =~ pattern || data[1] =~ '^'. pattern ) && !a:expert_mode
 			let close = nchar == '}' ? '' : '}'
 			call add(completions, data[0] . close)
 		    endif
@@ -4372,7 +4393,7 @@ function! atplib#TabCompletion(expert_mode,...)
     let b:completions=completions 
     " {{{2 COMPLETE 
     " {{{3 labels, package, tikz libraries, environment_names, colors, bibfiles, bibstyles, documentclass, font family, font series, font shape font encoding and input files 
-    if completion_method == 'labels' 			|| 
+    if
 		\ completion_method == 'package' 	|| 
 		\ completion_method == 'tikz libraries'    || 
 		\ completion_method == 'environment_names' ||
@@ -4391,6 +4412,9 @@ function! atplib#TabCompletion(expert_mode,...)
 		\ completion_method == 'missingfigure options' ||
 		\ completion_method == 'inputfiles' 
 	call complete(nr+2,completions)
+    "{{{3 labels
+    elseif completion_method == 'labels'
+	call complete(match(l, '\%(.\|\\ref\)*\\ref\s*{\zs\S*$')+1,completions)
     "{{{3 colors
     elseif completion_method == 'colors'
 	call complete(color_nr+2,completions)

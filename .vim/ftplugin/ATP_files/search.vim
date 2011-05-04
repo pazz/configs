@@ -144,29 +144,33 @@ function! LocalCommands(...)
 
      for line in loclist
 	" the order of pattern is important
-	if line['text'] =~ '\\definecolor'
+	if line['text'] =~ '^[^%]*\\definecolor'
 	    " color name
 	    let name=matchstr(line['text'],
 			\ '\\definecolor\s*{\s*\zs[^}]*\ze\s*}')
 	    let type="Colors"
-	elseif line['text'] =~ '\\def\>\|\\newcommand'
+	elseif line['text'] =~ '^[^%]*\%(\\def\>\|\\newcommand\)'
 	    " definition name 
-	    let name= '\' . matchstr(line['text'],
-			\ '\\def\\\zs[^{#]*\ze[{#]\|\\newcommand{\?\\\zs[^\[{]*\ze}')
+	    let name= '\' . matchstr(line['text'], '\\def\\\zs[^{]*\ze{\|\\newcommand{\?\\\zs[^\[{]*\ze}')
+	    let name=substitute(name, '\(#\d\+\)\+\s*$', '{', '')
+	    if name =~ '#\d\+'
+		echo line['text']
+		echo name
+	    endif
 	    let type="Commands"
 	    " definition
 " 	    let def=matchstr(line['text'],
 " 			\ '^\%(\\def\\[^{]*{\zs.*\ze}\|\\newcommand\\[^{]*{\zs.*\ze}\)') 
-	elseif line['text'] =~ '\\Declare\%(RobustCommand\|FixedFont\|TextFontCommand\|MathVersion\|SymbolFontAlphabet'
-			    \ . '\|MathSymbol\|MathDelimiter\|MathAccent\|MathRadical\|MathOperator\)\>\|\\SetMathAlphabet'
+	elseif line['text'] =~ '^[^%]*\%(\\Declare\%(RobustCommand\|FixedFont\|TextFontCommand\|MathVersion\|SymbolFontAlphabet'
+			    \ . '\|MathSymbol\|MathDelimiter\|MathAccent\|MathRadical\|MathOperator\)\>\|\\SetMathAlphabet\)'
 	    let name=matchstr(line['text'],
 			\ '\%(\\Declare\%(RobustCommand\|FixedFont\|TextFontCommand\|MathVersion\|SymbolFontAlphabet'
 			    \ . '\|MathSymbol\|MathDelimiter\|MathAccent\|MathRadical\|MathOperator\)\|\\SetMathAlphabet\)\s*{\s*\zs[^}]*\ze\s*}')
 	    let type="Commands"
-	elseif line['text'] =~ '\%(\\newenvironment\|\\newtheorem\)'
+	elseif line['text'] =~ '^[^%]*\%(\\newenvironment\|\\newtheorem\)'
 	    " environment name
 	    let name=matchstr(line['text'],
-			\ '\\\%(newtheorem\*\?\|newenvironment\)\s*{\s*\zs[^}]*\ze\s*}')
+			\ '^[^%]*\\\%(newtheorem\*\?\|newenvironment\)\s*{\s*\zs[^}]*\ze\s*}')
 	    let type="Environments"
 	endif
 	if exists("name") && name != '' && name != '\'
