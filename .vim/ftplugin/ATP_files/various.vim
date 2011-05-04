@@ -3,7 +3,7 @@
 " Note:	       This file is a part of Automatic Tex Plugin for Vim.
 " URL:	       https://launchpad.net/automatictexplugin
 " Language:    tex
-" Last Change: Mon Apr 25 09:00  2011 W
+" Last Change: Tue May 03 07:00  2011 W
 
 let s:sourced 	= exists("s:sourced") ? 1 : 0
 
@@ -380,9 +380,34 @@ endfunction
 " {{{ InsertItem()
 " ToDo: indent
 function! InsertItem()
-    let begin_line	= searchpair( '\\begin\s*{\s*\%(enumerate\|itemize\)\s*}', '', '\\end\s*{\s*\%(enumerate\|itemize\)\s*}', 'bnW')
+    let begin_line	= searchpair( '\\begin\s*{\s*\%(enumerate\|itemize\|thebibliography\)\s*}', '', '\\end\s*{\s*\%(enumerate\|itemize\|thebibliography\)\s*}', 'bnW')
     let saved_pos	= getpos(".")
     call cursor(line("."), 1)
+
+    if getline(begin_line) =~ '\\begin\s*{\s*thebibliography\s*}'
+	call cursor(saved_pos[1], saved_pos[2])
+	let new_line	= strpart(getline("."), 0, col(".")) . '\bibitem' . strpart(getline("."), col("."))
+	let g:new_line	= new_line
+	call setline(line("."), new_line)
+
+	" Indent the line:
+	if &l:indentexpr != ""
+	    execute "let indent = " . &l:indentexpr
+	    let i 	= 1
+	    let ind 	= ""
+	    while i <= indent
+		let ind	.= " "
+		let i	+= 1
+	    endwhile
+	else
+	    indent	= -1
+	    ind 	=  matchstr(getline("."), '^\s*')
+	endif
+	call setline(line("."), ind . substitute(getline("."), '^\s*', '', ''))
+	let saved_pos[2]	+= len('\bibitem') + indent
+	call cursor(saved_pos[1], saved_pos[2])
+	return
+    endif
 
     " This will work with \item [[1]], but not with \item [1]]
     let [ bline, bcol]	= searchpos('\\item\s*\zs\[', 'b', begin_line) 
@@ -835,7 +860,8 @@ function! <SID>Delete(delete_output)
 		endfor
 	    endif
 	else
-	    let f=fnamemodify(atplib#FullPath(b:atp_MainFile), ":h").".".ext
+	    " Delete output file (pdf|dvi|ps) (though ps is not supported by ATP).
+	    let f=fnamemodify(atplib#FullPath(b:atp_MainFile), ":r").".".ext
 	    echo "Removing ".f
 	    call delete(f)
 	endif
@@ -900,8 +926,10 @@ function! s:OpenLog()
 
 	let projectVarDict = SaveProjectVariables()
 	let g:projectVarDict = projectVarDict
-	let s:winnr		= bufwinnr("")
+	let s:winnr	= bufwinnr("")
+	let atp_TempDir	= b:atp_TempDir
 	exe "rightbelow split +setl\\ nospell\\ ruler\\ syn=log_atp\\ autoread " . fnameescape(&l:errorfile)
+	let b:atp_TempDir = atp_TempDir
 	call RestoreProjectVariables(projectVarDict)
 
 	map <buffer> q :bd!<CR>
@@ -986,6 +1014,9 @@ function! s:OpenLog()
 	    let nr	= 0
 	    " There should be a finer way to get the file name if it is split in two
 	    " lines.
+	    if g:atp_debugST
+		let g:fname_list = []
+	    endif
 	    while !test
 		" Some times in the lof file there is a '(' from the source tex file
 		" which might be not closed, then this while loop is used to find
@@ -999,7 +1030,6 @@ function! s:OpenLog()
 " THIS CODE IS NOT WORKING:
 " 		if nr >= 1 && [ startline, startcol ] == [ startline_o, startcol_o ] && !test
 " 		    keepjumps call setpos(".", saved_pos)
-" 		    let g:debug = "return " . nr
 " 		    break
 " 		endif
 		if !startline
@@ -1029,8 +1059,10 @@ function! s:OpenLog()
 		    let end = get(StrIdx, idx, "")
 		    let fname .= strpart(getline(startline+1), 0, idx + len(end) + 1)
 		endif
+		let fname=substitute(fname, escape(fnamemodify(b:atp_TempDir, ":t"), '.').'\/[^\/]*\/', '', '')
 		if g:atp_debugST
-		    let g:fname = fnamemodify(fname, ":t")
+		    call add(g:fname_list, fname)
+		    let g:fname = fname
 		    let g:dir	= fnamemodify(g:fname, ":p:h")
 		    let g:pat	= pat
 " 		    if g:fname =~# '^' .  escape(fnamemodify(tempname(), ":h"), '\/')
@@ -1043,7 +1075,7 @@ function! s:OpenLog()
 	    endwhile
 	    keepjumps call setpos(".", saved_pos)
 		if g:atp_debugST
-		    let g:fname = fname
+		    let g:fname_post = fname
 		endif
 
 	    " if the file is under texmf directory return unless g:atp_developer = 1
@@ -1482,7 +1514,7 @@ function! <SID>ReloadATP(bang)
     let common_file	= globpath(&rtp, 'ftplugin/ATP_files/common.vim')
     let options_file	= globpath(&rtp, 'ftplugin/ATP_files/options.vim')
     let g:atp_reload_functions = ( a:bang == "!" ? 1 : 0 ) 
-    let g:atp_reload	= 1
+    let g:atp_reload_variables = 0
     if a:bang == ""
 	execute "source " . common_file
 	execute "source " . options_file 
@@ -1519,8 +1551,8 @@ function! <SID>ReloadATP(bang)
 	    endif
 	endfor
     endif
-    let g:atp_reload		= 0
     let g:atp_reload_functions 	= 0
+    let g:atp_reload_variables  = 0
 endfunction
 catch /E127:/
     " Cannot redefine function, function is in use.
@@ -2192,6 +2224,34 @@ function! Comment(arg) "{{{
     endif
 
 endfunction "}}}
+
+" DebugPrint
+" cat files under g:atp_TempDir (with ATP debug info)
+" {{{
+if has("unix") && g:atp_atpdev
+    function! <SID>DebugPrint(file)
+	if a:file == ""
+	    return
+	endif
+	let dir = getcwd()
+	exe "lcd ".g:atp_TempDir
+	if filereadable(a:file)
+	    echo join(readfile(a:file), "\n")
+	else
+	    echomsg "No such file."
+	endif
+	exe "lcd ".dir
+    endfunction
+    function! <SID>DebugPrintComp(A,C,L)
+	let list = split(globpath(g:atp_TempDir, "*"), "\n")
+	let dir = getcwd()
+	exe "lcd ".g:atp_TempDir
+	call map(list, "fnamemodify(v:val, ':.')")
+	exe "lcd ".dir
+	return join(list, "\n")
+    endfunction
+    command! -nargs=? -complete=custom,<SID>DebugPrintComp DebugPrint	:call <SID>DebugPrint(<q-args>)
+endif "}}}
 endif "}}}
 
 

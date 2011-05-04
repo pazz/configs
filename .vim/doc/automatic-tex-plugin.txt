@@ -1,6 +1,6 @@
-*automatic-tex-plugin.txt* 	For Vim version 7.3	Last change: 25 April 2011
+*automatic-tex-plugin.txt* 	For Vim version 7.3	Last change: 03 May 2011
 
-	    An Introduction to AUTOMATIC (La)TeX PLUGIN (ver. 9.3.10)
+	    An Introduction to AUTOMATIC (La)TeX PLUGIN (ver. 9.3.24)
 			by Marcin Szamotulski
 		    mszamot [AT] gmail [DOT] com
 		----------------------------------------
@@ -14,7 +14,7 @@ mszamot@gmail.com. Voting at Vim site is also welcome ;) .
 
 This is a filetype plugin for Vim to comfortably write TeX (LaTeX, PdfLaTeX)
 documents, which provides functionality not met in other such plugins. It
-makes you FREE from compiling procedure, making this process automatic using
+makes you [FREE] from compiling procedure, making this process automatic using
 autocommands. It also provides useful mappings and other functions: to analyse
 your .log file, to see the table contents, to search for a label, to search in
 bib files or to find a macro definition matching a pattern, or even to find
@@ -30,12 +30,12 @@ TeX distribution for Linux, and MikTeX on Windows.
 
 FEATURES INCLUDE: ~
 -----------------
-* background compilation with debugging mode 
+* background compilation, debugging modes, progress bar
 * command to make the document (cross references, references, index, tables
   of contents) |atp-:MakeLatex|,
 * completion for commands, closing environments (even nested), package names,
   citations and labels. Support for some latex packages.
-	See |atp-Completion|, 
+	See |atp-completion|, 
 * table of contents which allows to switch between different sections, files, 
   but also to delete and paste sections:
 	See |atp-:TOC|, |atp-toc-window|,
@@ -56,7 +56,7 @@ FEATURES INCLUDE: ~
 ==============================================================================
 SOURCEFORGE						*atp-sourceforge*
 
-  - THE PROJECT HAS MOVED FROM Launchpad to SOURCEFORGE!
+  - The project is hosted on SourceForge:
     http://sourceforge.net/projects/atp-vim/
 
 DONATE     						*atp-donate*
@@ -75,11 +75,10 @@ DONATE     						*atp-donate*
     exchange).
 
   							*atp-mailing-list*
-  - There is a mailing list which will serve for both side communications:
-    feature requests, bug reports, suggestions. You can subscribe at:
+  - There is a mailing list which will serve for: feature requests, bug
+    reports, suggestions. You can subscribe at:
     https://lists.sourceforge.net/lists/listinfo/atp-vim-list
 
-  							*atp-wiki-page*
   - There is also a new wiki page: (as for now it only includes features of
     ATP - it looks nice :)
     http://sourceforge.net/apps/mediawiki/atp-vim/index.php?title=Main_Page
@@ -133,10 +132,65 @@ NEWS							*atp-news*
  ======================
  Changes in version 9.4
 <
- |atp-:MakeLatex| is rewritten in python. The "!" is not yet implemented.
- <C-L> nmap to call this command.
+ Small but nice change in closing environments: If you type
+ \begin{envname}<Tab> the cursor position will not change. You can use
+ |i_CTRL-M| (|i_CTRL-J| is used by |atp-j_motion|) after <Tab> to open new
+ line inside {envname}.  Otherwise the cursor position will be right after the
+ closing \end{envname}.
 
- All python scripts are compatible with Python 3.1. Traceback info is
+ |atp-:LocalCommands|		  -- do not search in comments,
+ 				-- add single { if command has defined arguments.
+
+ ATP remaps |j| and |k| to ATP_J() and ATP_K(), if you remap them to |gj| and
+ |gk| ATP remaps them to ATP_GJ() and ATP_GK(). These functions move the
+ cursor and update the ToC line if ToC is opened. This makes them comatible
+ with |i_CTRL-O| and |i_CTRL_\_CTRL-O|.
+
+ Note: the format of viewer options has changed from a string to a vim list.
+ Every option and its value should be placed as a seprate element of vim list.
+ See |atp-Viewers_Options| for examples.
+
+ New imaps for some commonly used math commands: see |atp-imap-math|.
+
+ There is an option to have environment imaps with three letter abreviations:
+ for example ]the for theorem. If you want longer, but more intuitive
+ abbreviation set |g:atp_ShortEnvIMaps|=0.  Use |atp-:HelpEnvIMaps| to see
+ them. There is also one new environemt ]let which inputs a letter
+ environment. But only when you use long maps, but if you want a short imap
+ for it you can set g:atp_imap_letter="w" and ATP will make a map ]w for it.
+ Note that "l", and "L" are already taken and using "le" will slow down
+ "l", also "e" and "r" are used. You can set |g:atp_letter_opening| and
+ |g:atp_letter_closing| to customize default opening and closing
+ statements.
+
+ The abreviations are customizable: g:atp_imap_{envname}, also the leader is
+ customizable with |g:atp_imap_third_leader| and environment names for example 
+ if you set |g:atp_EnvNameTheorem|="thm" then ]the imap will insert
+ \begin{thm}:\end{thm} pair. You can list supported environments with
+ ':let g:atp_EnvName<C-d>'. If you set g:atp_imap_{envname} to empty string ""
+ the corresponding imap will not be defined.
+
+ 							*atp->E* *atp-<E*
+ There are two more nice map >E which is something like %>e, i.e. jump over
+ the current environment and go to next one. The reverse <E is alos
+ implemented, thought it is not simply <e%. They do not support count (yet),
+ and actually count breaks them. If you want to add |zz|, (|zt| or |zb|) after
+ >E you can put this in your |atprc| file:
+     map <buffer> <silent> >E	<Plug>JumptoNextEnvironmentzz
+     map <buffer> <silent> <E	<Plug>JumptoPreviousEnvironmentzz
+
+
+ |g:atp_updatetime_insert| can be changed on the fly to 0 (previously it
+ requires to quiting vim and makeing changes in |vimrc|/|atprc| files. 
+ 
+ |atp--S|, |atp--s|, |atp--c|, |atp--p| new maps for |atp-:SSec|, |atp-:Sec|,
+ |atp-:Chap| and |atp-:Part|. They also works relatievly to the current unit
+ (section/chapter/part), i.e. 2]s will jump to second section of the current
+ chapter.
+
+ |atp-:MakeLatex| is rewritten in python. The "!" is not yet implemented.
+
+ All python scripts are compatible with Python 3. Traceback info is
  forwarded to vim (and log file) in case exceptions are handled.
 
  I added (and extended) the dictionaries of latex-suite to ATP (the files
@@ -199,6 +253,12 @@ EasyMotion and ATP ~
 	Select Comments nmap and vmap is now |_c| (previously \sc was
 	interfering with an ATP font map).
 
+ (Almost all) maps became |:map-silent|.   
+
+ :DebugPrint	if yuo want to develop/debug ATP set g:atp_atpdev to 1 run
+ |atp-:ReloadATP| and this command will allow to fast printing of debug files
+ under |g:atp_TempDir|.
+
 >
   =======================
   Changes in versions 9.3
@@ -245,10 +305,10 @@ EasyMotion and ATP ~
 	    nmap Q?		q?:call ATP_CmdwinToggleSpace('on')<CR>i
 <	in your |atprc| or |vimrc| file.
 
-							*atplib-:KillAll*
-	:KillAll
-	Kill all instances of b:atp_LatexPIDs, this only works with
-	|g:atp_Compiler|="python".
+							*atplib-:Kill*
+:Kill
+	Kill python scripts running (b:atp_PythonPIDs) and all pids in
+	|b:atp_LatexPIDs|. This only works with |g:atp_Compiler|="python".
 
 							*g:atp_DeleteWithBang*
 	g:atp_DeleteWithBang = ['synctex.gz', 'tex.project.vim']
@@ -263,22 +323,23 @@ EasyMotion and ATP ~
 	|g:atp_ProjectLocalVariables| (from g:atp_cached_local_variables),
 	|g:atp_ProjectGlobalVariables| (from g:atp_cached_global_variables).
 
-							*atp-map-Gs*
-							*atp-map-Gc*
-							*atp-map-Gp*
-							*atp-:SSec*
-							*atp-:Sec*
-							*atp-:Chap*
-							*atp-:Part*
+							*atp-:SSec* *atp--S*
+							*atp-:Sec*  *atp--s*
+							*atp-:Chap* *atp--c*
+							*atp-:Part* *atp--p*
 :[count]SSec
+nmap -S
 :[count]Sec
-nmap [count]Gs
+nmap -s
 :[count]Chap
-nmap [count]Gc
+nmap -c
 :[count]Part
-nmap [count]Gp
-	Go to subsection/section/chapter/part [count] from beinging. Mark ' is
-	preserved.
+nmap -p
+	Go to subsection/section/chapter/part [count] from beinging of the
+	section/chapter/document, i.e. 3]s will jump to section 3 in current
+	chapter. Mark ' is preserved.
+
+	You can set the leader for maps with *g:atp_goto_section_leader* .
 
 nmap \c, vmap \c
 nmap \u, vmap \u
@@ -288,10 +349,10 @@ nmap \u, vmap \u
 	default it is '% '). If you do not want this maps or you want to
 	remap them to something else you can set g:atp_MapCommentLines=0 in
 	your |vimrc| or |atprc| file and use <Plug>CommentLines,
-	<Plug>UnCommentLines (these are normal maps), for example: >
+	<Plug>UnCommentLines (these are normal maps), for example:
 		nmap <LocalLeader>C 	<Plug>UnCommentLines
 		vmap <LocalLeader>C 	<Plug>UnCommentLines
-<	A usefull map for uncommenting |atp-sc|.
+	A usefull map for uncommenting |atp-sc|.
 
     |atp-sc|: {s}elect {c}omment in normal mode with <LocalLeader>sc.
     (there used to be only map in visual mode).
@@ -591,21 +652,17 @@ NEW CODE TO COMPILE DOCUMENTS	 			*atp-news-NEW_COMPILER*
 
 ================================================================================
 INSTALLATION                               		*atp-installation*
->
-	 :filetype plugin on is required to run this plugin, see
-	 |:filetype-plugin-on| and |:filetype-indent-on| if you want to have
-	 automatic indentation for TeX files. Also |:syntax on| is required as
-	 several features (but not basic ones) requires syntax.
-<
-To install you just need to copy tex.Vim file to ~your ~/.Vim/ftplugin/
-directory copy this help file to ~/.Vim/doc and then run :helptags ~/.Vim/doc
-and that's all, now you can just type your story ... :)
+
+     Neccessary vim settings:
+     |:filetype-plugin-on|
+     |:filetype-indent-on|	(if you want to have automatic indentation for TeX files)
+     |:syntax-enable|		(several features will not work properly without this option)
 
 If you do not like colours you can still set syntax on but clear the highlight
 colours (you should make a simple function which clears all the highlight
 groups, because ':hi clear' will not give you what you want).
 
-See |atp-requirements| for ATP requirements. 
+See |atp-requirements| for other  ATP requirements. 
 
 ================================================================================
 COMMANDS	                               		*atp-commands* *atp-:*
@@ -662,22 +719,18 @@ note on using CTRL-C (|i_CTRL-C|) in Vim:
  g:atp_updatetime_normal = 1000
 < - These variables sets the value of |'updatetime'| vim option.
     Separate settings are for normal and insert mode. You can make
-    g:atp_updatetime_normal even smaller so that the file is processed
+    |g:atp_updatetime_normal| even smaller so that the file is processed
     whenever you go out from insert mode to normal mode. These values will
-    overwrite the original value of |'updatetime'| so you should adjust them
-    in order for the change to have an effect.
+    overwrite the original value of |'updatetime'| (unless you set both
+    variables to 0)  so you should adjust them in order for the change to have
+    an effect.
 
     If you set |g:atp_updatetime_insert|=0 the TeX compiler will not be called
     while Vim is in the insert mode. 
 
     If you set |g:atp_updatetime_normal|=0 the TeX compiler will not be called
-    while Vim is in the normal mode. 
+    while Vim is in the normal mode.
 
-    Note: this will only work if you set this in your |atprc| or |vimrc| file.
-    Also changing this to non zero will only work after restarting Vim (so
-    this requires changing this in |atprc|/|vimrc| files. Though it is
-    possible (at least theoretically) to make it work on the fly, I found
-    a bug which I could not resolve :(.
 
 Coming back to compilation ... ~
 
@@ -892,7 +945,6 @@ map \d
 	This is equivalent to ':TEX debug'.
 
 :MakeLatex[!]						*atp-:MakeLatex*
-nmap <C-L>
 	With one command you can make your whole document: cross references,
 	bibliography (with or without bibtex), index, table of contents, table
 	of figures, table of theorems ([ntheorem package]), table of
@@ -1523,10 +1575,11 @@ map \L
 	Go (backward) to {arg}, like above |atp-:F|.
 
 
-							*atp-:NEnv* *atp->e*
+							*atp-:NEnv* *atp->e* *atp-<C-F>*
 :NEnv {environment}
 :[count]F {environment}
 [count]map >e
+[count]map <C-F>
 	Move to next environment, for example ':NEnv definition'. Completion
 	is set, which finds environments defined in current tex source file.
 	This function omits environments in comment lines.
@@ -1538,10 +1591,11 @@ map \L
 	If g:atp_mapNn is set to one (see |atp-:ToggleNn|) then this command
 	is using |atp-:S|.
 
-							*atp-:PEnv* *atp-<e*
+							*atp-:PEnv* *atp-<e* *atp-<C-B>*
 :PEnv {environment}
 [count]:B {environment}
 [count]map <e
+[count]map <C-B>
 	Move to previous environment, for example ':NEnv definition'. Completion
 	is set, which finds environments defined in current tex source file.
 	This function omits environments in comment lines.
@@ -2501,14 +2555,21 @@ COMPLETION MODES		                       	*atp-completion-modes*
 		situations: for example when it did found less than one command
 		completion. It closes the right environment when they are
 		nested (however not in right place!) and it preserves the
-		indention. When after \begin{center}\label{...} XXX is
-		something (in place of XXX) it will close the environment in
-		after the cursor position otherwise in next line.
+		indention. When after \begin{center}\label{...} XXX there is
+		something (in place of XXX) it will close the environment
+		after the cursor position otherwise in next line
+		(\hypertarget{...}{...} command is treated like \lebl{...}).
 
 		The environments opened in tex definitions ('\def',
 		'\newcommand', '\renewcommand') will not be closed unless the
 		current cursor position is in that line (sometimes one might
 		want to have a definition which only opens an environment).
+
+		If you type \begin{envname}<Tab> the cursor position will not
+		change. You can use |i_CTRL-M| (|i_CTRL-J| is used by
+		|atp-j_motion|) after <Tab> to open new line inside {envname}.
+		Otherwise the cursor position will be right after the closing
+		\end{envname}.
 
 		See |g:atp_amsmath|.
 
@@ -2975,11 +3036,14 @@ HOW TO CONFIGURE ATP TO YOUR NEEDS                      *atp-configure*
 There are several options you can set, and they might be set in your Vimrc
 file. The default values are given below (except the completion setup and
 bibtex documented above). Note: not all variables are listed below.
+
 							*atprc*
-$HOME/.atprc.vim (only on Unix/GnuLinux) or ftplugin/ATP_files/atprc.vim					
+$HOME/.atprc.vim (only on Unix/GnuLinux) or $VIMRUNTIME/ftplugin/ATP_files/atprc.vim					
     A configuration file for ATP. You do not have to use autocommands to set
     local-buffer variables, just place them here. The settings in |atprc| file
-    override the values in the project script (|atp-ProjectScript|).
+    override the values in the project script (|atp-ProjectScript|). You can
+    also overwrite the plugin maps there it you want to have different
+    behaviour on the key map used by ATP.
 
 Tip: If you want to see (almost) all the variables, type ':let g:atp_<CTRL_D>',
 and ':let b:atp_<CTRL_D>'.
@@ -3013,7 +3077,7 @@ let b:atp_TexCompilerVariable = "max_print_line=2000" 	*b:atp_TexCompilerVariabl
 
 let b:atp_BibCompiler	= "bibtex"			*b:atp_BibCompiler*
 	This variable sets the bibtex backend. There are other programs which
-	might be used, for example "biber" and "pybib" (not tested with ATP).
+	might be used, for example biber and pybib (not tested with ATP).
 	
 	The default value will be "biber" if the preamule contains
 	\usepackge[backend=biber]{biblatex}. If it is set to "biber" ATP will
@@ -3416,26 +3480,29 @@ PROJECT SCRIPT						*atp-ProjectScript*
 	for acroread. Read more about viewers in |atp-viewers|. 
 
 	If you use program b:atp_Viewer then you can use the variable
-	b:atp_{b:atp_Viewer}Options to set the options, for example if b:atp_Viewer="xpdf"
-	then you might use:
+	b:atp_{b:atp_Viewer}Options to set the options (it is a vim list), for
+	example if b:atp_Viewer="xpdf" then you might use:
 
 							*atp-Viewers_Options*
 							*b:atp_xdviOptions*
     							*b:atp_xpdfOptions*
     							*b:atp_okularOptions*
     							*b:atp_evinceOptions*
-    b:atp_xpdfOptions					
-    b:atp_xdviOptions
-    b:atp_okularOptions
-    b:atp_evinceOptions, etc ... (and also g:atp_...Options variables)
+    |b:atp_xpdfOptions|
+    |b:atp_xdviOptions|
+    |b:atp_okularOptions|
+    |b:atp_evinceOptions|, etc ... (also global variables g:atp_...Options)
 	Used by function: ViewOutput() (map \v, map <F3>, imap <F3>)
+
+	These are lists in which every viewer switch and its value should be
+	placed as element (seprate!). See examples below. 
 
 	For example, if you want to have different look of one document you can
 	set it to "-bg gray20". Some examples:
 >
- 	let b:atp_xpdfOptions	= "-bg Grey30 -mattecolor SlateBlue2 -papercolor White"
-	let g:atp_xpdfOptions	= "-bg NavajoWhite4 -fg black -mattecolor burlywood"
-	let b:atp_xdviOptions	= "-expertmode 0 -s 6"
+ 	let b:atp_xpdfOptions	= ['-bg', 'Grey30', '-mattecolor', 'SlateBlue2', '-papercolor', 'White']
+	let g:atp_xpdfOptions	= ['-bg', 'NavajoWhite4', '-fg', 'black', '-mattecolor', 'burlywood']
+	let b:atp_xdviOptions	= ['-expertmode', '0', '-s', '6']
 <	
 							*g:atp_XpdfServer* 
 >
@@ -3503,7 +3570,7 @@ PROJECT SCRIPT						*atp-ProjectScript*
 <	It is read-only variable.	
 							*b:atp_TempDir*
 >
- b:atp_TempDir =	b:atp_OutDir/.tmp
+ b:atp_TempDir = b:atp_OutDir/.tmp
 <	In this directory vim (or python) will make a temporary directory
 	(with a unique name) to which output files will be put by your TeX
 	compiler. This is done so to prevent overwriting the output file while
@@ -3512,7 +3579,13 @@ PROJECT SCRIPT						*atp-ProjectScript*
 	file). The output files are copied back to b:atp_OutDir after
 	compelation. The tmporary directory is passed to your TeX compiler
 	using '-output-directory' switch.  
-
+							*g:atp_TempDir*
+>
+ g:atp_TempDir 
+<	In this direcory the logs of ATP are stored. If vim has python support
+	is created by python in most secure way available (readable only by
+	the user) if not it is made using mkdir() vim function with 0700
+	permissions.
 							*g:atp_CompilersDict*
 >
  let g:atp_CompilersDict 	= { 
@@ -3579,11 +3652,11 @@ using the variables:
 							*g:atp_imap_first_leader*
 >
 	    g:atp_imap_first_leader == "#"
-<	    	for Greak letters, 
+<	    	for Greak letters and some math commands,
 							*g:atp_imap_second_leader*
 >
 	    g:atp_imap_second_leader == "##"
-<	    	for font commands, 
+<	    	for font commands, (another good choice is "_") 
 							*g:atp_imap_third_leader*
 >
 	    g:atp_imap_third_leader == "]"
@@ -3591,18 +3664,15 @@ using the variables:
 							*g:atp_imap_fourth_leader*
 >
 	    g:atp_imap_fourth_leader == "["
-<	    	for extra environments in the old layout.
+<	    	for extra environments in the old layout (this will be removed).
 
-If one of the imap leaders |g:atp_imap_first_leader|, ...
-,|g:atp_imap_fourth_leader| is equal to "_" then an imap with left hand side
-__ for _{} (and ^^ for ^{}) is used rather than autex function (which has this
-nice feature that it puts _{} when you type __ disregarding the time between
-first '_' and second '_', which is not the case for imap '__'.  By default
-none of imap leaders is equal to '_'.
+Note: the best way to list mappings with leader '#' in insert mode is to use
+      ':imap #<CR>'.
 
-You can list imaps with |atp-:HelpMathIMaps| and |atp-:HelpEnvIMaps|.
+You can list imaps with |atp-:HelpMathIMaps| and |atp-:HelpEnvIMaps| but the
+best way is to use |imap| directly.
 
-All other mappings (map, vmap, nmap, ...) are using |<LocalLeader>| which can be
+All other mappings (|map|, |vmap|, |nmap|, ...) are using |<LocalLeader>| which can be
 altered with the option |maplocalleader|. A good alternate solution is to use "_"
 instead of "##".
 
@@ -3623,6 +3693,16 @@ Note: in all mappings '\' is set to your |<LocalLeader>| (and thus, in fact, the
 maps listed below might differ).
 
 Note: The list of commands might not be complete.
+
+Note: There are many internal maps defined |<Plug>|, they are not documented,
+but you can easily find them (you can start with
+ftplugin/ATP_files/mappings.vim, where they are used in rhs of maps or you can
+search for them inside the scripts). 
+
+Note: you might like to use |'notimeout'| and |'nottimeout'| settings.
+However, they require that there are no maps such that no lhs is a subset ot
+the another, i.e. like "ab" and "abc". With the default settings it is
+shouldn't be a problem.
 
 						*atp-j_motion* *atp-k_motion*
 imap <Ctrl-j>, imap <Ctrl-k>	- these are two motions (based on syntax)
@@ -3773,7 +3853,6 @@ imap #F 	\Phi
 imap #G 	\Gamma
 imap #L 	\Lambda
 imap #M 	\Mu
-imap #N 	\Nu
 imap #P 	\Pi
 imap #O 	\Theta
 imap #S 	\Sigma
@@ -3784,24 +3863,36 @@ imap #W 	\Omega
 imap #Z 	\mathrm{Z}
 
 ENVIRONMENT IMAPS				*atp-imap-environments*
+						*g:atp_imap_ShortEnvIMaps*
+g:atp_imap_ShortEnvIMaps=1 by default the short environment imaps are defined,
+but if you set this variable to 0 you will get three letter abbreviations.
+The only clashes is for proof (pro) and proposition (Pro) environments and
+itemize (ite) and \item (I). You can also reconfigure them using the
+variables: g:atp_imap_{env_name} (for example g:atp_imap_theorem, if you don't
+want a map for particular environment set the corresponding variable to empty
+string ""), |g:atp_imap_third_leader| is used as a leader (the default is ]).
+Map for letter environment is not defined when you use short imaps.
+
 Note: you can list this mappings using the command |atp-:HelpEnvIMaps|.
-imap ]b 	\begin{}<Left>
-imap ]e 	\end{}<Left>
-imap ]c 	\begin{center}<Cr>\end{center}<Esc>O
 
-imap ]d 	\begin{definition}<Cr>\end{definition}<Esc>O
-imap ]t 	\begin{theorem}<Cr>\end{theorem}<Esc>O
-imap ]P 	\begin{proposition}<Cr>\end{proposition}<Esc>O
-imap ]l 	\begin{lemma}<Cr>\end{lemma}<Esc>O
-imap ]r 	\begin{remark}<Cr>\end{remark}<Esc>O
-imap ]C 	\begin{corollary}<Cr>\end{corollary}<Esc>O
-imap ]p 	\begin{proof}<Cr>\end{proof}<Esc>O
-imap ]x 	\begin{example}<Cr>\end{example}<Esc>O
-imap ]n 	\begin{note}<Cr>\end{note}<Esc>O
+imap ]b   ]beg 		\begin{}<Left>
+imap ]e   ]end		\end{}<Left>
+imap ]C   ]cen 		\begin{center}<Cr>\end{center}<Esc>O
 
-imap ]E 	\begin{enumerate}<Cr>\end{enumerate}<Esc>O
-imap ]I 	\begin{itemize}<Cr>\end{itemize}<Esc>O
-imap ]i 	\item					*atp-item*
+imap ]d   ]def 		\begin{definition}<Cr>\end{definition}<Esc>O
+imap ]t   ]the 		\begin{theorem}<Cr>\end{theorem}<Esc>O
+imap ]P   ]Pro		\begin{proposition}<Cr>\end{proposition}<Esc>O
+imap ]l	  ]lem 		\begin{lemma}<Cr>\end{lemma}<Esc>O
+imap ]r   ]rem 		\begin{remark}<Cr>\end{remark}<Esc>O
+imap ]c   ]cor 		\begin{corollary}<Cr>\end{corollary}<Esc>O
+imap ]p   ]pro		\begin{proof}<Cr>\end{proof}<Esc>O
+imap ]x   ]exa 		\begin{example}<Cr>\end{example}<Esc>O
+imap ]n   ]not 		\begin{note}<Cr>\end{note}<Esc>O
+
+imap ]E   ]enu 		\begin{enumerate}<Cr>\end{enumerate}<Esc>O
+imap ]i   ]ite 		\begin{itemize}<Cr>\end{itemize}<Esc>O
+
+imap ]I   ]I		\item					*atp-item*
 		This map has more features: if the preceding line is of the
 		form:
 			\item[(1)]
@@ -3812,25 +3903,105 @@ imap ]i 	\item					*atp-item*
 		but also (1a) -> (1b). 
 			
 
-imap ]a 	\begin{align}<Cr>\end{align}<Esc>O
-imap ]q 	\begin{equation}<Cr>\end{equation}<Esc>O
+imap ]a   ]ali 		\begin{align}<Cr>\end{align}<Esc>O
+imap ]q   ]equ 		\begin{equation}<Cr>\end{equation}<Esc>O
 
-imap ]L 	\begin{flushleft}<Cr>\end{flushleft}<Esc>O
-imap ]R 	\begin{flushright}<Cr>\end{flushright}<Esc>O
+imap ]l   ]lem 		\begin{flushleft}<Cr>\end{flushleft}<Esc>O
+imap ]R   ]rig 		\begin{flushright}<Cr>\end{flushright}<Esc>O
 
-imap ]T 	\begin{center}<CR>\begin{tikzpicture}<CR><CR>\end{tikzpicture}<CR>\end{center}<Up><Up>
-imap ]f 	\begin{frame}<Cr>\end{frame}<Esc>O
+imap ]T   ]tik 		\begin{center}<CR>\begin{tikzpicture}<CR><CR>\end{tikzpicture}<CR>\end{center}<Up><Up>
+imap ]f   ]fra 		\begin{frame}<Cr>\end{frame}<Esc>O
+
+imap      ]let		\begin{letter}{<cursor>}
+			    \opening{g:atp_letter_opening} 
+			    \closing{g:atp_letter_closing}
+			\end{letter}
+								*g:atp_letter_opening*
+								*g:atp_letter_closing*
+		By default g:atp_letter_opening and g:atp_letter_closing are ''.
 
 MATH IMAPS						*atp-imap-math*
 These are very useful mappings for typing mathematics:
+
+These two maps are only valid inside math environment (credits belongs to
+AuTeX plugin author Carl Mueller):
 imap __ 	_{}<Left>
-imap ^^ 	^{}<Left>
-	These maps are done like in auctex plugin (the idea and the solution
-	are taken from there :) and thus it is slightly different than just
-	a map and works better). 
+imap ^^		^{}<Left>
+You can set the leader for these two maps using g:atp_imap_subscript,
+g:atp_imap_supscript variables. If you do not have any maps which begins with
+_ or ^ then you can set them to _ and ^, if this is the case thes maps will
+not be fired if you type \_ or \^ (which means literal _ or ^ in LaTeX). 
+							*g:atp_imaps*
+Both above maps can be turned on/off on the fly with |g:atp_imaps| (1 - on,
+0 - off). Use |atp-:ToggleIMaps| (mapped to '<Tab>) to switch it on/off.
+
 imap ]m 	\[\]<Left><Left>
 imap ]M 	\[\]<Left><Left>
 
+imap #\		\setminus
+imap #/		\frac{}{}
+imap #&		\wedge
+imap #ve	\vee
+imap #V		\Vee
+imap #N		\Nabla
+imap #=		\equiv
+imap `8		\infty		[the default '#' is not working, ` is used intead, 
+				 but only if |g:atp_imap_first_leader|='#']
+imap `6		\partial	[as above, you can also use \p<Tab>]
+imap #@		\circ
+imap #=		\equiv
+imap #*		\bigcap
+imap #+		\bigcup
+imap #\		\backslash
+imap #>		\geq
+imap #<		\leq
+imap #~		\tilde{}	[if g:atp_imap_wide is nonempty it is \widetilde{}]
+imap #^		\hat{}		[as above]
+imap #_		\bat{}
+imap #.		\dot		[#.s will put \dots]
+
+These maps are only valid inside a math environment. They work around
+|'timeout'| vim setting (behave like |'notimeout'| was set):
+
+Some of the ideas were taken from TeX_9 by Elias Toivanen.
+
+The following imaps can be turned on/off on the fly with |g:atp_imaps|
+variable (0 - off, 1 - on). You can use |atp-:ToggleIMaps| (mapped to '<Tab>).
+
+imap ==		&=
+imap =~		\cong
+imap ~~		\approx
+
+imap o+		\oplus
+imap O+		\bigoplus
+imap o-		\ominus
+imap o.		\odot
+imap O.		\bigodot
+imap o*		\otimes
+imap O*		\bigotimes
+imap s+		\cup		[    set +]		/set = set theoretic/
+imap s-		\setminus	[    set -]
+imap S+		\bigcup		[big set +]
+imap s*		\cap		[    set *]
+imap S*		\bigcap		[big set *]
+imap c*		\prod		[    cat *]		/cat = categorical/
+imap c+		\coprod		[    cat +]
+imap <=		\leq
+imap >=		\geq
+imap t<		\triangleleft
+imap t>		\triangleright
+imap s<		\subseteq	[    set <]
+imap s>		\supseteq	[    set >]
+
+If you want to write 'o*' you can wait until |'timeoutlen'| passes or write 'o *' 
+(TeX in math mode doesn't see spaces).
+							*atp-:ToggleIMaps*
+:ToggleImaps
+nmap, imap `<Tab> 
+    It is a command to toggle the impas off/on by switching the value of
+    |g:atp_imaps|. These are the maps above plus _ for  _{} and ^ for ^{}.
+
+============
 LOG FILE MAPS						*atp-maps-log*
     This are available maps in the log file, when it was opened with
     |atp-:OpenLog| command >
@@ -3932,14 +4103,14 @@ nmaps: g>, g<, 2g>, ..., 6g>
 ================================================================================
 REQUIREMENTS							*atp-requirements*
 
-This plugin requires Vim version 7.2. Several tools uses syntax, so even if
+This plugin requires Vim version 7.3.  Several tools uses syntax, so even if
 you do not like colours on the screen you should set "syntax on". For example,
 the recognition of math mode used by |atp-completion|, and |atp-:TexAlign|
-command (but also some other things).
+command (but also some other things, and some maps!).
 
 								*atp-requirements-python*
-ATP uses python 2.7 (also works with 3.0). You need psutil library which you
-can get from here:
+ATP uses python 2.7 (also works with python 3). You need psutil library which
+you can get from here:
     http://code.google.com/p/psutil/
 Other libraries are standard ones so they should be available. If you have
 a problem you can try to set g:atp_debugPythonCompiler=1 and then look at the
@@ -3972,9 +4143,9 @@ Xpdf								*atp-Viewers-Xpdf*
 		map <S-LeftMouse>
 <	Read also |atp-:SyncTex_Xpdf-hack| and see |atp-:SetXpdf| command
 	description.  You can set your own options of Xpdf using
-	|b:atp_xpdfOptions|, for example
+	|b:atp_xpdfOptions| (or g:atp_xpdfOptions), for example:
 >
-	    let b:atp_xpdfOptions="-bg NavajoWhite4 -fg black -mattecolor burylwood"
+	    let b:atp_xpdfOptions=['-bg', 'NavajoWhite4', '-fg', 'black', '-mattecolor', 'burylwood']
 <
 	will make Xpdf view different. This is helpful when you edit to
 	files, and do not want to mix them. Another nice example:
@@ -4014,7 +4185,7 @@ Okular
 <
 								*atp-:SyncTex_with_Okular*
 	NOTE: :SyncTex command uses "--unique" switch for okular. However,
-	when you do not set b:atp_okularOptions to "--unique" as well, then
+	when you do not set |b:atp_okularOptions| to ["--unique"] as well, then
 	using :SyncTex will open new instance of Okular regardless if it was
 	openned or not. You can use "--unique" as an Okular option (in
 	g:atp_okularOptins or b:atp_okularOptions), but the if you open many
@@ -4068,8 +4239,9 @@ Xdvi								*atp-Viewers-Xdvi*
 	Xdvi. The forward search is set by ATP (see |atp:SyncTex|), the
 	inverse search is set by: >
 	    let b:atp_TexCompiler	= "latex"
-	    let b:atp_TexOptions	= "-src-specials"
-	    let b:atp_Viewer		= "xdvi -editor 'gvim --remote-wait +%l %f'"
+	    let b:atp_TexOptions	= ["-src-specials"]
+	    let b:atp_Viewer		= "xdvi" 
+	    let b:atp_xdviOptions	= ["-editor", "'gvim --remote-wait +%l %f'"]
 <	They are not set by default, however there is simple command to set
 	them at once |atp-:SetXdvi|.	
 	This are excellent sources of information on this:
