@@ -13,3 +13,4 @@ alias o="ssh -X $one"
 alias s='ssh -X -L8888:129.215.90.80:80 s0976898@ssh.inf.ed.ac.uk'
 alias trc='transmission-remote-cli -c `~/bin/getpwd Transmission`@openwrt'
 alias gmutt="mutt -F ~/.muttrc.gmail"
+alias gb="goobook dquery"
