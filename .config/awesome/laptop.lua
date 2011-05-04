@@ -350,8 +350,8 @@ end,
 volbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(mixer_cmd) end),
 	awful.button({ }, 3, function () awful.util.spawn('amixer -q set Master toggle') end),
-	awful.button({ }, 4, function () awful.util.spawn('amixer -q set Master 5%-') end),
-	awful.button({ }, 5, function () awful.util.spawn('amixer -q set Master 5%+') end)
+	awful.button({ }, 4, function () awful.util.spawn('amixer -q set Master 5%+') end),
+	awful.button({ }, 5, function () awful.util.spawn('amixer -q set Master 5%-') end)
 )
 volbar.widget:buttons(volbuttons)
 sndicon:buttons(volbuttons)
