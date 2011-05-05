@@ -410,7 +410,6 @@ wifibuttons = awful.util.table.join(
 )
 wifiicon:buttons(wifibuttons)
 wifiwidget:buttons(wifibuttons)
-
  --Create a wibox for each screen and add it
 mywibox = {}
 mypromptbox = {}
