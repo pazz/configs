@@ -401,6 +401,29 @@ vicious.register(mpdwidget, vicious.widgets.mpd,
 --wifiicon:buttons(wifibuttons)
 --wifiwidget:buttons(wifibuttons)
 --
+
+-- Weather widget
+weatherwidget = widget({ type = "textbox" })
+weatherwidget.text = "weather"
+    vicious.register(weatherwidget, vicious.widgets.weather,
+    function (widget, args)
+        local weather_popup
+        if args["{tempc}"] == "N/A" then
+            return " No Info "
+        else
+            weatherwidget:add_signal('mouse::enter', function () 
+                weather_popup =
+                    naughty.notify({ 
+                        title = "" .. " Weather", text = "Wind    : " .. args["{windmph}"] .. " mph " .. args["{wind}"] .. "\nHumidity: " .. args["{humid}"] .. " %\nPressure: " .. args["{press}"] .. " hPa" .. "", border_color = "#1a1a1a", timeout = 0, hover_timeout = 0.5 })
+            end)
+            weatherwidget:add_signal('mouse::leave', function () naughty.destroy(weather_popup) end)
+            return "weather " .. string.lower(args["{sky}"]) .. ", " .. args["{tempc}"] .. "°C" 
+        end
+    end, 20, "EGPH" )
+--weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
+
+
+
  --Create a wibox for each screen and add it
 mywibox = {}
 mypromptbox = {}
@@ -446,6 +469,7 @@ for s = 1, screen.count() do
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
+        rightcap,weatherwidget, spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
