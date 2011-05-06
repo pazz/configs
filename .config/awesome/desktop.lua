@@ -124,7 +124,7 @@ clientbuttons = awful.util.table.join(
 -- order here matters, early rules will be applied first
 shifty.config.apps = {
          { match = { "Firefox" }, tag = "web" } ,
-         { match = { "Shredder.*","Thunderbird","mutt", "sup" } , tag = "mail" } ,
+         { match = { "Shredder.*","Thunderbird","mutt", "Sup.*" } , tag = "mail" } ,
          { match = { ".*Calendar.*" } , tag = "calendar" } ,
          { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
          { match = { terminal } ,slave = true } ,
@@ -413,14 +413,17 @@ weatherwidget.text = "weather"
             return " No Info "
         else
             weatherwidget:add_signal('mouse::enter', function () 
-                weather_popup =
-                    naughty.notify({ 
-                        title = "" .. " Weather", text = "Wind    : " .. args["{windmph}"] .. " mph " .. args["{wind}"] .. "\nHumidity: " .. args["{humid}"] .. " %\nPressure: " .. args["{press}"] .. " hPa" .. "", border_color = "#1a1a1a", timeout = 0, hover_timeout = 0.5 })
+                weather_popup = naughty.notify({ 
+                        title = "<span color='" .. beautiful.fg_urgent .."'><b>Weather</b></span>",
+                        text = "Wind    : " .. args["{windmph}"] .. " mph " .. args["{wind}"] .. "\nHumidity: " .. args["{humid}"] .. " %\nPressure: " .. args["{press}"] .. " hPa" .. "", 
+                        timeout = 0, 
+                        hover_timeout = 0.5 
+                    })
             end)
             weatherwidget:add_signal('mouse::leave', function () naughty.destroy(weather_popup) end)
             return "weather " .. string.lower(args["{sky}"]) .. ", " .. args["{tempc}"] .. "°C" 
         end
-    end, 20, "EGPH" )
+    end, 300, "EGPH" )
 --weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
 
 
