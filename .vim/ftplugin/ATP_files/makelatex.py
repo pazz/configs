@@ -359,6 +359,7 @@ try:
         lot     =False
         lof     =False
         thm     =False
+        loa     =False
         for el in openout_list:
             if re.search('\.toc$',el):
                 toc=True
@@ -372,6 +373,9 @@ try:
                 need_runs.append(1)
             if re.search('\.thm$',el):
                 thm=True
+                need_runs.append(1)
+            if re.search('\.loa',el):
+                loa=True
                 need_runs.append(1)
 
         debug_file.write("A0 need_runs="+str(need_runs)+"\n")

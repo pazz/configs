@@ -438,6 +438,7 @@ endfunction "}}}
 "{{{ MakeLatex
 " Function Arguments:
 function! <SID>MakeLatex(bang, verbose, start)
+
     " a:verbose and a:bang are not yet used by makelatex.py
     let PythonMakeLatexPath = globpath(&rtp, "ftplugin/ATP_files/makelatex.py")
     let interaction 	    = ( a:verbose=="verbose" ? b:atp_VerboseLatexInteractionMode : 'nonstopmode' )
@@ -476,6 +477,17 @@ function! <SID>MakeLatex(bang, verbose, start)
     unlockvar g:atp_TexCommand
     let g:atp_TexCommand=cmd
     lockvar g:atp_TexCommand
+
+    " Write file
+    let backup		= &backup
+    let writebackup	= &writebackup
+
+    " Disable WriteProjectScript
+    let eventignore 		= &l:eventignore
+    setl eventignore+=BufWrite
+    silent! w
+    let &l:eventignore 		= eventignore
+
     if a:verbose == "verbose"
 	exe ":!".cmd
     elseif has("win16") || has("win32") || has("win64")
@@ -1084,6 +1096,9 @@ function! <SID>auTeX(...)
 
     " if the file (or input file is modified) compile the document 
     if filereadable(expand("%"))
+" 	if !exists("b:atp_changedtick")
+" 	    let b:atp_changedtick = b:changedtick
+" 	endif
 	if g:atp_Compare == "changedtick"
 	    let cond = ( b:changedtick != b:atp_changedtick )
 	else
@@ -1330,13 +1345,50 @@ function! <SID>SetErrorFormat(...)
     let l:cgetfile = ( a:0 >=2 ? a:2 : 0 )
     " This l:cgetfile == 1 only if run by the command :ErrorFormat 
     if l:cgetfile  == 1 && a:1 == ''	
-	echo "[ATP:] current error format: ".b:atp_ErrorFormat 
+	echo "[ATP:] current error format: ".getbufvar(bufnr(fnamemodify(&l:errorfile, ":r").".tex"), "atp_ErrorFormat") 
 	return
     endif
 
-    let carg = ( a:0 == 0 ? g:atp_DefaultErrorFormat : a:1 )
+    let carg_raw = ( a:0 == 0 ? g:atp_DefaultErrorFormat : a:1 )
+    let carg_list= split(carg_raw, '\zs')
+    if carg_list[0] =~ '^[+-]$'
+	let add=remove(carg_list,0)
+    else
+	let add=0
+    endif
+    for i in range(0, len(carg_list)-2)
+	if carg_list[i] == 'f' && get(carg_list,i+1, "") == "i"
+	    call remove(carg_list, i+1)
+	    let carg_list[i]="fi"
+	endif
+    endfor
+
+    " Get the bufnr of tex file corresponding to the &l:errorfile
+    let bufnr = bufnr(fnamemodify(&l:errorfile, ":r").".tex")
+    let carg= !exists("w:quickfix_title") && exists("b:atp_ErrorFormat")
+		\ ? b:atp_ErrorFormat 
+		\ : getbufvar((bufnr), "atp_ErrorFormat")
+    if carg_raw =~ '^+'
+	for flag in carg_list
+	    if flag != 'f' && b:atp_ErrorFormat !~ flag || flag == 'f' && b:atp_ErrorFormat !~ 'fi\@!'
+		let carg .= flag
+	    endif
+	endfor
+    elseif carg_raw =~ '^-'
+	for flag in carg_list
+	    if flag != 'f'
+		let carg=substitute(carg, flag, '', 'g')
+	    else
+		let carg=substitute(carg, 'fi\@!', '', 'g')
+	    endif
+	endfor
+    else
+	let carg=carg_raw
+    endif
     let b:atp_ErrorFormat = carg
-    let g:carg = carg." a:1=".a:1
+    if exists("w:quickfix_title")
+	call setbufvar(bufnr, "atp_ErrorFormat", carg)
+    endif
 
     let &l:errorformat=""
     if ( carg =~ 'e' || carg =~# 'all' ) 
@@ -1475,6 +1527,16 @@ function! <SID>SetErrorFormat(...)
 	catch E40:
 	endtry
     endif
+    if t:atp_QuickFixOpen
+	let winnr=winnr()
+	" Quickfix is opened, jump to it and change the size
+	copen
+	exe "resize ".min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])
+	exe winnr."wincmd w"
+    endif
+    if add != "0"
+	echo "[ATP:] current error format: ".b:atp_ErrorFormat 
+    endif
 endfunction
 "}}}
 "{{{ ShowErrors
@@ -1563,7 +1625,7 @@ endif
 
 endif "}}}
 
-" Commands: 
+" Commands And Autocommands: 
 " {{{
 command! -buffer -bang 		Kill			:call <SID>Kill(<q-bang>)
 command! -buffer -nargs=? 	ViewOutput		:call <SID>ViewOutput(<f-args>)
@@ -1575,14 +1637,27 @@ command! -buffer -nargs=? -bang -count=1 -complete=custom,DebugComp TEX	:call <S
 command! -buffer -count=1	DTEX			:call <SID>TeX(<count>, <q-bang>, 'debug') 
 command! -buffer -bang -nargs=? -complete=custom,BibtexComp Bibtex		:call <SID>Bibtex(<q-bang>, <f-args>)
 command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A SetErrorFormat 	:call <SID>SetErrorFormat(<f-args>,1)
+
 augroup ATP_QuickFix_1
     au!
-    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A SetErrorFormat :call <SID>SetErrorFormat(<q-args>,1) | cg
-    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A ErrorFormat :call <SID>SetErrorFormat(<q-args>,1) | cg
-    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A ShowErrors :call <SID>SetErrorFormat(<f-args>) | cg
+    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A SetErrorFormat :call <SID>SetErrorFormat(<q-args>,1)
+    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A ErrorFormat :call <SID>SetErrorFormat(<q-args>,1)
+    au FileType qf command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A ShowErrors :call <SID>SetErrorFormat(<f-args>)
 augroup END
+
 command! -buffer -nargs=? -complete=custom,ListErrorsFlags_A 	ErrorFormat 	:call <SID>SetErrorFormat(<q-args>,1)
-exe "SetErrorFormat ".g:atp_DefaultErrorFormat
+let load_ef=(exists("t:atp_QuickFixOpen") ? !t:atp_QuickFixOpen : 1)
+" Note: the following code works nicly with :split (do not reloads the log file) but
+" this is not working with :edit
+" but one can use: au BufEnter *.tex :cgetfile
+if exists("t:atp_QuickFixOpen") && t:atp_QuickFixOpen
+    " If QuickFix is opened:
+    let load_ef = 0
+else
+    let load_ef = 1
+endif
+" let g:load_ef=load_ef
+call <SID>SetErrorFormat(g:atp_DefaultErrorFormat, load_ef)
 command! -buffer -nargs=? -complete=custom,ListErrorsFlags 	ShowErrors 	:call ShowErrors(<f-args>)
 " }}}
 " vim:fdm=marker:tw=85:ff=unix:noet:ts=8:sw=4:fdc=1

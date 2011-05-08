@@ -345,7 +345,7 @@ atp-:PSSec	automatic-tex-plugin.txt	/*atp-:PSSec*
 atp-:PSec	automatic-tex-plugin.txt	/*atp-:PSec*
 atp-:Part	automatic-tex-plugin.txt	/*atp-:Part*
 atp-:PasteSection	automatic-tex-plugin.txt	/*atp-:PasteSection*
-atp-:Preambule	automatic-tex-plugin.txt	/*atp-:Preambule*
+atp-:Preamble	automatic-tex-plugin.txt	/*atp-:Preamble*
 atp-:PrevSection	automatic-tex-plugin.txt	/*atp-:PrevSection*
 atp-:ReloadATP	automatic-tex-plugin.txt	/*atp-:ReloadATP*
 atp-:S	automatic-tex-plugin.txt	/*atp-:S*
@@ -375,7 +375,7 @@ atp-:TexAlign	automatic-tex-plugin.txt	/*atp-:TexAlign*
 atp-:TexDoc	automatic-tex-plugin.txt	/*atp-:TexDoc*
 atp-:ToDo	automatic-tex-plugin.txt	/*atp-:ToDo*
 atp-:ToggleEnv	automatic-tex-plugin.txt	/*atp-:ToggleEnv*
-atp-:ToggleIMaps	automatic-tex-plugin.txt	/*atp-:ToggleIMaps*
+atp-:ToggleMathIMaps	automatic-tex-plugin.txt	/*atp-:ToggleMathIMaps*
 atp-:ToggleNn	automatic-tex-plugin.txt	/*atp-:ToggleNn*
 atp-:ToggleProjectScript	automatic-tex-plugin.txt	/*atp-:ToggleProjectScript*
 atp-:ToggleStar	automatic-tex-plugin.txt	/*atp-:ToggleStar*
@@ -522,6 +522,7 @@ atp-requirements-python	automatic-tex-plugin.txt	/*atp-requirements-python*
 atp-sourceforge	automatic-tex-plugin.txt	/*atp-sourceforge*
 atp-status-line	automatic-tex-plugin.txt	/*atp-status-line*
 atp-status-line-notification	automatic-tex-plugin.txt	/*atp-status-line-notification*
+atp-tikzpicture	automatic-tex-plugin.txt	/*atp-tikzpicture*
 atp-tips	automatic-tex-plugin.txt	/*atp-tips*
 atp-toc-window	automatic-tex-plugin.txt	/*atp-toc-window*
 atp-vaS	automatic-tex-plugin.txt	/*atp-vaS*
@@ -646,6 +647,9 @@ g:atp_delete_output	automatic-tex-plugin.txt	/*g:atp_delete_output*
 g:atp_goto_section_leader	automatic-tex-plugin.txt	/*g:atp_goto_section_leader*
 g:atp_iabbrev_leader	automatic-tex-plugin.txt	/*g:atp_iabbrev_leader*
 g:atp_imap_ShortEnvIMaps	automatic-tex-plugin.txt	/*g:atp_imap_ShortEnvIMaps*
+g:atp_imap_define_greek_letters	automatic-tex-plugin.txt	/*g:atp_imap_define_greek_letters*
+g:atp_imap_define_math	automatic-tex-plugin.txt	/*g:atp_imap_define_math*
+g:atp_imap_define_math_misc	automatic-tex-plugin.txt	/*g:atp_imap_define_math_misc*
 g:atp_imap_first_leader	automatic-tex-plugin.txt	/*g:atp_imap_first_leader*
 g:atp_imap_fourth_leader	automatic-tex-plugin.txt	/*g:atp_imap_fourth_leader*
 g:atp_imap_second_leader	automatic-tex-plugin.txt	/*g:atp_imap_second_leader*

@@ -111,11 +111,6 @@ function! LocalCommands(...)
 		\ . '\|\\SetMathAlphabet\>'
     let bang	= a:0 >= 2 ? a:2 : '' 
 
-    " Regenerate the package list
-    if bang == "!"
-	let b:atp_PacakgeList	= atplib#GrepPackageList()
-    endif
-
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
 
 
