@@ -1,0 +1,1 @@
+header["Bcc"] = header["From"]
