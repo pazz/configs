@@ -1,0 +1,81 @@
+--- 
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/gmail/All
+  usual: true
+  archived: false
+  id: 1
+  labels: []
+
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/INBOX
+  usual: true
+  archived: false
+  id: 2
+  labels: []
+
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.automata-team
+  usual: true
+  archived: false
+  id: 4
+  labels: 
+  - automata
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.lfcs
+  usual: true
+  archived: false
+  id: 6
+  labels: 
+  - lfcs
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.phd-students
+  usual: true
+  archived: false
+  id: 7
+  labels: 
+  - gradschool
+  - phd-students
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.seminars
+  usual: true
+  archived: false
+  id: 8
+  labels: 
+  - seminars
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.sicsa
+  usual: true
+  archived: false
+  id: 9
+  labels: 
+  - sicsa
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.students
+  usual: true
+  archived: false
+  id: 10
+  labels: 
+  - students
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/Call4Papers
+  usual: true
+  archived: false
+  id: 11
+  labels: 
+  - C4P
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/Sent
+  usual: true
+  archived: true
+  id: 3
+  labels: 
+  - sent
+- !masanjin.net,2006-10-01/Redwood/Maildir 
+  uri: maildir:/home/pazz/mail/uoe/lists.agda
+  usual: true
+  archived: true
+  id: 5
+  labels: 
+  - agda
+- !masanjin.net,2006-10-01/Redwood/SentLoader {}
+

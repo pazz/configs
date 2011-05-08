@@ -18,10 +18,11 @@ type = IMAP
 remotehost = imap.gmail.com
 remoteuser = patricktotzke@gmail.com
 remotepasseval = getpwd("Gmail")
-nametrans = lambda foldername: re.sub ('^\[Google\ Mail\]\/', '',foldername)
+nametrans = lambda foldername: re.sub(' Mail','',re.sub('^\[Google\ Mail\]\/', '',foldername))
 #folderfilter = lambda foldername: not re.match('^\[Google\ Mail\]\/.*',foldername)
 #folderfilter = lambda foldername: foldername in ['[Google Mail]/All Mail']
-folderfilter = lambda foldername: foldername not in ['Spam', 'Trash','Bin','[Google Mail]/Sent Mail','[Google Mail]/All Mail']
+#folderfilter = lambda foldername: foldername not in ['Spam', 'Trash','Bin','[Google Mail]/Sent Mail','[Google Mail]/All Mail']
+folderfilter = lambda foldername: foldername not in ['Spam', 'Trash','Bin','[Google Mail]/Sent Mail',]
 
 ssl = yes
 maxconnections = 6
