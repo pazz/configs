@@ -65,8 +65,8 @@ function! LatexBox_TexIndent()
 
 	let n += s:ComputeLevel(lnum_prev, s:open_pat, s:close_pat)
 
-	let n += s:ComputeLevel(lnum_prev, '\\begin{\%(' . join(s:itemize_envs, '\|') . '\)}',
-				\ '\\end{\%(' . join(s:itemize_envs, '\|') . '\)}')
+	let n += s:ComputeLevel(lnum_prev, '\\begin{\%(' . join(s:itemize_envs, '\|') . '\)}', 
+		    \ '\\end{\%(' . join(s:itemize_envs, '\|') . '\)}')
 
 	" less shift for lines starting with \item
 	let item_here = getline(v:lnum) =~ '^\s*\\item'

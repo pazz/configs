@@ -3,7 +3,7 @@
 " Note:	       This file is a part of Automatic Tex Plugin for Vim.
 " URL:	       https://launchpad.net/automatictexplugin
 " Language:    tex
-" Last Change: Tue May 03 07:00  2011 W
+" Last Change: Sun May 08 07:00  2011 W
 
 let s:sourced 	= exists("s:sourced") ? 1 : 0
 
@@ -13,7 +13,6 @@ if !s:sourced || g:atp_reload_functions "{{{
 " {{{ WrapSelection
 function! s:WrapSelection(wrapper,...)
 
-    let g:args=[a:wrapper]+a:000
     let l:end_wrapper 	= ( a:0 >= 1 ? a:1 : '}' )
     let l:cursor_pos	= ( a:0 >= 2 ? a:2 : 'end' )
     let l:new_line	= ( a:0 >= 3 ? a:3 : 0 )
@@ -373,6 +372,7 @@ function! Insert(text, math)
     let new_line	= strpart(line, 0, col) . insert . strpart(line, col)
     call setline(line("."), new_line)
     call cursor(line("."), col(".")+len(insert))
+
     return ""
 endfunction
 " }}}
@@ -384,14 +384,19 @@ function! InsertItem()
     let saved_pos	= getpos(".")
     call cursor(line("."), 1)
 
+    if g:atp_debugInsertItem
+	let g:debugInsertItem_redir= "redir! > ".g:atp_TempDir."/InsertItem.log"
+	exe "redir! > ".g:atp_TempDir."/InsertItem.log"
+    endif
+
     if getline(begin_line) =~ '\\begin\s*{\s*thebibliography\s*}'
 	call cursor(saved_pos[1], saved_pos[2])
 	let new_line	= strpart(getline("."), 0, col(".")) . '\bibitem' . strpart(getline("."), col("."))
-	let g:new_line	= new_line
 	call setline(line("."), new_line)
 
 	" Indent the line:
 	if &l:indentexpr != ""
+	    let v:lnum=saved_pos[1]
 	    execute "let indent = " . &l:indentexpr
 	    let i 	= 1
 	    let ind 	= ""
@@ -406,13 +411,19 @@ function! InsertItem()
 	call setline(line("."), ind . substitute(getline("."), '^\s*', '', ''))
 	let saved_pos[2]	+= len('\bibitem') + indent
 	call cursor(saved_pos[1], saved_pos[2])
+
+	if g:atp_debugInsertItem
+	    let g:InsertIntem_return = 0
+	    silent echo "0] return"
+	    redir END
+	endif
 	return
     endif
 
     " This will work with \item [[1]], but not with \item [1]]
     let [ bline, bcol]	= searchpos('\\item\s*\zs\[', 'b', begin_line) 
     if bline == 0
-	keepjumps call setpos(".", saved_pos)
+	call cursor(saved_pos[1], saved_pos[2])
 	if search('\\item\>', 'nb', begin_line)
 	    let new_line	= strpart(getline("."), 0, col(".")) . '\item '. strpart(getline("."), col("."))
 	else
@@ -422,6 +433,7 @@ function! InsertItem()
 
 	" Indent the line:
 	if &l:indentexpr != ""
+	    let v:lnum=saved_pos[1]
 	    execute "let indent = " . &l:indentexpr
 	    let i 	= 1
 	    let ind 	= ""
@@ -433,16 +445,29 @@ function! InsertItem()
 	    indent	= -1
 	    ind 	=  matchstr(getline("."), '^\s*')
 	endif
+	if g:atp_debugInsertItem
+	    silent echo "1] indent=".len(ind)
+	endif
 	call setline(line("."), ind . substitute(getline("."), '^\s*', '', ''))
 
 	" Set the cursor position
 	let saved_pos[2]	+= len('\item') + indent
 	keepjumps call setpos(".", saved_pos)
 
+	if g:atp_debugInsertItem
+	    let g:debugInsertItem_return = 1
+	    silent echo "1] return"
+	    redir END
+	endif
 	return ""
     endif
     let [ eline, ecol]	= searchpairpos('\[', '', '\]', 'nr', '', line("."))
     if eline != bline
+	if g:atp_debugInsertItem
+	    let g:debugInsertItem_return = 2
+	    silent echo "2] return"
+	    redir END
+	endif
 	return ""
     endif
 
@@ -454,32 +479,51 @@ function! InsertItem()
     let space		= matchstr(getline("."), '\\item\zs\s*\ze\[')
     if nr2char(number) != "" && subNr == "" 
 	let new_item	= substitute(item, number, number + 1, '')
+	if g:atp_debugInsertItem
+	    silent echo "(1) new_item=".new_item
+	endif
     elseif item =~ '\%('.bpat.'\)\=\s*\%(i\|ii\|iii\|iv\|v\|vi\|vii\|viii\|ix\)\%('.epat.'\)\=$'
 	let numbers	= [ 'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x' ]
 	let roman	= matchstr(item, '\%('.bpat.'\)\=\s*\zs\w\+\ze\s*\%('.epat.'\)\=$')
 	let new_roman	= get(numbers, index(numbers, roman) + 1, 'xi') 
 	let new_item	= substitute(item,  '^\%('.bpat.'\)\=\s*\zs\a\+\ze\s*\%('.epat.'\)\=$', new_roman, 'g') 
+	if g:atp_debugInsertItem
+	    silent echo "(2) new_item=".new_item
+	endif
     elseif nr2char(number) != "" && subNr != ""
 	let alphabet 	= [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z' ] 
 	let char	= matchstr(item, '^\%('.bpat.'\)\=\s*\d\+\zs\a\ze\s*\%('.epat.'\)\=$')
 	let new_char	= get(alphabet, index(alphabet, char) + 1, 'z')
 	let new_item	= substitute(item, '^\%('.bpat.'\)\=\s*\d\+\zs\a\ze\s*\%('.epat.'\)\=$', new_char, 'g')
+	if g:atp_debugInsertItem
+	    silent echo "(3) new_item=".new_item
+	endif
     elseif item =~ '\%('.bpat.'\)\=\s*\w\s*\%('.epat.'\)\='
 	let alphabet 	= [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z' ] 
 	let char	= matchstr(item, '^\%('.bpat.'\)\=\s*\zs\w\ze\s*\%('.epat.'\)\=$')
 	let new_char	= get(alphabet, index(alphabet, char) + 1, 'a')
 	let new_item	= substitute(item, '^\%('.bpat.'\)\=\s*\zs\w\ze\s*\%('.epat.'\)\=$', new_char, 'g')
+	if g:atp_debugInsertItem
+	    silent echo "(4) new_item=".new_item
+	endif
     else
 	let new_item	= item
+	if g:atp_debugInsertItem
+	    silent echo "(5) new_item=".item
+	endif
     endif
 
     keepjumps call setpos(".", saved_pos)
 
     let new_line	= strpart(getline("."), 0, col(".")) . '\item' . space . '[' . new_item . '] ' . strpart(getline("."), col("."))
+    if g:atp_debugInsertItem
+	silent echo "new_line=".new_line
+    endif
     call setline(line("."), new_line)
 
     " Indent the line:
     if &l:indentexpr != ""
+	let v:lnum=saved_pos[1]
 	execute "let indent = " . &l:indentexpr
 	let i 	= 1
 	let ind 	= ""
@@ -490,6 +534,9 @@ function! InsertItem()
     else
 	ind 	= matchstr(getline("."), '^\s*')
     endif
+    if g:atp_debugInsertItem
+	silent echo "indent=".len(ind)
+    endif
     call setline(line("."), ind . substitute(getline("."), '^\s*', '', ''))
 
     " Set the cursor position
@@ -497,6 +544,11 @@ function! InsertItem()
     keepjumps call setpos(".", saved_pos)
 
 
+    if g:atp_debugInsertItem
+	let g:debugInsertItem_return = 3
+	silent echo "3] return"
+	redir END
+    endif
     return ""
 endfunction
 " }}}

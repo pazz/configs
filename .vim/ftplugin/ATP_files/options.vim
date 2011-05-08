@@ -40,6 +40,10 @@ endif
 
 " ATP Debug Variables: (to debug atp behaviour)
 " {{{ debug variables
+if !exists("g:atp_debugInsertItem")
+    " debug UpdateATP (various.vim)
+    let g:atp_debugInsertItem = 0
+endif
 if !exists("g:atp_debugUpdateATP")
     " debug UpdateATP (various.vim)
     let g:atp_debugUpdateATP 	= 0
@@ -325,20 +329,35 @@ lockvar b:atp_autex_wait
 
 " Global Variables: (almost all)
 " {{{ global variables 
-if !exists("g:atp_atpdev")
+if !exists("g:atp_cgetfile") || g:atp_reload_variables
+    let g:atp_cgetfile = 1
+endif
+if !exists("g:atp_atpdev") || g:atp_reload_variables
     let g:atp_atpdev = 0
 endif
 if !exists("g:atp_imap_ShortEnvIMaps") || g:atp_reload_variables
     let g:atp_imap_ShortEnvIMaps = 1
 endif
+if !exists("g:atp_imap_over_leader") || g:atp_reload_variables
+    let g:atp_imap_over_leader="`"
+endif
 if !exists("g:atp_imap_subscript") || g:atp_reload_variables
     let g:atp_imap_subscript="__"
 endif
 if !exists("g:atp_imap_supscript") || g:atp_reload_variables
-    let g:atp_imap_supscript="^^"
+    let g:atp_imap_supscript="^"
 endif
-if !exists("g:atp_imaps") || g:atp_reload_variables
-    let g:atp_imaps=1
+if !exists("g:atp_imap_define_math") || g:atp_reload_variables
+    let g:atp_imap_define_math=1
+endif
+if !exists("g:atp_imap_define_environments") || g:atp_reload_variables
+    let g:atp_imap_define_environments = 1
+endif
+if !exists("g:atp_imap_define_math_misc") || g:atp_reload_variables
+    let g:atp_imap_define_math_misc = 1
+endif
+if !exists("g:atp_imap_define_greek_letters") || g:atp_reload_variables
+    let g:atp_imap_define_greek_letters = 1
 endif
 if !exists("g:atp_imap_wide") || g:atp_reload_variables
     let g:atp_imap_wide=0
@@ -449,14 +468,14 @@ if !exists("g:atp_imap_enumerate") || g:atp_reload_variables
 endif
 if !exists("g:atp_imap_itemize") || g:atp_reload_variables
     if g:atp_imap_ShortEnvIMaps
-	let g:atp_imap_itemize="i"
+	let g:atp_imap_itemize="I"
     else
 	let g:atp_imap_itemize="ite"
     endif
 endif
 if !exists("g:atp_imap_item") || g:atp_reload_variables
     if g:atp_imap_ShortEnvIMaps
-	let g:atp_imap_item="I"
+	let g:atp_imap_item="i"
     else
 	let g:atp_imap_item="I"
     endif
@@ -919,7 +938,7 @@ if !exists("g:atp_delete_output") || g:atp_reload_variables
     let g:atp_delete_output	= 0
 endif
 if !exists("g:keep") || g:atp_reload_variables
-    let g:keep=[ "log", "aux", "toc", "bbl", "ind", "pdfsync", "synctex.gz", "blg" ]
+    let g:keep=[ "log", "aux", "toc", "bbl", "ind", "synctex.gz", "blg", "loa", "toc", "lot", "lof", "thm" ]
     " biber stuff is added before compelation, this makes it possible to change 
     " to biber on the fly
     if b:atp_BibCompiler =~ '^\s*biber\>'
@@ -1064,8 +1083,10 @@ function! s:ShowOptions(bang,...)
     let pattern	= a:0 >= 1 ? a:1 : ".*,"
     let mlen	= max(map(copy(keys(s:optionsDict)), "len(v:val)"))
 
-    echo "Local buffer variables:"
     redraw
+    echohl WarningMsg
+    echo "Local buffer variables:"
+    echohl Normal
     for key in keys(s:optionsDict)
 	let space = ""
 	for s in range(mlen-len(key)+1)
@@ -1073,14 +1094,16 @@ function! s:ShowOptions(bang,...)
 	endfor
 	if "b:".key =~ pattern
 " 	    if patn != '' && "b:".key !~ patn
-	    echo "b:".key.space.getbufvar(bufnr(""), key)
+		echo "b:".key.space.string(getbufvar(bufnr(""), key))
 " 	    endif
 	endif
     endfor
     if a:bang == "!"
 " 	Show some global options
 	echo "\n"
+	echohl WarningMsg
 	echo "Global variables (defined in ".s:file."):"
+	echohl Normal
 	let saved_loclist	= getloclist(0)
 	    execute "lvimgrep /^\\s*let\\s\\+g:/j " . fnameescape(s:file)
 	let global_vars		= getloclist(0)
@@ -1104,7 +1127,12 @@ function! s:ShowOptions(bang,...)
 	    endfor
 	    if var_name =~ pattern && var_name !~ '_command\|_amsfonts\|ams_negations\|tikz_\|keywords'
 " 		if patn != '' && var_name !~ patn
-		echo var_name.space.string({var_name})
+		if index(["g:atp_LatexPackages", "g:atp_LatexClasses", "g:optionsDict", "g:optionsKeys", "g:atp_completion_modes", "g:atp_completion_modes_normal_mode", "g:atp_Environments", "g:atp_shortname_dict", "g:atp_MathTools_environments", "g:atp_keymaps", "g:atp_CupsOptions", "g:atp_CompilerMsg_Dict", "g:ViewerMsg_Dict", "g:CompilerMsg_Dict", "g:atp_amsmath_environments"], var_name) == -1 && var_name !~# '^g:atp_Beamer' && var_name !~# '^g:atp_TodoNotes'
+		    echo var_name.space.string({var_name})
+		    if len(var_name.space.string({var_name})) > &l:columns
+			echo "\n"
+		    endif
+		endif
 " 		endif
 	    endif
 	endfor
@@ -1119,7 +1147,9 @@ command! -buffer -bang -nargs=* ShowOptions		:call <SID>ShowOptions(<q-bang>, <q
 let t:atp_DebugMode	= g:atp_DefaultDebugMode 
 " there are three possible values of t:atp_DebugMode
 " 	silent/normal/debug
-let t:atp_QuickFixOpen	= 0
+if !exists("t:atp_QuickFixOpen")
+    let t:atp_QuickFixOpen	= 0
+endif
 
 if !s:did_options
     augroup ATP_DebugMode
@@ -1359,9 +1389,12 @@ function! ATP_ToggleSpace(...)
 endfunction
 function! ATP_CmdwinToggleSpace(on)
     let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : maparg('<space>', 'i') == "" )
+    let g:on	= on
     if on
+	echomsg "space ON"
 	imap <space> \_s\+
     else
+	echomsg "space OFF"
 	iunmap <space>
     endif
 endfunction
@@ -1537,16 +1570,8 @@ function! ATP_ToggleDebugMode(mode,...)
 	    let efm=b:atp_ErrorFormat
 	    exe "ErrorFormat ".efm
 	    silent! cg
-	    " Compute lines:
-	    let lines = 1
-	    " i.e. open with one more line than needed.
-	    for qf in getqflist()
-		let text=substitute(qf['text'], '\_s\+', ' ', 'g')
-		let lines+=(len(text))/&l:columns+1
-	    endfor
-" 	    let g:lines = lines
 	    if len(getqflist()) > 0
-		exe "silent copen ".min([lines, g:atp_DebugModeQuickFixHeight])
+		exe "silent copen ".min([atplb#qflength(), g:atp_DebugModeQuickFixHeight])
 		exe winnr . " wincmd w"
 	    else
 		echo "[ATP:] no errors for b:atp_ErrorFormat=".efm
@@ -1578,26 +1603,47 @@ function! ATP_ToggleTab(...)
     endif
 endfunction
 " }}}
-
 " {{{ ATP_ToggleIMaps
 " switches on/off the <Tab> map for TabCompletion
-function! ATP_ToggleIMaps(...)
-    let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : !g:atp_imaps )
-    if !on 
-	let g:atp_imaps=0
-	echo '[ATP:] imaps OFF'
+function! ATP_ToggleMathIMaps(insert_enter, bang,...)
+"     let g:arg	= ( a:0 >=1 ? a:1 : 0 )
+"     let g:bang = a:bang
+    let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : g:atp_imap_define_math <= 0 || g:atp_imap_define_math_misc <= 0 )
+"     let g:debug=g:atp_imap_define_math." ".g:atp_imap_define_math_misc
+"     let g:on	= on
+"     echomsg "****"
+"     echomsg g:arg
+"     echomsg g:debug
+"     echomsg g:on
+    if on == 0
+" 	echomsg "DELETE IMAPS"
+	let g:atp_imap_define_math = ( a:bang == "!" ? -1 : 0 ) 
+	call atplib#DelMaps(g:atp_imap_math)
+	let g:atp_imap_define_math_misc = ( a:bang == "!" ? -1 : 0 )
+	call atplib#DelMaps(g:atp_imap_math_misc)
+	echo '[ATP:] imaps OFF '.(a:bang == "" ? '(insert)' : '')
     else
-	let g:atp_imaps=1
+" 	echomsg "MAKE IMAPS"
+	let g:atp_imap_define_math =1
+	call atplib#MakeMaps(g:atp_imap_math)
+	let g:atp_imap_define_math_misc = 1
+	call atplib#MakeMaps(g:atp_imap_math_misc)
 	echo '[ATP:] imaps ON'
+    endif
+    if a:insert_enter
+	let g:atp_eventignore=&l:eventignore
+	let g:atp_eventignoreInsertEnter=1
+	set eventignore+=InsertEnter
+" 	" This doesn't work because startinsert runs after function ends.
     endif
 endfunction
 " }}}
 endif
  
 "  Commands And Maps:
-command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp	ToggleIMaps	 	:call ATP_ToggleIMaps(<f-args>)
-nnoremap <silent> <buffer> 	<Plug>ToggleIMaps		:call ATP_ToggleIMaps()<CR>
-inoremap <silent> <buffer> 	<Plug>ToggleIMaps		<Esc>:call ATP_ToggleIMaps()<CR>
+command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp	ToggleMathIMaps	 	:call ATP_ToggleMathIMaps(0, "!", <f-args>)
+nnoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		:call ATP_ToggleMathIMaps(0, "!")<CR>
+inoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		<Esc>:call ATP_ToggleMathIMaps(1, "")<CR>
 
 command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp ToggleAuTeX 	:call ATP_ToggleAuTeX(<f-args>)
 nnoremap <silent> <buffer> 	<Plug>ToggleAuTeX 		:call ATP_ToggleAuTeX()<CR>
@@ -2124,10 +2170,23 @@ let g:atp_pagenumbering = [ 'arabic', 'roman', 'Roman', 'alph', 'Alph' ]
 
 if !s:did_options
 
+    let g:atp_eventignore		= &l:eventignore
+    let g:atp_eventignoreInsertEnter 	= 0
+    function! <SID>InsertLeave_InsertEnter()
+	if g:atp_eventignoreInsertEnter
+	    setl eventignore-=g:atp_eventignore
+	endif
+    endfunction
+    augroup ATP_InsertLeave_eventignore
+	" ToggleMathIMaps
+	au!
+	au InsertLeave *.tex 	:call <SID>InsertLeave_InsertEnter()
+    augroup END
+
     augroup ATP_Cmdwin
 	au!
-	au CmdwinLeave / :call ATP_CmdwinToggleSpace('off')
-	au CmdwinLeave ? :call ATP_CmdwinToggleSpace('off')
+	au CmdwinLeave / :call ATP_CmdwinToggleSpace(0)
+	au CmdwinLeave ? :call ATP_CmdwinToggleSpace(0)
     augroup END
 
     augroup ATP_cmdheight
@@ -2156,10 +2215,42 @@ else
 endif
 endfunction
 
+    function! ErrorMsg(type)
+	let errors		= len(filter(getqflist(),"v:val['type']==a:type"))
+	let type		= (a:type == 'E' ? 'errors' : 'warnnings')
+	let msg			= ""
+	if errors
+	    let msg.=" ".errors." ".type
+	endif
+	return msg
+    endfunction
+
     augroup ATP_QuickFix_2
 	au!
 	au FileType qf command! -bang -buffer -nargs=? -complete=custom,DebugComp DebugMode	:call <SID>SetDebugMode(<q-bang>,<f-args>)
-	au FileType qf set statusline="There are %{len(getqflist())} messages"
+	au FileType qf let w:atp_qf_errorfile=&l:errorfile
+	au FileType qf setl statusline=%{w:atp_qf_errorfile}%=\ %#WarnningMsg#%{ErrorMsg('W')}\ %#ErrorMsg#%{ErrorMsg('E')}
+	"There are %{len(getqflist())} messages"
+	au FileType qf "resize ".min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])
+" 	THIS IS NOT WORKING this might be considered as a vim bug.
+" 	when there are two files it loads the errors from the window which we leave
+" 	rather than we get into.
+" 	au WinEnter *.tex cgetfile
+    augroup END
+
+    function! <SID>BufEnterCgetfile()
+	if g:atp_cgetfile 
+	    try
+		cgetfile
+		" cgetfile needs:
+		exe "ErrorFormat ".b:atp_ErrorFormat
+	    catch /E40:/ 
+	    endtry
+	endif
+    endfunction
+    augroup ATP_QuickFix_cgetfile
+	au!
+	au BufEnter *.tex :call <SID>BufEnterCgetfile()
     augroup END
 
     augroup ATP_VimLeave
@@ -2329,12 +2420,14 @@ endif
 " Add extra syntax groups
 " {{{1 ATP_SyntaxGroups
 function! s:ATP_SyntaxGroups()
+    " add texMathZoneT syntax group for tikzpicture environment:
     if atplib#SearchPackage('tikz') || atplib#SearchPackage('pgfplots')
 	try
 	    call TexNewMathZone("T", "tikzpicture", 0)
 	catch /E117:/
 	endtry
     endif
+    " add texMathZoneALG syntax group for algorithmic environment:
     if atplib#SearchPackage('algorithmic')
 	try
 	    call TexNewMathZone("ALG", "algorithmic", 0)
@@ -2343,7 +2436,7 @@ function! s:ATP_SyntaxGroups()
     endif
 endfunction
 
-augroup ATP_Syntax_TikzZone
+augroup ATP_AddSyntaxGroups
     au Syntax tex :call <SID>ATP_SyntaxGroups()
 augroup END
 
@@ -2516,13 +2609,15 @@ function! <SID>SetDebugMode(bang,...)
 		echohl Normal
 	    endtry
 	    if a:bang == "!"
-		exe "cwindow " . (max([1, min([len(getqflist()), g:atp_DebugModeQuickFixHeight-1])])+1)
+		exe "cwindow " . (max([1, min([len(getqflist()), g:atp_DebugModeQuickFixHeight])]))
 		exe winnr . "wincmd w"
 	    endif
 	endif
     elseif a:1 =~# 'd\%[ebug]'
 	let winnr=winnr()
-	exe "copen " . (max([1, min([len(getqflist()), g:atp_DebugModeQuickFixHeight-1])])+1)
+	exe "copen " . (!exists("w:quickfix_title") 
+		    \ ? (max([1, min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])]))
+		    \ : "" )
 	exe winnr . "wincmd w"
 	try
 	    cgetfile
@@ -2534,7 +2629,9 @@ function! <SID>SetDebugMode(bang,...)
 	" DebugMode is not changing when log file is missing!
     elseif a:1 =~# 'D\%[ebug]'
 	let winnr=winnr()
-	exe "copen " . (max([1, min([len(getqflist()), g:atp_DebugModeQuickFixHeight-1])])+1)
+	exe "copen " . (!exists("w:quickfix_title") 
+		    \ ? (max([1, min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])]))
+		    \ : "" )
 	exe winnr . "wincmd w"
 	try
 	    cgetfile

@@ -99,6 +99,70 @@ function! atplib#PrintTable(list, spaces)
 endfunction
 "}}}
 
+" QFLength "{{{
+function! atplib#qflength() 
+    let lines = 1
+    " i.e. open with one more line than needed.
+    for qf in getqflist()
+	let text=substitute(qf['text'], '\_s\+', ' ', 'g')
+	let lines+=(len(text))/&l:columns+1
+    endfor
+    return lines
+endfunction "}}}
+
+" IMap Functions:
+" {{{
+" These maps extend ideas from TeX_9 plugin:
+function! atplib#IsInMath()
+    return atplib#CheckSyntaxGroups(g:atp_MathZones) && 
+		    \ !atplib#CheckSyntaxGroups(['texMathText'])
+endfunction
+function! atplib#MakeMaps(maps, ...)
+    let aucmd = ( a:0 >= 1 ? a:1 : '' )
+"     let echo = 0
+    for map in a:maps
+	if map[3] != "" && ( !exists(map[5]) || {map[5]} > 0 || 
+		    \ exists(map[5]) && {map[5]} == 0 && aucmd == 'InsertEnter'  )
+	    if exists(map[5]) && {map[5]} == 0 && aucmd == 'InsertEnter'
+		exe "let ".map[5]." =1"
+	    endif
+" 	    if !echo
+" 		echomsg "MAKEMAPS ".aucmd
+" 		let echo = 1
+" 	    endif
+	    exe map[0]." ".map[1]." ".map[2].map[3]." ".map[4]
+	endif
+    endfor
+endfunction
+function! atplib#DelMaps(maps)
+    for map in a:maps
+	let cmd = matchstr(map[0], '[^m]\ze\%(nore\)\=map') . "unmap"
+	let arg = ( map[1] =~ '<buffer>' ? '<buffer>' : '' )
+	exe "silent! ".cmd." ".arg." ".map[2].map[3]
+" 	echo "silent! ".cmd." ".arg." ".map[2].map[3]."\n"
+    endfor
+endfunction
+function! atplib#IsLeft(lchar,...)
+    let nr = ( a:0 >= 1 ? a:1 : 0 )
+    " From TeX_nine plugin:
+	let left = getline('.')[col('.')-2-nr]
+	if left ==# a:lchar
+	    return 1
+	else
+	    return 0
+	endif
+endfunction
+try
+function! atplib#ToggleMathIMaps(var, augroup)
+    if atplib#IsInMath() 
+	call atplib#MakeMaps(a:var, a:augroup)
+    else
+	call atplib#DelMaps(a:var)
+    endif
+endfunction
+catch E127
+endtry "}}}
+
 " Compilation Call Back Communication: 
 " with some help of D. Munger
 " (Communications with compiler script: both in compiler.vim and the python script.)
@@ -1671,7 +1735,6 @@ endfunction
 " EOF
 " endfunction "}}}
 
-
 " This function sets the window options common for toc and bibsearch windows.
 "{{{1 atplib#setwindow
 " this function sets the options of BibSearch, ToC and Labels windows.
@@ -2403,8 +2466,8 @@ function! atplib#CloseLastEnvironment(...)
 
     if g:atp_debugCLE
 	exe "redir! > " . g:atp_TempDir."/CloseLastEnvironment.log"
-	let g:args 	= l:com . " " . l:close . " " . l:env_name . " " . string(l:bpos_env)
-	silent echo "args=".g:args
+	let g:CLEargs 	= l:com . " " . l:close . " " . l:env_name . " " . string(l:bpos_env)
+	silent echo "args=".g:CLEargs
 	let g:com	= l:com
 	let g:close 	= l:close
 	let g:env_name	= l:env_name
@@ -2580,13 +2643,20 @@ if a:0 <= 1
     " texMathZoneW, texMathZoneX, texMathZoneY.
     if math_1 + math_2 + math_3 + math_4 >= 1
 	let l:close = 'math'
-    elseif l:begin_line_env
+    elseif l:env_name
 	let l:close = 'environment'
+    else
+	if g:atp_debugCLE
+	    silent echo "return: l:env_name=".string(l:env_name)." && math_1+...+math_4=".string(math_1+math_2+math_3+math_4)
+	    redir END
+	endif
+	return
     endif
 endif
 if g:atp_debugCLE
     let g:close = l:close
     silent echo "g:close=".string(l:close)
+    silent echo "l:env_name=".l:env_name
 endif
 let l:env=l:env_name
 "}}}2
@@ -2642,7 +2712,9 @@ let l:eindent=atplib#CopyIndentation(l:line)
 	" unless it starts in a serrate line,
 	" \( \): close in the same line. 
 	"{{{3 close environment in the same line
-	if l:line !~ '^\s*\%(\$\|\$\$\|[^\\]\\(\|\\\@<!\\\[\)\?\s*\\begin\s*{[^}]*}\s*\%(([^)]*)\s*\|{[^}]*}\s*\|\[[^\]]*\]\s*\)\{,3}\%(\s*\\label\s*{[^}]*}\s*\|\s*\\hypertarget\s*{[^}]*}\s*{[^}]*}\s*\)\{0,2}$'
+	if l:line !~ '^\s*\%(\$\|\$\$\|[^\\]\\%(\|\\\@<!\\\[\)\?\s*\\begin\s*{[^}]*}\s*\%((.*)\s*\|{.*}\s*\|\[.*\]\s*\)\{,3}\%(\s*\\label\s*{[^}]*}\s*\|\s*\\hypertarget\s*{[^}]*}\s*{[^}]*}\s*\)\{0,2}$'
+	    " I use \[.*\] instead of \[[^\]*\] which doesn't work with nested
+	    " \[:\] the same for {:} and (:).
 " 	    	This pattern matches:
 " 	    		^ $
 " 	    		^ $$
@@ -3020,6 +3092,7 @@ function! atplib#CheckBracket(bracket_dict)
     let limit_line	= max([1,(line(".")-g:atp_completion_limits[1])])
     let pos_saved 	= getpos(".")
 
+    " Bracket sizes:
     let ket_pattern	= '\%(' . join(values(filter(copy(g:atp_sizes_of_brackets), "v:val != '\\'")), '\|') . '\)'
 
 
@@ -3037,7 +3110,8 @@ function! atplib#CheckBracket(bracket_dict)
     let bracket_list= keys(a:bracket_dict)
     for ket in bracket_list
 	let pos		= deepcopy(pos_saved)
-	let pair_{i}	= searchpairpos(escape(ket,'\[]'),'', escape(a:bracket_dict[ket], '\[]'). '\|'.ket_pattern.'\.' ,'bnW',"",limit_line)
+	let pair_{i}	= searchpairpos(escape(ket,'\[]'),'', escape(a:bracket_dict[ket], '\[]'). 
+		    \ ( ket_pattern != "" ? '\|'.ket_pattern.'\.' : '' ) ,'bnW',"",limit_line)
 	if g:atp_debugCB >= 2
 	    echomsg escape(ket,'\[]') . " pair_".i."=".string(pair_{i}) . " limit_line=" . limit_line
 	endif
@@ -3130,6 +3204,9 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	    let env_name 	= matchstr(strpart(getline(open_env[0]),open_env[1]-1), '\\begin\s*{\s*\zs[^}]*\ze*\s*}')
 	    if open_env[0] && atplib#CompareCoordinates([(exists("open_line") ? open_line : 0),(exists("open_line") ? open_col : 0)], open_env)
 		call atplib#CloseLastEnvironment('i', 'environment', env_name, open_env)
+		if g:atp_debugCLB
+		    redir END
+		endif
 		return 'closeing ' . env_name . ' at ' . string(open_env) 
 	    endif
 	endfor
@@ -3151,6 +3228,9 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	   let b:atp_debugCLB = "call atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
 	   silent echo "calling atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
        endif
+	if g:atp_debugCLB
+	    redir END
+	endif
        return
    endif
 
@@ -3228,6 +3308,9 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	let pos[2]+=len(closing_size.get(a:bracket_dict, opening_bracket))
 	keepjumps call setpos(".", pos)
 
+	if g:atp_debugCLB
+	    redir END
+	endif
 	return l:return
    endif
    " }}}3
@@ -3666,8 +3749,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	    endif
     "{{{3 --------- algorithmic
 	elseif atplib#CheckBracket(g:atp_algorithmic_dict)[1] != 0
-		if (!normal_mode && index(g:atp_completion_active_modes, 'algorithmic' ) != -1 ) ||
-		    \ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'algorithmic') != -1 )
+		if atplib#CheckSyntaxGroups(['texMathZoneALG']) && (
+			\ (!normal_mode && index(g:atp_completion_active_modes, 'algorithmic' ) != -1 ) ||
+			\ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'algorithmic') != -1 )
+			\ )
 		    let b:comp_method='algorithmic'
 		    call atplib#CloseLastBracket(g:atp_algorithmic_dict, 0, 1)
 		    return '' 

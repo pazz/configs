@@ -110,9 +110,10 @@ function! SetProjectName(...)
     " this is not done here
 
     " Now we can run things that needs the project name: 
-    if !exists("b:atp_PackageList")
-	let b:atp_PackageList	= atplib#GrepPackageList()
-    endif
+    " b:atp_PackageList is not used
+"     if !exists("b:atp_PackageList")
+" 	let b:atp_PackageList	= atplib#GrepPackageList()
+"     endif
 
     if !exists("b:atp_ProjectDir")
 	let b:atp_ProjectDir = ( exists("b:atp_ProjectScriptFile") ? fnamemodify(b:atp_ProjectScriptFile, ":h") : fnamemodify(resolve(expand("%:p")), ":h") )
@@ -177,6 +178,7 @@ function! s:SetOutDir(arg, ...)
 
 	    " if arg != 0 then set errorfile option accordingly to b:atp_OutDir
 	    if bufname("") =~ ".tex$" && a:arg != 0
+" 			\ &&  ( !exists("t:atp_QuickFixOpen") || exists("t:atp_QuickFixOpen") && !t:atp_QuickFixOpen )
 		 call s:SetErrorFile()
 	    endif
 
@@ -605,16 +607,12 @@ function! ATPRunning() "{{{
 
     if g:atp_Compiler == "python" 
         " For python compiler
-	" This is very fast:
-" 	call LatexRunning()
         for var in [ "Latex", "Bibtex", "Python" ] 
 	    if !exists("b:atp_".var."PIDs")
 		let b:atp_{var}PIDs = []
 	    endif
 	    call atplib#PIDsRunning("b:atp_".var."PIDs")
 	endfor
-" 	call atplib#PIDsRunning("b:atp_MakeindexPIDs")
-" 	let atp_running= ( b:atp_LastLatexPID != 0 ? 1 : 0 ) * len(b:atp_LatexPIDs) 
 	if len(b:atp_LatexPIDs) > 0
 	    let atp_running= len(b:atp_LatexPIDs) 
 	elseif len(b:atp_BibtexPIDs) > 0
@@ -622,16 +620,28 @@ function! ATPRunning() "{{{
 	else
 	    return ''
 	endif
-	" This is slower (so the status line is updated leter)
-" 	call atplib#PIDsRunning("b:atp_LatexPIDs")
-" 	let atp_running= len(b:atp_LatexPIDs)
-" 	let atp_running= ( b:atp_LastLatexPID != 0 ? 1 : 0 ) * len(b:atp_LatexPIDs)
     else
-	" For bash compiler 
+	" for g:atp_Compiler='bash' 
 	let atp_running=b:atp_running
+
+	for cmd in keys(g:CompilerMsg_Dict) 
+	    if b:atp_TexCompiler =~ '^\s*' . cmd . '\s*$'
+		let Compiler = g:CompilerMsg_Dict[cmd]
+		break
+	    else
+		let Compiler = b:atp_TexCompiler
+	    endif
+	endfor
+	if atp_running >= 2
+	    return atp_running." ".Compiler
+	elseif atp_running >= 1
+	    return Compiler
+	else
+	    return ""
+	endif
     endif
 
-
+    " For g:atp_Compiler='python'
     if exists("g:atp_callback") && g:atp_callback
 	if exists("b:atp_LatexPIDs") && len(b:atp_LatexPIDs)>0  
 
@@ -754,6 +764,11 @@ endfunction
 " The main status function, it is called via autocommand defined in 'options.vim'.
 let s:errormsg = 0
 function! ATPStatus(bang) "{{{
+
+    if expand("%") == "[Command Line]" || &l:filetype == "qf"
+	" If one uses q/ or q? this status function should not be used.
+	return
+    endif
 
     let g:status_OutDir	= a:bang == "" && g:atp_statusOutDir || a:bang == "!" && !g:atp_statusOutDir ? s:StatusOutDir() : ""
     let status_CTOC	= &filetype =~ '^\(ams\)\=tex' ? 'CTOC("return")' : ''
