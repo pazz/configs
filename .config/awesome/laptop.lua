@@ -15,6 +15,7 @@ require("naughty")
 --calendar
 require('calendar2')
 require('mailhoover')
+require('weatherhoover')
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -410,6 +411,16 @@ wifibuttons = awful.util.table.join(
 )
 wifiicon:buttons(wifibuttons)
 wifiwidget:buttons(wifibuttons)
+
+-- Weather widget
+weatherwidget = widget({ type = "textbox" })
+weatherhoover.addToWidget(weatherwidget, 'EGPH')
+weatherwidget.text = "weather"
+    vicious.register(weatherwidget, vicious.widgets.weather,
+    function (widget, args)
+        return args["{tempc}"] .. "°C" 
+    end, 300, "EGPH" )
+--weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
  --Create a wibox for each screen and add it
 mywibox = {}
 mypromptbox = {}
@@ -455,6 +466,7 @@ for s = 1, screen.count() do
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
+        rightcap,weatherwidget,leftcap,spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
