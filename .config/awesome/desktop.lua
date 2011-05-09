@@ -12,6 +12,7 @@ require("naughty")
 --calendar
 require('calendar2')
 require('mailhoover')
+require('weatherhoover')
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -405,24 +406,11 @@ vicious.register(mpdwidget, vicious.widgets.mpd,
 
 -- Weather widget
 weatherwidget = widget({ type = "textbox" })
+weatherhoover.addToWidget(weatherwidget, 'EGPH')
 weatherwidget.text = "weather"
     vicious.register(weatherwidget, vicious.widgets.weather,
     function (widget, args)
-        local weather_popup
-        if args["{tempc}"] == "N/A" then
-            return " No Info "
-        else
-            weatherwidget:add_signal('mouse::enter', function () 
-                weather_popup = naughty.notify({ 
-                        title = "<span color='" .. beautiful.fg_urgent .."'><b>Weather</b></span>",
-                        text = "Wind    : " .. args["{windmph}"] .. " mph " .. args["{wind}"] .. "\nHumidity: " .. args["{humid}"] .. " %\nPressure: " .. args["{press}"] .. " hPa" .. "", 
-                        timeout = 0, 
-                        hover_timeout = 0.5 
-                    })
-            end)
-            weatherwidget:add_signal('mouse::leave', function () naughty.destroy(weather_popup) end)
-            return "weather " .. string.lower(args["{sky}"]) .. ", " .. args["{tempc}"] .. "°C" 
-        end
+        return string.lower(args["{weather}"]) .. ", " .. args["{tempc}"] .. "°C" 
     end, 300, "EGPH" )
 --weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
 
