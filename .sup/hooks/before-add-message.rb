@@ -4,6 +4,11 @@ if message.from.email =~ /patricktotzke@gmail.com/i
   message.remove_label "inbox"
 end
 
+#remove read mail from inbox
+if not message.labels.any? { |l| l == "unread" }
+  message.remove_label "inbox"
+end
+
 #UoE
 if (message.from.email =~ /rmayr@/i) or (message.from.email =~ /cps@staffmail/i)
   message.add_label "supervisor" 
@@ -26,6 +31,7 @@ end
 if message.recipients.any? { |person| person.email =~ /offlineimap-project/i }
   message.add_label "offlineimap"
   message.add_label "dev"
+  message.remove_label "inbox"
 end
 
 
