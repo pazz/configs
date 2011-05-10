@@ -5,8 +5,10 @@ if message.from.email =~ /patricktotzke@gmail.com/i
 end
 
 #remove read mail from inbox
-if not message.labels.any? { |l| l == "unread" }
+if not message.labels.any? { |tag| tag == ":unread" }
+  puts message.labels
   message.remove_label "inbox"
+  message.add_label "TESTCASE"
 end
 
 #UoE
