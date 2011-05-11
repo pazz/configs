@@ -5,6 +5,6 @@ if num>=1
               notify_summary << "s"
       end          
       notify_body = ''
-      from_and_subj.each { |f,s| notify_body << "#{f} : #{s}" }
+      from_and_subj.each { |f,s| notify_body << "#{f} : #{s}\n" }
       system "#{notify_cmd} '#{notify_summary}' '#{notify_body}'"
 end     
