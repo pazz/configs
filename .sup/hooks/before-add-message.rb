@@ -5,10 +5,9 @@ if message.from.email =~ /patricktotzke@gmail.com/i
 end
 
 #remove read mail from inbox
-if not message.labels.any? { |tag| tag == ":unread" }
-  puts message.labels
-  message.remove_label "inbox"
-  message.add_label "TESTCASE"
+if message.labels =~ /unread/i
+  print message.labels
+  message.add_label "TEST"
 end
 
 #UoE
@@ -29,10 +28,14 @@ if message.recipients.any? { |person| person.email =~ /atp-vim-list/i }
   message.add_label "atp"
   message.add_label "dev"
 end
-# Mark if containing recipient (to/cc)
 if message.recipients.any? { |person| person.email =~ /offlineimap-project/i }
   message.add_label "offlineimap"
   message.add_label "dev"
+  message.remove_label "inbox"
+end
+if message.recipients.any? { |person| person.email =~ /foosoc.ed@gmail.com/i } or message.subject =~ /foosoc/i
+  message.add_label "foo"
+  message.add_label "soc"
   message.remove_label "inbox"
 end
 
