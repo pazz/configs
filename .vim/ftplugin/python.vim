@@ -7,10 +7,14 @@ if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
 
 "--------------
-set tabstop=8
-set softtabstop=4
-set shiftwidth=4
-set expandtab
+
+setlocal tabstop=4
+setlocal softtabstop=4
+setlocal shiftwidth=4
+setlocal textwidth=80
+setlocal smarttab
+setlocal expandtab
+
 
 " Use the below highlight group when displaying bad whitespace is desired.
 highlight BadWhitespace ctermbg=red guibg=red
@@ -19,7 +23,6 @@ au BufRead,BufNewFile *.py,*.pyw match BadWhitespace /^\t\+/
 " Make trailing whitespace be flagged as bad.
 au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
 
-set textwidth=79 " Wrap text after a certain number of characters
 set fileformat=unix
 " For full syntax highlighting:
 let python_highlight_all=1
