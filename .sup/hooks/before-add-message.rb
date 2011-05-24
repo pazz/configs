@@ -13,6 +13,11 @@ end
 if (message.from.email =~ /rmayr@/i) or (message.from.email =~ /cps@staffmail/i)
   message.add_label "supervisor" 
 end
+if message.recipients.any? { |person| person.email =~ /hamming-members@inf.ed.ac.uk/i }
+  message.add_label "hamming"
+  message.add_label "seminars"
+  message.remove_label "inbox"
+end
 
 # lists
 if message.recipients.any? { |person| person.email =~ /sup-talk@rubyforge.org/i }
