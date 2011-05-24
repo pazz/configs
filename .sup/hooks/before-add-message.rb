@@ -5,9 +5,8 @@ if message.from.email =~ /patricktotzke@gmail.com/i
 end
 
 #remove read mail from inbox
-if message.labels =~ /unread/i
-  print message.labels
-  message.add_label "TEST"
+if not message.labels =~ /unread/i
+  message.remove_label "inbox"
 end
 
 #UoE
