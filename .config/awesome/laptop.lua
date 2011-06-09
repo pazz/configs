@@ -458,7 +458,8 @@ for s = 1, screen.count() do
             mypromptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        mytextclock,
+        mytextclock, spacer,
+        rightcap,weatherwidget,leftcap,spacer,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
@@ -466,7 +467,6 @@ for s = 1, screen.count() do
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
-        rightcap,weatherwidget,leftcap,spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end

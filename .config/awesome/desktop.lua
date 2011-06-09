@@ -23,8 +23,8 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
---mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
-mail_cmd = 'urxvt -T sup -e sup'
+mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+--mail_cmd = 'urxvt -T sup -e sup'
 gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
@@ -410,7 +410,7 @@ weatherhoover.addToWidget(weatherwidget, 'EGPH')
 weatherwidget.text = "weather"
     vicious.register(weatherwidget, vicious.widgets.weather,
     function (widget, args)
-        return string.lower(args["{weather}"]) .. ", " .. args["{tempc}"] .. "°C" 
+        return args["{tempc}"] .. "°C" 
     end, 300, "EGPH" )
 --weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
 
@@ -453,7 +453,8 @@ for s = 1, screen.count() do
             mypromptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        mytextclock,
+        mytextclock, spacer,
+        rightcap,weatherwidget, leftcap, spacer,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
@@ -461,7 +462,6 @@ for s = 1, screen.count() do
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
-        rightcap,weatherwidget, spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
