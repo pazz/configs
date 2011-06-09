@@ -2,9 +2,7 @@
 " Note:		this file contain the main compiler function and related tools, to
 " 		view the output, see error file.
 " Note:		This file is a part of Automatic Tex Plugin for Vim.
-" URL:		https://launchpad.net/automatictexplugin
 " Language:	tex
-" Last Change:
 
 " Some options (functions) should be set once:
 let s:sourced	 	= exists("s:sourced") ? 1 : 0
@@ -58,24 +56,12 @@ function! <SID>ViewOutput(...)
     endif
 
 
-    let sync_args 	= ( fwd_search ?  <SID>SyncTex(0,1) : "" )
     if g:atp_debugV
 	let g:global_options = global_options
-	let g:local_options = local_options
-	let g:sync_args	= sync_args
-	let g:viewer	= viewer
+	let g:local_options  = local_options
+	let g:viewer         = viewer
     endif
-    if b:atp_Viewer =~ '\<okular\>' && fwd_search
-	let view_cmd	= "(".viewer." ".global_options." ".local_options." ".sync_args.")&"
-    elseif b:atp_Viewer =~ '^\s*xdvi\>'
-	let view_cmd	= "(".viewer." ".global_options." ".local_options." ".sync_args." ".shellescape(outfile).")&"
-    else
-" I couldn't get it work with okular.	
-" 	let SyncTex	= s:SidWrap('SyncTex')
-" 	let sync_cmd 	= (fwd_search ? "vim "." --servername ".v:servername." --remote-expr "."'".SyncTex."()';" : "" ) 
-" 	let g:sync_cmd=sync_cmd
-	let view_cmd	= viewer." ".global_options." ".local_options." ".shellescape(outfile)."&"
-    endif
+    let view_cmd	= viewer." ".global_options." ".local_options." ".shellescape(outfile)." &"
 
     if g:atp_debugV
 	let g:view_cmd	= view_cmd
@@ -103,7 +89,25 @@ function! <SID>ViewOutput(...)
 		call <SID>Compiler( 0, 1, 1, 'silent' , "AU" , atp_MainFile, "")
 	    endif
 	endif
-    endif	
+    endif
+"     if fwd_search
+" 	let msg = "[SyncTex:] waiting for the viewer "
+" 	let i=1
+" 	while !<SID>IsRunning(viewer, outfile) && i<10
+" 	    echo msg
+" 	    sleep 100m
+" 	    redraw
+" 	    let msg.="."
+" 	    let i+=1
+" 	endwhile
+" 	if i<15
+" 	    call <SID>SyncTex(0)
+" 	else
+" 	    echohl WarningMsg
+" 	    echomsg "[SyncTex:] viewer is not running"
+" 	    echohl Normal
+" 	endif
+"     endif
 endfunction
 noremap <silent> 		<Plug>ATP_ViewOutput	:call <SID>ViewOutput()<CR>
 "}}}
@@ -185,19 +189,53 @@ function! <SID>SyncShow( page_nr, y_coord)
 	echohl Normal
     endif
 endfunction "}}}
-function! <SID>SyncTex(mouse, ...) "{{{
+" {{{ SyncTex
+function! <SID>SyncTex(bang, mouse, ...)
+    if g:atp_debugSyncTex
+	exe "redir! > ".g:atp_TempDir."/SyncTex.log"
+    endif
     let output_check 	= ( a:0 >= 1 && a:1 == 0 ? 0 : 1 )
+    let IsRunning_check = ( a:bang == "!" ? 0 : 1 )
     let dryrun 		= ( a:0 >= 2 && a:2 == 1 ? 1 : 0 )
     " Mouse click <S-LeftMouse> is mapped to <LeftMouse>... => thus it first changes
     " the cursor position.
     let [ line, col ] 	= [ line("."), col(".") ]
-"     let [ g:line, g:col ] 	= [ line, col ]
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
     let ext		= get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf")
     let output_file	= fnamemodify(atp_MainFile,":p:r") . ext
     if !filereadable(output_file) && output_check
-       ViewOutput sync
+	" Here should be a test if viewer is running, this can be made with python.
+	" this is way viewer starts not well when using :SyncTex command while Viewer
+	" is not running.
+"        call <SID>ViewOutput("sync")
+"        if g:atp_debugSyncTex
+" 	   silent echo "ViewOutput sync"
+" 	   redir END
+"        endif
+       echohl WarningMsg
+       echomsg "[SyncTex:] no output file"
+       echohl Normal
        return 2
+    endif
+    let atp_MainFile         = atplib#FullPath(b:atp_MainFile)
+    let ext		     = get(g:atp_CompilersDict, matchstr(b:atp_TexCompiler, '^\s*\zs\S\+\ze'), ".pdf")
+    let link=resolve(atp_MainFile)
+    if link != ""
+        let outfile     = fnamemodify(link,":r") . ext
+    else
+        let outfile     = fnamemodify(atp_MainFile,":r"). ext 
+    endif
+
+    if IsRunning_check
+	if (!<SID>IsRunning(b:atp_Viewer, atplib#FullPath(outfile), b:atp_XpdfServer) && output_check) 
+	    "Note: I should test here if Xpdf is not holding a file (it might be not
+	    "visible through cmdline arguments -> this happens if file is opened in
+	    "another server. We can use: xpdf -remote b:atp_XpdfServer "run('echo %f')"
+	    echohl WarningMsg
+	    echomsg "[SyncTex:] please open the file first. (if file is opend add bang \"!\")"
+	    echohl Normal
+	    return
+	endif
     endif
     if b:atp_Viewer == "xpdf"
 	let [ page_nr, y_coord, x_coord ] = <SID>GetSyncData(line, col)
@@ -207,16 +245,13 @@ function! <SID>SyncTex(mouse, ...) "{{{
 	"There is a bug in xpdf. We need to sleep between sending commands to it.:
 	let sleep    = ( g:atp_XpdfSleepTime ? 'sleep '.string(g:atp_XpdfSleepTime).'s;' : '' )
 	let sync_cmd = "(".sync_cmd_page.";".sleep.sync_cmd_y.";".sleep.sync_cmd_x.")&"
-" 	let sync_cmd = sync_cmd_page.";".sync_cmd_y.";".sync_cmd_x
 	if !dryrun
 	    call system(sync_cmd)
-" 	    redraw!
 	    call <SID>SyncShow(page_nr, y_coord)
 	endif
-" 	let g:sync_cmd_page 	= sync_cmd_page
-" 	let g:sync_cmd_y 	= sync_cmd_y
-"         let g:sync_cmd_x 	= sync_cmd_x
-" 	let g:sync_cmd = sync_cmd
+	if g:atp_debugSyncTex
+	    silent echo "sync_cmd=".sync_cmd
+	endif
     elseif b:atp_Viewer == "okular"
 	let [ page_nr, y_coord, x_coord ] = <SID>GetSyncData(line, col)
 	" This will not work in project files. (so where it is mostly needed.) 
@@ -224,15 +259,16 @@ function! <SID>SyncTex(mouse, ...) "{{{
 	let sync_args = " ".shellescape(expand("%:p:r")).".pdf\\#src:".line.shellescape(expand("%:p"))." "
 	if !dryrun
 	    call system(sync_cmd)
-" 	    redraw!
 	    call <SID>SyncShow(page_nr, y_coord)
 	endif
-" 	let g:sync_cmd = sync_cmd
+	if g:atp_debugSyncTex
+	    silent echo "sync_cmd=".sync_cmd
+	endif
 "     elseif b:atp_Viewer == "evince"
 " 	let rev_searchcmd="synctex view -i ".line(".").":".col(".").":".fnameescape(b:atp_MainFile). " -o ".fnameescape(fnamemodify(b:atp_MainFile, ":p:r").".pdf") . " -x 'evince %{output} -i %{page}'"
 "     endif
     elseif b:atp_Viewer =~ '^\s*xdvi\>'
-	let options = (exists("g:atp_xdviOptions") ? g:atp_xdviOptions : "" ) . getbufvar(bufnr(""), "atp_xdviOptions")
+	let options = (exists("g:atp_xdviOptions") ? " ".join(g:atp_xdviOptions, " ") : " " ) ." ".join(getbufvar(bufnr(""), "atp_xdviOptions"), " ")
 	let sync_cmd = "xdvi ".options.
 		\ " -editor '".v:progname." --servername ".v:servername.
 		\ " --remote-wait +%l %f' -sourceposition ". 
@@ -242,15 +278,22 @@ function! <SID>SyncTex(mouse, ...) "{{{
 	if !dryrun
 	    call system(sync_cmd)
 	endif
-" 	let g:sync_cmd = sync_cmd
+	if g:atp_debugSyncTex
+	    silent echo "sync_cmd=".sync_cmd
+	endif
     else
 	let sync_cmd=""
-" 	let g:sync_cmd = sync_cmd
+	if g:atp_debugSyncTex
+	    silent echo "sync_cmd=EMPTY"
+	endif
     endif
+   if g:atp_debugSyncTex
+       redir END
+   endif
     return
 endfunction 
-nmap <buffer> <Plug>SyncTexKeyStroke		:call <SID>SyncTex(0)<CR>
-nmap <buffer> <Plug>SyncTexMouse		:call <SID>SyncTex(1)<CR>
+nmap <buffer> <Plug>SyncTexKeyStroke		:call <SID>SyncTex("", 0)<CR>
+nmap <buffer> <Plug>SyncTexMouse		:call <SID>SyncTex("", 1)<CR>
 "}}}
 "
 " This function gets the pid of the running compiler
@@ -464,7 +507,7 @@ function! <SID>MakeLatex(bang, verbose, start)
 		\ " --bibcmd ".b:atp_BibCompiler.
 		\ " --bibliographies ".shellescape(bibliographies).
 		\ " --outdir ".b:atp_OutDir.
-		\ " --keep ". shellescape(join(g:keep, ',')).
+		\ " --keep ". shellescape(join(g:atp_keep, ',')).
 		\ " --tex-options ".tex_options.
 		\ " --servername ".v:servername.
 		\ " --viewer ".shellescape(b:atp_Viewer).
@@ -479,14 +522,7 @@ function! <SID>MakeLatex(bang, verbose, start)
     lockvar g:atp_TexCommand
 
     " Write file
-    let backup		= &backup
-    let writebackup	= &writebackup
-
-    " Disable WriteProjectScript
-    let eventignore 		= &l:eventignore
-    setl eventignore+=BufWrite
-    silent! w
-    let &l:eventignore 		= eventignore
+    call atplib#write("silent")
 
     if a:verbose == "verbose"
 	exe ":!".cmd
@@ -547,15 +583,43 @@ function! <SID>SetBiberSettings()
 	return
     elseif !exists("s:biber_keep_done")
 	let s:biber_keep_done = 1
-	if index(g:keep, "run.xml") == -1
-	    g:keep += [ "run.xml" ]
+	if index(g:atp_keep, "run.xml") == -1
+	    g:atp_keep += [ "run.xml" ]
 	endif
-	if index(g:keep, "bcf") == -1
-	    g:keep += [ "bcf" ]
+	if index(g:atp_keep, "bcf") == -1
+	    g:atp_keep += [ "bcf" ]
 	endif
     endif
 endfunction
 
+" This function checks if program a:program is running a file a:file.
+" a:file should be full path to the file.
+" {{{ IsRunning
+function! <SID>IsRunning(program, file, ...)
+python << EOF
+import vim, psutil, os, pwd
+from psutil import NoSuchProcess
+x=0
+program	=vim.eval("a:program")
+f	=vim.eval("a:file")
+pat	="|".join(vim.eval("a:000"))
+for pid in psutil.get_pid_list():
+    try:
+        p=psutil.Process(pid)
+        if p.username == pwd.getpwuid(os.getuid())[0] and re.search(program, p.cmdline[0]):
+            for arg in p.cmdline:
+                if arg == f or re.search(pat, arg) :
+                    x=1
+                    break
+        if x:
+            break
+    except psutil.error.NoSuchProcess:
+        pass
+vim.command("let s:running="+str(x))
+EOF
+return s:running
+endfunction
+" }}}
 " THE MAIN COMPILER FUNCTIONs:
 " {{{ s:PythonCompiler
 function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, bang)
@@ -579,13 +643,14 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
     " On Unix the output of compile.py run by this function is available at
     " g:atp_TempDir/compiler.py.log
     if g:atp_debugPythonCompiler
-	let g:debugPC_bibtex	=a:bibtex
-	let g:debugPC_start	=a:start
-	let g:debugPC_runs	=a:runs
-	let g:debugPC_verbose	=a:verbose
-	let g:debugPC_command	=a:command
-	let g:debugPC_filename	=a:filename
-	let g:debugPC_bang	=a:bang
+	call atplib#Log("PythonCompiler.log", "", "init")
+	call atplib#Log("PythonCompiler.log", "a:bibtex=".a:bibtex)
+	call atplib#Log("PythonCompiler.log", "a:start=".a:start)
+	call atplib#Log("PythonCompiler.log", "a:runs=".a:runs)
+	call atplib#Log("PythonCompiler.log", "a:verbose=".a:verbose)
+	call atplib#Log("PythonCompiler.log", "a:command=".a:command)
+	call atplib#Log("PythonCompiler.log", "a:filename=".a:filename)
+	call atplib#Log("PythonCompiler.log", "a:bang=".a:bang)
     endif
 
     if !exists("t:atp_DebugMode")
@@ -656,7 +721,7 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 		\ ." --viewer ".shellescape(b:atp_Viewer)
 		\ ." --xpdf-server ".shellescape(b:atp_XpdfServer)
 		\ ." --viewer-options ".shellescape(viewer_options) 
-		\ ." --keep ". shellescape(join(g:keep, ','))
+		\ ." --keep ". shellescape(join(g:atp_keep, ','))
 		\ ." --progname ".v:progname
 		\ ." --bibcommand ".b:atp_BibCompiler
 		\ ." --bibliographies ".shellescape(bibliographies)
@@ -666,21 +731,14 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 		\ . autex_wait
 
     " Write file
-    let backup=&backup
-    let writebackup=&writebackup
-    if a:command == "AU"  
-	if &backup | setlocal nobackup | endif
-	if &writebackup | setlocal nowritebackup | endif
+    if g:atp_debugPythonCompiler
+	call atplib#Log("PythonCompiler.log", "PRE WRITING b:atp_changedtick=".b:atp_changedtick." b:changedtick=".b:changedtick)
     endif
 
-    " Disable WriteProjectScript
-    let eventignore 		= &l:eventignore
-    setl eventignore+=BufWrite
-    silent! w
-    let &l:eventignore 		= eventignore
-    if a:command == "AU"  
-	let &l:backup		= backup 
-	let &l:writebackup 	= writebackup 
+    call atplib#write("silent")
+
+    if g:atp_debugPythonCompiler
+	call atplib#Log("PythonCompiler.log", "POST WRITING b:atp_changedtick=".b:atp_changedtick." b:changedtick=".b:changedtick)
     endif
     unlockvar g:atp_TexCommand
     let g:atp_TexCommand	= cmd
@@ -696,6 +754,9 @@ function! <SID>PythonCompiler(bibtex, start, runs, verbose, command, filename, b
 	call system(cmd)
     else
 	call system(cmd." &")
+    endif
+    if g:atp_debugPythonCompiler
+	call atplib#Log("PythonCompiler.log", "END b:atp_changedtick=".b:atp_changedtick." b:changedtick=".b:changedtick)
     endif
 endfunction
 " }}}
@@ -799,7 +860,7 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
 
 "	COPY IMPORTANT FILES TO TEMP DIRECTORY WITH CORRECT NAME 
 "	except log and aux files.
-	let list	= copy(g:keep)
+	let list	= copy(g:atp_keep)
 	call filter(list, 'v:val != "log"')
 	for i in list
 	    let ftc	= b:atp_OutDir . fnamemodify(basename,":t:r") . "." . i
@@ -946,10 +1007,10 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
 	silent echomsg "command=" . command
     endif
 
-	" Preserve files with extension belonging to the g:keep list variable.
+	" Preserve files with extension belonging to the g:atp_keep list variable.
 	let copy_cmd=""
 	let j=1
-	for i in filter(copy(g:keep), 'v:val != "aux"') 
+	for i in filter(copy(g:atp_keep), 'v:val != "aux"') 
 " ToDo: this can be done using internal vim functions.
 	    let copycmd=g:atp_cpcmd." ".cpoptions." ".shellescape(atplib#append(tmpdir,"/")).
 			\ "*.".i." ".shellescape(atplib#append(b:atp_OutDir,"/")) 
@@ -988,29 +1049,14 @@ function! <SID>Compiler(bibtex, start, runs, verbose, command, filename, bang)
 	endif
 
 	" Take care about backup and writebackup options.
-	let backup=&backup
-	let writebackup=&writebackup
-	if a:command == "AU"  
-	    if &backup || &writebackup | setlocal nobackup | setlocal nowritebackup | endif
+	if g:atp_debugCompiler
+	    silent echomsg "BEFORE WRITING: b:changedtick=" . b:changedtick . " b:atp_changedtick=" . b:atp_changedtick . " b:atp_running=" .  b:atp_running
 	endif
-" This takes lots of time! 0.049s (more than 1/3)	
-    if g:atp_debugCompiler
-	silent echomsg "BEFORE WRITING: b:changedtick=" . b:changedtick . " b:atp_changedtick=" . b:atp_changedtick . " b:atp_running=" .  b:atp_running
-    endif
 
-	" disable WriteProjectScript
-	let eventignore = &l:eventignore
-	setl eventignore+=BufWrite
-	silent! w
-	let &l:eventignore = eventignore
-" 	let b:atp_changedtick += 1
-    if g:atp_debugCompiler
-	silent echomsg "AFTER WRITING: b:changedtick=" . b:changedtick . " b:atp_changedtick=" . b:atp_changedtick . " b:atp_running=" .  b:atp_running
-    endif
+	call atplib#write("silent")
 
-	if a:command == "AU"  
-	    let &l:backup=backup 
-	    let &l:writebackup=writebackup 
+	if g:atp_debugCompiler
+	    silent echomsg "AFTER WRITING: b:changedtick=" . b:changedtick . " b:atp_changedtick=" . b:atp_changedtick . " b:atp_running=" .  b:atp_running
 	endif
 
 	if a:verbose != 'verbose'
@@ -1045,44 +1091,52 @@ augroup END
 
 function! <SID>auTeX(...)
 
-    if mode()=='i' && g:atp_updatetime_insert == 0 ||
+    if g:atp_debugauTeX
+	echomsg "*****************"
+	echomsg "b:atp_changedtick=".b:atp_changedtick." b:changedtick=".b:changedtick
+    endif
+
+    if mode() == 'i' && g:atp_updatetime_insert == 0 ||
 		\ mode()=='n' && g:atp_updatetime_normal == 0
+	if g:atp_debugauTeX
+	    echomsg "autex is off for the mode: ".mode()
+	endif
 	return "autex is off for the mode: ".mode()." (see :help mode())"
     endif
 
     " Wait if the compiler is running. The problem is that CursorHoldI autocommands
     " are not triggered more than once after 'updatetime'.
-"     echomsg "***"
-"     echomsg "b:atp_autex_wait=".b:atp_autex_wait
-"     echomsg "mode=".mode()
-    if index(split(g:atp_autex_wait, ','), mode()) != -1
-" 	\ !b:atp_autex_wait
-	if g:atp_Compiler == "python"
-	    call atplib#PIDsRunning("b:atp_PythonPIDs")
-	    echomsg string(b:atp_PythonPIDs)
-	else
-	    call atplib#PIDsRunning("b:atp_LatexPIDs")
-	endif
-	call atplib#PIDsRunning("b:atp_BibtexPIDs")
-	echo string(b:atp_BibtexPIDs)
-	if g:atp_Compiler == "python" && len(b:atp_PythonPIDs) ||
-	    \ g:atp_Compiler == "bash" && len(b:atp_LatexPIDs) ||
-	    \ len(b:atp_BibtexPIDs)
-" 	    unlockvar b:atp_autex_wait
-" 	    let b:atp_autex_wait=1
-" 	    lockvar b:atp_autex_wait
-	    return
-	endif
-"     else
-" 	unlockvar b:atp_autex_wait
-" 	let b:atp_autex_wait=0
-" 	lockvar b:atp_autex_wait
-    endif
+"     if index(split(g:atp_autex_wait, ','), mode()) != -1
+" " 	\ !b:atp_autex_wait
+" 	if g:atp_Compiler == "python"
+" 	    call atplib#PIDsRunning("b:atp_PythonPIDs")
+" 	else
+" 	    call atplib#PIDsRunning("b:atp_LatexPIDs")
+" 	endif
+" 	call atplib#PIDsRunning("b:atp_BibtexPIDs")
+" 	echo string(b:atp_BibtexPIDs)
+" 	if g:atp_Compiler == "python" && len(b:atp_PythonPIDs) ||
+" 	    \ g:atp_Compiler == "bash" && len(b:atp_LatexPIDs) ||
+" 	    \ len(b:atp_BibtexPIDs)
+" " 	    unlockvar b:atp_autex_wait
+" " 	    let b:atp_autex_wait=1
+" " 	    lockvar b:atp_autex_wait
+" 	    if g:atp_debugauTeX
+" 		echomsg "autex wait"
+" 	    endif
+" 	    return
+" 	endif
+" "     else
+" " 	unlockvar b:atp_autex_wait
+" " 	let b:atp_autex_wait=0
+" " 	lockvar b:atp_autex_wait
+"     endif
 
 
     " Using vcscommand plugin the diff window ends with .tex thus the autocommand
     " applies but the filetype is 'diff' thus we can switch tex processing by:
     if &l:filetype !~ "tex$"
+	echo "wrong file type"
 	return "wrong file type"
     endif
 
@@ -1091,7 +1145,10 @@ function! <SID>auTeX(...)
     let mode 	= ( g:atp_DefaultDebugMode == 'verbose' ? 'debug' : g:atp_DefaultDebugMode )
 
     if !b:atp_autex
-       return "autex is off"
+	if g:atp_debugauTeX
+	   echomsg "autex is off"
+	endif
+	return "autex is off"
     endif
 
     " if the file (or input file is modified) compile the document 
@@ -1099,12 +1156,17 @@ function! <SID>auTeX(...)
 " 	if !exists("b:atp_changedtick")
 " 	    let b:atp_changedtick = b:changedtick
 " 	endif
-	if g:atp_Compare == "changedtick"
+	if g:atp_Compare ==? "changedtick"
 	    let cond = ( b:changedtick != b:atp_changedtick )
 	else
 	    let cond = ( <SID>compare(readfile(expand("%"))) )
 	endif
-	let g:cond=cond
+	if g:atp_debugauTeX
+	    let g:cond=cond
+	    if g:atp_debugauTeX
+		echomsg  "COND=".cond
+	    endif
+	endif
 	if cond
 	    " This is for changedtick only
 	    let b:atp_changedtick = b:changedtick + 1
@@ -1123,6 +1185,9 @@ function! <SID>auTeX(...)
 		call <SID>Compiler(0, 0, b:atp_auruns, mode, "AU", atp_MainFile, "")
 	    endif
 	    redraw
+	    if g:atp_debugauTeX
+		echomsg "compile" 
+	    endif
 	    return "compile" 
 	endif
     " if compiling for the first time
@@ -1139,11 +1204,19 @@ function! <SID>auTeX(...)
 	    endif
 	catch /E212:/
 	    echohl ErrorMsg
-	    echomsg expand("%") . "E212: Cannon open file for writing"
+	    if g:atp_debugauTeX
+		echomsg expand("%") . "E212: Cannon open file for writing"
+	    endif
 	    echohl Normal
+	    if g:atp_debugauTeX
+		echomsg " E212"
+	    endif
 	    return " E212"
 	catch /E382:/
 	    " This option can be set by VCSCommand plugin using VCSVimDiff command
+	    if g:atp_debugauTeX
+		echomsg " E382"
+	    endif
 	    return " E382"
 	endtry
 	if g:atp_Compiler == 'python'
@@ -1152,7 +1225,13 @@ function! <SID>auTeX(...)
 	    call <SID>Compiler(0, 0, b:atp_auruns, mode, "AU", atp_MainFile, "")
 	endif
 	redraw
+	if g:atp_debugauTeX
+	    echomsg "compile for the first time"
+	endif
 	return "compile for the first time"
+    endif
+    if g:atp_debugauTeX
+	echomsg "files does not differ"
     endif
     return "files does not differ"
 endfunction
@@ -1364,13 +1443,14 @@ function! <SID>SetErrorFormat(...)
     endfor
 
     " Get the bufnr of tex file corresponding to the &l:errorfile
-    let bufnr = bufnr(fnamemodify(&l:errorfile, ":r").".tex")
-    let carg= !exists("w:quickfix_title") && exists("b:atp_ErrorFormat")
+    let bufnr 	= bufnr(fnamemodify(&l:errorfile, ":r").".tex")
+    let carg	= !exists("w:quickfix_title") && exists("b:atp_ErrorFormat")
 		\ ? b:atp_ErrorFormat 
 		\ : getbufvar((bufnr), "atp_ErrorFormat")
+    let atp_ErrorFormat = ( exists("b:atp_ErrorFormat") ? b:atp_ErrorFormat : getbufvar((bufnr), "atp_ErrorFormat") )
     if carg_raw =~ '^+'
 	for flag in carg_list
-	    if flag != 'f' && b:atp_ErrorFormat !~ flag || flag == 'f' && b:atp_ErrorFormat !~ 'fi\@!'
+	    if flag != 'f' && atp_ErrorFormat !~ flag || flag == 'f' && atp_ErrorFormat !~ 'fi\@!'
 		let carg .= flag
 	    endif
 	endfor
@@ -1627,9 +1707,11 @@ endif "}}}
 
 " Commands And Autocommands: 
 " {{{
+command! -buffer		HighlightErrors		:call atplib#HighlightErrors()
+command! -buffer		ClearHighlightErrors	:call atplib#ClearHighlightErrors()
 command! -buffer -bang 		Kill			:call <SID>Kill(<q-bang>)
 command! -buffer -nargs=? 	ViewOutput		:call <SID>ViewOutput(<f-args>)
-command! -buffer 		SyncTex			:call <SID>SyncTex(0)
+command! -buffer -bang 		SyncTex			:call <SID>SyncTex(<q-bang>, 0)
 command! -buffer 		PID			:call <SID>GetPID()
 command! -buffer -bang 		MakeLatex		:call <SID>SetBiberSettings() | call <SID>MakeLatex(<q-bang>, 'silent', 0)
 nmap <buffer> <Plug>ATP_MakeLatex		:MakeLatex<CR>

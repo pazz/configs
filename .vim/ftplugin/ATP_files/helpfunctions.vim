@@ -1,7 +1,6 @@
 " Author: 	Marcin Szamotulski
 " Description: 	This file contains help commands and variables (for mappings used by ATP) 
 " Note:		This file is a part of Automatic Tex Plugin for Vim.
-" URL:		https://launchpad.net/automatictexplugin
 " Language:	tex
 " Last Change:
 
@@ -16,7 +15,7 @@ function! <SID>HelpMathIMaps()
 	return ''
     endif
 
-    let infty_leader = (g:atp_imap_first_leader == "#" ? "\\" : g:atp_imap_first_leader ) 
+"     let infty_leader = (g:atp_imap_first_leader == "#" ? "\\" : g:atp_imap_first_leader ) 
 
     let g:help_mathimaps = ''
 	\."\n MATH IMAPS"
@@ -44,7 +43,7 @@ function! <SID>HelpMathIMaps()
 	\."\n ".g:atp_imap_first_leader."W \\Omega"
 	\."\n"
 	\."\n ".g:atp_imap_first_leader."+ \\bigcup           ".g:atp_imap_first_leader."- \\setminus" 
-	\."\n ".infty_leader."8 \\infty            ".g:atp_imap_first_leader."& \\wedge"
+	\."\n ".g:atp_infty_leader."8 \\infty            ".g:atp_imap_first_leader."& \\wedge"
 	\."\n ".                        "^^ ^{}               ".                        "__ _{}"
 	\."\n ".g:atp_imap_third_leader."m \\(\\)              ".g:atp_imap_third_leader."M \\[\\]           <maplocalleader> has value g:atp_imap_third_leader" 
     return g:help_mathimaps
@@ -92,14 +91,10 @@ function! <SID>HelpVMaps()
 	return ''
     endif
 
-    " Substitute <LocalLeader> with maplocalleader
-    if !exists("maplocalleader")
-	let maplocalleader = "\\"
-    endif
-    let l:atp_vmap_text_font_leader = ( g:atp_vmap_text_font_leader == "<LocalLeader>" ? maplocalleader : g:atp_vmap_text_font_leader )
-    let l:atp_vmap_environment_leader = ( g:atp_vmap_environment_leader == "<LocalLeader>" ? maplocalleader : g:atp_vmap_environment_leader )
-    let l:atp_vmap_bracket_leader = ( g:atp_vmap_bracket_leader == "<LocalLeader>" ? maplocalleader : g:atp_vmap_bracket_leader )
-    let l:atp_vmap_big_bracket_leader = ( g:atp_vmap_big_bracket_leader =~ "<LocalLeader>" ? substitute(g:atp_vmap_big_bracket_leader, '<LocalLeader>', maplocalleader, '')  : g:atp_vmap_big_bracket_leader )
+    let l:atp_vmap_text_font_leader 	= ( exists("maplocalleader") && g:atp_vmap_text_font_leader 	== "<LocalLeader>" ? maplocalleader : g:atp_vmap_text_font_leader )
+    let l:atp_vmap_environment_leader 	= ( exists("maplocalleader") && g:atp_vmap_environment_leader 	== "<LocalLeader>" ? maplocalleader : g:atp_vmap_environment_leader )
+    let l:atp_vmap_bracket_leader 	= ( exists("maplocalleader") && g:atp_vmap_bracket_leader 	== "<LocalLeader>" ? maplocalleader : g:atp_vmap_bracket_leader )
+    let l:atp_vmap_big_bracket_leader 	= ( exists("maplocalleader") && g:atp_vmap_big_bracket_leader 	=~ "<LocalLeader>" ? substitute(g:atp_vmap_big_bracket_leader, '<LocalLeader>', maplocalleader, '')  : g:atp_vmap_big_bracket_leader )
 
     let g:help_vmaps = ''
 	    \."\n <maplocalleader> has value g:atp_vmap_text_font_leader"
@@ -145,7 +140,6 @@ function! <SID>HelpVMaps()
 	    \."\n ".l:atp_vmap_text_font_leader."f                \\usefont{".g:atp_font_encoding."}{}{}{}\\selectfont" 
     return g:help_vmaps 
 endfunction
-silent call <SID>HelpVMaps()
 " {{{1 Help IMaps
 " function! <SID>HelpIMaps()
 " let tc_imap = maparg("<Tab>  ", 'i') =~# 'atplib#TabCompletion' ? '<Tab>' : 

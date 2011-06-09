@@ -1,7 +1,6 @@
 " Author:	David Mnuger (latexbox vim plugin)
 " Maintainer:	Marcin Szamotulski
 " Note:		This file is a part of Automatic Tex Plugin for Vim.
-" URL:		https://launchpad.net/automatictexplugin
 " Email:	mszamot [AT] gmail [DOT] com
 " Language:	tex
 " Last Change:
@@ -351,7 +350,9 @@ function! s:GetEnvironmentList(lead, cmdline, pos)
 	let suggestions = []
 	
 	if !exists("b:atp_LocalEnvironments")
-	    call LocalCommands()
+	    LocalCommands
+	elseif has("python")
+	    LocalCommands
 	endif
 	let l:completion_list=atplib#Extend(g:atp_Environments,b:atp_LocalEnvironments)
 

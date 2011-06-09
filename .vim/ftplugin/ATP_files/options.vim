@@ -1,7 +1,6 @@
 " Author: 	Marcin Szamotulski	
 " Description: 	This file contains all the options defined on startup of ATP
 " Note:		This file is a part of Automatic Tex Plugin for Vim.
-" URL:		https://launchpad.net/automatictexplugin
 " Language:	tex
 " Last Change:
 
@@ -40,9 +39,25 @@ endif
 
 " ATP Debug Variables: (to debug atp behaviour)
 " {{{ debug variables
+if !exists("g:atp_debugMapFile")
+    " debug mappings.vim file (show which maps will not be defined).
+    let g:atp_debugMapFile	= 0
+endif
+if !exists("g:atp_debugLatexTags")
+    " debug <SID>LatexTags() function (motion.vim)
+    let g:atp_debugLatexTags	= 0
+endif
+if !exists("g:atp_debugaaTeX")
+    " debug <SID>auTeX() function (compiler.vim)
+    let g:atp_debugauTeX	= 0
+endif
+if !exists("g:atp_debugSyncTex")
+    " debug SyncTex (compiler.vim)
+    let g:atp_debugSyncTex 	= 0
+endif
 if !exists("g:atp_debugInsertItem")
-    " debug UpdateATP (various.vim)
-    let g:atp_debugInsertItem = 0
+    " debug SyncTex (various.vim)
+    let g:atp_debugInsertItem 	= 0
 endif
 if !exists("g:atp_debugUpdateATP")
     " debug UpdateATP (various.vim)
@@ -60,9 +75,9 @@ if !exists("g:atp_debugGAF")
     " debug aptlib#GrepAuxFile
     let g:atp_debugGAF		= 0
 endif
-if !exists("g:atp_debugSCP")
+if !exists("g:atp_debugSelectCurrentParagraph")
     " debug s:SelectCurrentParapgrahp (LatexBox_motion.vim)
-    let g:atp_debugSCP		= 0
+    let g:atp_debugSelectCurrentParagraph	= 0
 endif
 if !exists("g:atp_debugSIT")
     " debug <SID>SearchInTree (search.vim)
@@ -98,9 +113,9 @@ if !exists("g:atp_debugST")
     " Debug SyncTex() (various.vim) function
     let g:atp_debugST 		= 0
 endif
-if !exists("g:atp_debugCLE")
+if !exists("g:atp_debugCloseLastEnvironment")
     " Debug atplib#CloseLastEnvironment()
-    let g:atp_debugCLE 		= 0
+    let g:atp_debugCloseLastEnvironment	= 0
 endif
 if !exists("g:atp_debugMainScript")
     " loading times of scripts sources by main script file: ftpluing/tex_atp.vim
@@ -114,17 +129,17 @@ if !exists("g:atp_debugProject")
     " The value that is set in history file matters!
     let g:atp_debugProject 	= 0
 endif
-if !exists("g:atp_debugCB")
+if !exists("g:atp_debugChekBracket")
     " atplib#CheckBracket()
-    let g:atp_debugCB 		= 0
+    let g:atp_debugCheckBracket 		= 0
 endif
-if !exists("g:atp_debugCLB")
+if !exists("g:atp_debugClostLastBracket")
     " atplib#CloseLastBracket()
-    let g:atp_debugCLB 		= 0
+    let g:atp_debugCloseLastBracket 		= 0
 endif
-if !exists("g:atp_debugTC")
+if !exists("g:atp_debugTabCompletion")
     " atplib#TabCompletion()
-    let g:atp_debugTC 		= 0
+    let g:atp_debugTabCompletion 		= 0
 endif
 if !exists("g:atp_debugBS")
     " atplib#searchbib()
@@ -136,11 +151,6 @@ endif
 if !exists("g:atp_debugToF")
     " TreeOfFiles() ATP_files/common.vim
     let g:atp_debugToF 		= 0
-endif
-if !exists("g:atp_debgTOF")
-    " TreeOfFiles() redirect only the output to
-    " /tmp/ATP_log
-    let g:atp_debugTOF 		= 0
 endif
 if !exists("g:atp_debugBabel")
     " echo msg if  babel language is not supported.
@@ -172,6 +182,8 @@ endif
 " }}}
 
 setl nrformats=alpha
+" The vim option 'iskeyword' is adjust just after g:atp_separator and
+" g:atp_no_separator variables are defined.
 setl keywordprg=texdoc\ -m
 if maparg("K", "n") != ""
     try
@@ -187,30 +199,35 @@ exe "setlocal complete+=".
 	    \ ",k".globpath(&rtp, "ftplugin/ATP_files/dictionaries/SIunits")
 " The ams_dictionary is added after g:atp_amsmath variable is defined.
 
-setlocal suffixes+=pdf
+" setlocal iskeyword+=\
+let suffixes = split(&suffixes, ",")
+if index(suffixes, ".pdf") == -1
+    setlocal suffixes+=.pdf
+elseif index(suffixes, ".dvi") == -1
+    setlocal suffixes+=.dvi
+endif
 " As a base we use the standard value defined in 
 " The suffixes option is also set after g:atp_tex_extensions is set.
 
 " Borrowed from tex.vim written by Benji Fisher:
     " Set 'comments' to format dashed lists in comments
-    setlocal com=sO:%\ -,mO:%\ \ ,eO:%%,:%
+    setlocal comments=sO:%\ -,mO:%\ \ ,eO:%%,:%
 
     " Set 'commentstring' to recognize the % comment character:
     " (Thanks to Ajit Thakkar.)
-    setlocal cms=%%s
+    setlocal commentstring=%%s
 
     " Allow "[d" to be used to find a macro definition:
     " Recognize plain TeX \def as well as LaTeX \newcommand and \renewcommand .
     " I may as well add the AMS-LaTeX DeclareMathOperator as well.
-    let &l:define='\\\([egx]\|char\|mathchar\|count\|dimen\|muskip\|skip\|toks\)\='
-	    \ .	'def\|\\font\|\\\(future\)\=let'
-	    \ . '\|\\new\(count\|dimen\|skip\|muskip\|box\|toks\|read\|write'
-	    \ .	'\|fam\|insert\)'
+    let &l:define='\\\([egx]\|char\|mathchar\|count\|dimen\|muskip\|skip\|toks\)\=def'
+	    \ .	'\|\\font\|\\\(future\)\=let'
+	    \ . '\|\\new\(count\|dimen\|skip\|muskip\|box\|toks\|read\|write\|fam\|insert\)'
+	    \ .	'\|\\definecolor{'
 	    \ . '\|\\\(re\)\=new\(boolean\|command\|counter\|environment\|font'
 	    \ . '\|if\|length\|savebox\|theorem\(style\)\=\)\s*\*\=\s*{\='
 	    \ . '\|DeclareMathOperator\s*{\=\s*'
 	    \ . '\|DeclareFixedFont\s*{\s*'
-    let g:filetype = &l:filetype
     if &l:filetype != "plaintex"
 	setlocal include=^[^%]*\\%(\\\\input\\(\\s*{\\)\\=\\\\|\\\\include\\s*{\\)
     else
@@ -235,6 +252,22 @@ setlocal suffixes+=pdf
 let b:atp_running	= 0
 
 " these are all buffer related variables:
+function! <SID>TexCompiler()
+    if buflisted(atplib#FullPath(b:atp_MainFile))
+	let line = getbufline(atplib#FullPath(b:atp_MainFile), 1)[0]
+	if line =~ '^%&\w*tex\>'
+	    return matchstr(line, '^%&\zs\w\+')
+	endif
+    else
+	let line = readfile(atplib#FullPath(b:atp_MainFile))[0] 
+	if line =~ '^%&\w*tex\>'
+	    return matchstr(line, '^%&\zs\w\+')
+	endif
+    endif
+    return (&filetype == "plaintex" ? "pdftex" : "pdflatex")
+endfunction
+let s:TexCompiler = <SID>TexCompiler()
+    
 let s:optionsDict= { 	
 		\ "atp_TexOptions" 		: "-synctex=1", 
 	        \ "atp_ReloadOnError" 		: "1", 
@@ -248,7 +281,7 @@ let s:optionsDict= {
 		\ "atp_okularOptions"		: ["--unique"],
 		\ "atp_OutDir" 			: substitute(fnameescape(fnamemodify(resolve(expand("%:p")),":h")) . "/", '\\\s', ' ' , 'g'),
 		\ "atp_TempDir"			: substitute(b:atp_OutDir . "/.tmp", '\/\/', '\/', 'g'),
-		\ "atp_TexCompiler" 		: &filetype == "plaintex" ? "pdftex" : "pdflatex",	
+		\ "atp_TexCompiler" 		: s:TexCompiler,
 		\ "atp_BibCompiler"		: ( getline(atplib#SearchPackage('biblatex')) =~ '\<backend\s*=\s*biber\>' ? 'biber' : "bibtex" ),
 		\ "atp_auruns"			: "1",
 		\ "atp_TruncateStatusSection"	: "40", 
@@ -273,7 +306,6 @@ let s:optionsDict= {
 " 			\.($TEXINPUTS == "" ? b:atp_OutDir : b:atp_OutDir.":".$TEXINPUTS)
 " 			\.";BIBINPUTS="
 " 			\.($BIBINPUTS == "" ? b:atp_OutDir : b:atp_OutDir.":".$BIBINPUTS),
-let g:optionsDict=deepcopy(s:optionsDict)
 " the above atp_OutDir is not used! the function s:SetOutDir() is used, it is just to
 " remember what is the default used by s:SetOutDir().
 
@@ -284,13 +316,13 @@ let s:ask = { "ask" : "0" }
 function! s:SetOptions()
 
     let s:optionsKeys		= keys(s:optionsDict)
-    let g:optionsKeys		= copy(s:optionsKeys)
     let s:optionsinuseDict	= getbufvar(bufname("%"),"")
 
     "for each key in s:optionsKeys set the corresponding variable to its default
     "value unless it was already set in .vimrc file.
     for key in s:optionsKeys
-	if string(get(s:optionsinuseDict,key, "optionnotset")) == string("optionnotset") && key != "atp_OutDir" && key != "atp_autex" || key == "atp_TexCompiler"
+" 	echomsg key
+	if string(get(s:optionsinuseDict,key, "optionnotset")) == string("optionnotset") && key != "atp_OutDir" && key != "atp_autex"
 	    call setbufvar(bufname("%"), key, s:optionsDict[key])
 	elseif key == "atp_OutDir"
 
@@ -305,13 +337,16 @@ function! s:SetOptions()
         " Do not run tex on tex files which are in texmf tree
     " Exception: if it is opened using the command ':EditInputFile'
     " 		 which sets this itself.
+    let time=reltime()
     if string(get(s:optionsinuseDict,"atp_autex", 'optionnotset')) == string('optionnotset')
 	let atp_texinputs=split(substitute(substitute(system("kpsewhich -show-path tex"),'\/\/\+','\/','g'),'!\|\n','','g'),':')
 	call remove(atp_texinputs, index(atp_texinputs, '.'))
 	call filter(atp_texinputs, 'b:atp_OutDir =~# v:val')
 	let b:atp_autex = ( len(atp_texinputs) ? 0 : s:optionsDict['atp_autex'])  
     endif
+    let g:source_time_INPUTS=reltimestr(reltime(time))
 
+    let time=reltime()
     if !exists("b:TreeOfFiles") || !exists("b:ListOfFiles") || !exists("b:TypeDict") || !exists("b:LevelDict")
 	if exists("b:atp_MainFile") 
 	    let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
@@ -320,35 +355,84 @@ function! s:SetOptions()
 	    echomsg "[ATP:] b:atp_MainFile: ".b:atp_MainFile." doesn't exists."
 	endif
     endif
+    let g:source_time_TREE=reltimestr(reltime(time))
 endfunction
 "}}}
+let time=reltime()
 call s:SetOptions()
+let g:source_time_OPTIONS=reltimestr(reltime(time))
 lockvar b:atp_autex_wait
 
 "}}}
 
 " Global Variables: (almost all)
 " {{{ global variables 
+if !exists("g:atp_cmap_space") || g:atp_reload_variables
+    let g:atp_cmap_space 	= 1
+endif
+if !exists("g:atp_bibsearch") || g:atp_reload_variables
+    " Use python search engine (and python regexp) for bibsearch
+    let g:atp_bibsearch 	= "python"
+endif
+if !exists("g:atp_map_Comment") || g:atp_reload_variables
+    let g:atp_map_Comment 	= "-c"
+endif
+if !exists("g:atp_map_UnComment") || g:atp_reload_variables
+    let g:atp_map_UnComment 	= "-u"
+endif
+if !exists("g:atp_HighlightErrors") || g:atp_reload_variables
+    let g:atp_HighlightErrors 	= 0
+endif
+if !exists("g:atp_Highlight_ErrorGroup") || g:atp_reload_variables
+    let g:atp_Highlight_ErrorGroup = "Error"
+endif
+if !exists("g:atp_Highlight_WarningGroup") || g:atp_reload_variables
+"     let g:atp_Highlight_WarningGroup = "WarningMsg"
+    let g:atp_Highlight_WarningGroup = ""
+endif
+if !exists("maplocalleader") || g:atp_reload_variables
+    if &l:cpoptions =~# "B"
+	let maplocalleader="\\"
+    else
+	let maplocalleader="\\\\"
+    endif
+endif
+if !exists("g:atp_sections") || g:atp_reload_variables
+    " Used by :TOC command (s:maketoc in motion.vim)
+    let g:atp_sections={
+	\	'chapter' 	: [ '\m^\s*\(\\chapter\*\?\>\)',			'\m\\chapter\*'		],	
+	\	'section' 	: [ '\m^\s*\(\\section\*\?\>\)',			'\m\\section\*'		],
+	\ 	'subsection' 	: [ '\m^\s*\(\\subsection\*\?\>\)',			'\m\\subsection\*'	],
+	\	'subsubsection' : [ '\m^\s*\(\\subsubsection\*\?\>\)',			'\m\\subsubsection\*'	],
+	\	'bibliography' 	: [ '\m^\s*\(\\begin\s*{\s*thebibliography\s*}\|\\bibliography\s*{\)' , 'nopattern'],
+	\	'abstract' 	: [ '\m^\s*\(\\begin\s*{abstract}\|\\abstract\s*{\)',	'nopattern'		],
+	\   	'part'		: [ '\m^\s*\(\\part\*\?\>\)',				'\m\\part\*'		]
+	\ }
+endif
 if !exists("g:atp_cgetfile") || g:atp_reload_variables
     let g:atp_cgetfile = 1
 endif
 if !exists("g:atp_atpdev") || g:atp_reload_variables
+    " if 1 defines DebugPrint command to print log files from g:atp_Temp directory.
     let g:atp_atpdev = 0
 endif
 if !exists("g:atp_imap_ShortEnvIMaps") || g:atp_reload_variables
+    " By default 1, then one letter (+leader) mappings for environments are defined,
+    " for example ]t -> \begin{theorem}\end{theorem}
+    " if 0 three letter maps are defined: ]the -> \begin{theorem}\end{theorem}
     let g:atp_imap_ShortEnvIMaps = 1
 endif
 if !exists("g:atp_imap_over_leader") || g:atp_reload_variables
-    let g:atp_imap_over_leader="`"
+    let g:atp_imap_over_leader	= "`"
 endif
 if !exists("g:atp_imap_subscript") || g:atp_reload_variables
-    let g:atp_imap_subscript="__"
+    let g:atp_imap_subscript 	= "__"
 endif
 if !exists("g:atp_imap_supscript") || g:atp_reload_variables
-    let g:atp_imap_supscript="^"
+    let g:atp_imap_supscript	= "^"
 endif
 if !exists("g:atp_imap_define_math") || g:atp_reload_variables
-    let g:atp_imap_define_math=1
+    let g:atp_imap_define_math	= 1
 endif
 if !exists("g:atp_imap_define_environments") || g:atp_reload_variables
     let g:atp_imap_define_environments = 1
@@ -360,13 +444,13 @@ if !exists("g:atp_imap_define_greek_letters") || g:atp_reload_variables
     let g:atp_imap_define_greek_letters = 1
 endif
 if !exists("g:atp_imap_wide") || g:atp_reload_variables
-    let g:atp_imap_wide=0
+    let g:atp_imap_wide		= 0
 endif
 if !exists("g:atp_letter_opening") || g:atp_reload_variables
-    let g:atp_letter_opening=""
+    let g:atp_letter_opening	= ""
 endif
 if !exists("g:atp_letter_closing") || g:atp_reload_variables
-    let g:atp_letter_closing=""
+    let g:atp_letter_closing	= ""
 endif
 if !exists("g:atp_imap_bibiliography") || g:atp_reload_variables
     if g:atp_imap_ShortEnvIMaps
@@ -569,8 +653,8 @@ if !exists("g:atp_Python") || g:atp_reload_variables
 	let g:atp_Python = "python"
     endif
 endif
-if !exists("g:atp_MapUpdateToCLine") || g:atp_reload_variables
-    let g:atp_MapUpdateToCLine = 1
+if !exists("g:atp_UpdateToCLine") || g:atp_reload_variables
+    let g:atp_UpdateToCLine = 1
 endif
 if !exists("g:atp_DeleteWithBang") || g:atp_reload_variables
     let g:atp_DeleteWithBang = [ 'synctex.gz', 'tex.project.vim']
@@ -584,15 +668,15 @@ endif
 if !exists("g:atp_XpdfSleepTime") || g:atp_reload_variables
     let g:atp_XpdfSleepTime = "0.2"
 endif
-if !exists("g:atp_MapCC") || g:atp_reload_variables
-    let g:atp_MapCC = 0
+if !exists("g:atp_IMapCC") || g:atp_reload_variables
+    let g:atp_IMapCC = 0
 endif
 if !exists("g:atp_DefaultErrorFormat") || g:atp_reload_variables
     let g:atp_DefaultErrorFormat = "erc"
 endif
 let b:atp_ErrorFormat = g:atp_DefaultErrorFormat
-if !exists("g:atp_DefiSearchMaxWindowHeight") || g:atp_reload_variables
-    let g:atp_DefiSearchMaxWindowHeight=15
+if !exists("g:atp_DsearchMaxWindowHeight") || g:atp_reload_variables
+    let g:atp_DsearchMaxWindowHeight=15
 endif
 if !exists("g:atp_ProgressBar") || g:atp_reload_variables
     let g:atp_ProgressBar = 1
@@ -930,19 +1014,21 @@ if !exists("g:atp_tex_extensions") || g:atp_reload_variables
 endif
 for ext in g:atp_tex_extensions
     let suffixes = split(&suffixes, ",")
-    if index(suffixes, ".".ext) == -1
+    if index(suffixes, ".".ext) == -1 && ext !~ 'mtc'
 	exe "setlocal suffixes+=.".ext
     endif
 endfor
 if !exists("g:atp_delete_output") || g:atp_reload_variables
     let g:atp_delete_output	= 0
 endif
-if !exists("g:keep") || g:atp_reload_variables
-    let g:keep=[ "log", "aux", "toc", "bbl", "ind", "synctex.gz", "blg", "loa", "toc", "lot", "lof", "thm" ]
+if !exists("g:atp_keep") || g:atp_reload_variables
+    " Files with this extensions will be compied back and forth to/from temporary
+    " directory in which compelation happens.
+    let g:atp_keep=[ "log", "aux", "toc", "bbl", "ind", "synctex.gz", "blg", "loa", "toc", "lot", "lof", "thm", "out" ]
     " biber stuff is added before compelation, this makes it possible to change 
     " to biber on the fly
     if b:atp_BibCompiler =~ '^\s*biber\>'
-	let g:keep += [ "run.xml", "bcf" ]
+	let g:atp_keep += [ "run.xml", "bcf" ]
     endif
 endif
 if !exists("g:atp_ssh") || g:atp_reload_variables
@@ -966,12 +1052,11 @@ if !exists("g:atp_compare_double_empty_lines") || g:atp_reload_variables || g:at
     let g:atp_compare_double_empty_lines = 1
 endif
 "TODO: put toc_window_with and labels_window_width into DOC file
+if !exists("g:atp_toc_window_width") || g:atp_reload_variables
+    let g:atp_toc_window_width 	= 30
+endif
 if !exists("t:toc_window_width") || g:atp_reload_variables
-    if exists("g:toc_window_width")
-	let t:toc_window_width	= g:toc_window_width
-    else
-	let t:toc_window_width	= 30
-    endif
+    let t:toc_window_width	= g:atp_toc_window_width
 endif
 if !exists("t:atp_labels_window_width") || g:atp_reload_variables
     if exists("g:labels_window_width")
@@ -1032,7 +1117,6 @@ endif
 "     let g:atp_complete_math_env_first=0
 " endif
 " }}}
-"
 
 " Project Settings:
 " {{{1
@@ -1044,8 +1128,11 @@ if !exists("g:atp_ProjectLocalVariables") || g:atp_reload_variables
 		\ "b:atp_auruns", 	"b:atp_ReloadOnErr", 	"b:atp_OpenViewer", 
 		\ "b:atp_XpdfServer",	"b:atp_ProjectDir", 	"b:atp_Viewer",
 		\ "b:TreeOfFiles",	"b:ListOfFiles", 	"b:TypeDict",
-		\ "b:LevelDict", 	"b:atp_BibCompiler"
+		\ "b:LevelDict", 	"b:atp_BibCompiler",
 		\ ] 
+    if !has("python")
+	call extend(g:atp_ProjectLocalVariables, ["b:atp_LocalCommands", "b:atp_LocalEnvironments", "b:atp_LocalColors"])
+    endif
 endif
 " the variable a:1 is the name of the variable which stores the list of variables to
 " save.
@@ -1127,7 +1214,7 @@ function! s:ShowOptions(bang,...)
 	    endfor
 	    if var_name =~ pattern && var_name !~ '_command\|_amsfonts\|ams_negations\|tikz_\|keywords'
 " 		if patn != '' && var_name !~ patn
-		if index(["g:atp_LatexPackages", "g:atp_LatexClasses", "g:optionsDict", "g:optionsKeys", "g:atp_completion_modes", "g:atp_completion_modes_normal_mode", "g:atp_Environments", "g:atp_shortname_dict", "g:atp_MathTools_environments", "g:atp_keymaps", "g:atp_CupsOptions", "g:atp_CompilerMsg_Dict", "g:ViewerMsg_Dict", "g:CompilerMsg_Dict", "g:atp_amsmath_environments"], var_name) == -1 && var_name !~# '^g:atp_Beamer' && var_name !~# '^g:atp_TodoNotes'
+		if index(["g:atp_LatexPackages", "g:atp_LatexClasses", "g:atp_completion_modes", "g:atp_completion_modes_normal_mode", "g:atp_Environments", "g:atp_shortname_dict", "g:atp_MathTools_environments", "g:atp_keymaps", "g:atp_CupsOptions", "g:atp_CompilerMsg_Dict", "g:ViewerMsg_Dict", "g:CompilerMsg_Dict", "g:atp_amsmath_environments"], var_name) == -1 && var_name !~# '^g:atp_Beamer' && var_name !~# '^g:atp_TodoNotes'
 		    echo var_name.space.string({var_name})
 		    if len(var_name.space.string({var_name})) > &l:columns
 			echo "\n"
@@ -1249,6 +1336,27 @@ endif
 " {{{ SetXdvi
 function! <SID>SetXdvi()
 
+    if buflisted(atplib#FullPath(b:atp_MainFile))
+	let line = getbufline(atplib#FullPath(b:atp_MainFile), 1)[0]
+	if line =~ '^%&\w*tex\>'
+	    let compiler = matchstr(line, '^%&\zs\w\+')
+	else
+	    let compiler = ""
+	endif
+    else
+	let line = readfile(atplib#FullPath(b:atp_MainFile))[0] 
+	if line =~ '^%&\w*tex\>'
+	    let compiler = matchstr(line, '^%&\zs\w\+')
+	else
+	    let compiler = ""
+	endif
+    endif
+    if compiler != "" && compiler !~ '\(la\)\=tex'
+	echohl Error
+	echomsg "[SetXdvi:] You need to change the first line of your project!"
+	echohl Normal
+    endif
+
     " Remove menu entries
     let Compiler		= get(g:CompilerMsg_Dict, matchstr(b:atp_TexCompiler, '^\s*\S*'), 'Compiler')
     let Viewer			= get(g:ViewerMsg_Dict, matchstr(b:atp_Viewer, '^\s*\S*'), 'View\ Output')
@@ -1307,6 +1415,27 @@ function! <SID>SetPdf(viewer)
     catch /E329:/
     endtry
 
+    if buflisted(atplib#FullPath(b:atp_MainFile))
+	let line = getbufline(atplib#FullPath(b:atp_MainFile), 1)[0]
+	if line =~ '^%&\w*tex>'
+	    let compiler = matchstr(line, '^%&\zs\w\+')
+	else
+	    let compiler = ""
+	endif
+    else
+	let line = readfile(atplib#FullPath(b:atp_MainFile))[0] 
+	if line =~ '^%&\w*tex\>'
+	    let compiler = matchstr(line, '^%&\zs\w\+')
+	else
+	    let compiler = ""
+	endif
+    endif
+    if compiler != "" && compiler !~ 'pdf\(la\)\=tex'
+	echohl Error
+	echomsg "[SetPdf:] You need to change the first line of your project!"
+	echohl Normal
+    endif
+
     let b:atp_TexCompiler	= "pdflatex"
     " We have to clear tex options (for example -src-specials set by :SetXdvi)
     let b:atp_TexOptions	= "-synctex=1"
@@ -1364,10 +1493,16 @@ endfunction
 " Special Space for Searching 
 let s:special_space="[off]"
 function! ATP_ToggleSpace(...)
-    let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : maparg('<space>','c') == "" )
+    let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : !g:atp_cmap_space )
     if on
-	echomsg "[ATP:] special space is on"
-	cmap <Space> \_s\+
+	if mapcheck("<space>", 'c') == ""
+	    if &cpoptions =~# 'B'
+		cmap <buffer> <expr> <space> 	( g:atp_cmap_space && getcmdtype() =~ '[\/?]' ? '\_s\+' : ' ' )
+	    else
+		cmap <buffer> <expr> <space> 	( g:atp_cmap_space && getcmdtype() =~ '[\\/?]' ? '\\_s\\+' : ' ' )
+	    endif
+	endif
+	let g:atp_cmap_space=1
 	let s:special_space="[on]"
 	silent! aunmenu LaTeX.Toggle\ Space\ [off]
 	silent! aunmenu LaTeX.Toggle\ Space\ [on]
@@ -1375,9 +1510,10 @@ function! ATP_ToggleSpace(...)
 	cmenu 550.78 &LaTeX.&Toggle\ Space\ [on]<Tab>cmap\ <space>\ \\_s\\+	<C-U>ToggleSpace<CR>
 	imenu 550.78 &LaTeX.&Toggle\ Space\ [on]<Tab>cmap\ <space>\ \\_s\\+	<Esc>:ToggleSpace<CR>a
 	tmenu &LaTeX.&Toggle\ Space\ [on] cmap <space> \_s\+ is curently on
+	redraw
+	let msg = "[ATP:] special space is on"
     else
-	echomsg "[ATP:] special space is off"
-	cunmap <Space>
+	let g:atp_cmap_space=0
 	let s:special_space="[off]"
 	silent! aunmenu LaTeX.Toggle\ Space\ [on]
 	silent! aunmenu LaTeX.Toggle\ Space\ [off]
@@ -1385,14 +1521,19 @@ function! ATP_ToggleSpace(...)
 	cmenu 550.78 &LaTeX.&Toggle\ Space\ [off]<Tab>cmap\ <space>\ \\_s\\+	<C-U>ToggleSpace<CR>
 	imenu 550.78 &LaTeX.&Toggle\ Space\ [off]<Tab>cmap\ <space>\ \\_s\\+	<Esc>:ToggleSpace<CR>a
 	tmenu &LaTeX.&Toggle\ Space\ [off] cmap <space> \_s\+ is curently off
+	redraw
+	let msg = "[ATP:] special space is off"
     endif
+    return msg
 endfunction
+" nnoremap <buffer> <silent> <Plug>ToggleSpace	:call ATP_ToggleSpace() 
+" cnoremap <buffer> <Plug>ToggleSpace	:call ATP_ToggleSpace() 
 function! ATP_CmdwinToggleSpace(on)
-    let on	= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : maparg('<space>', 'i') == "" )
-    let g:on	= on
+    let on		= ( a:0 >=1 ? ( a:1 == 'on'  ? 1 : 0 ) : maparg('<space>', 'i') == "" )
     if on
 	echomsg "space ON"
-	imap <space> \_s\+
+	let backslash 	= ( &l:cpoptions =~# "B" ? "\\" : "\\\\\\" ) 
+	exe "imap <space> ".backslash."_s".backslash."+"
     else
 	echomsg "space OFF"
 	iunmap <space>
@@ -1571,7 +1712,7 @@ function! ATP_ToggleDebugMode(mode,...)
 	    exe "ErrorFormat ".efm
 	    silent! cg
 	    if len(getqflist()) > 0
-		exe "silent copen ".min([atplb#qflength(), g:atp_DebugModeQuickFixHeight])
+		exe "silent copen ".min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])
 		exe winnr . " wincmd w"
 	    else
 		echo "[ATP:] no errors for b:atp_ErrorFormat=".efm
@@ -1630,28 +1771,33 @@ function! ATP_ToggleMathIMaps(insert_enter, bang,...)
 	call atplib#MakeMaps(g:atp_imap_math_misc)
 	echo '[ATP:] imaps ON'
     endif
-    if a:insert_enter
-	let g:atp_eventignore=&l:eventignore
-	let g:atp_eventignoreInsertEnter=1
-	set eventignore+=InsertEnter
-" 	" This doesn't work because startinsert runs after function ends.
-    endif
+" Setting eventignore is not a good idea 
+" (this might break specific user settings)
+"     if a:insert_enter
+" 	let g:atp_eventignore=&l:eventignore
+" 	let g:atp_eventignoreInsertEnter=1
+" 	set eventignore+=InsertEnter
+" " 	" This doesn't work because startinsert runs after function ends.
+"     endif
 endfunction
+" }}}
 " }}}
 endif
  
 "  Commands And Maps:
+command! -buffer ToggleSpace	:call <SID>ToggleSpace()
 command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp	ToggleMathIMaps	 	:call ATP_ToggleMathIMaps(0, "!", <f-args>)
 nnoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		:call ATP_ToggleMathIMaps(0, "!")<CR>
-inoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		<Esc>:call ATP_ToggleMathIMaps(1, "")<CR>
+inoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		<Esc>:call ATP_ToggleMathIMaps(0, "!")<CR>
+" inoremap <silent> <buffer> 	<Plug>ToggleMathIMaps		<Esc>:call ATP_ToggleMathIMaps(1, "")<CR>
 
 command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp ToggleAuTeX 	:call ATP_ToggleAuTeX(<f-args>)
 nnoremap <silent> <buffer> 	<Plug>ToggleAuTeX 		:call ATP_ToggleAuTeX()<CR>
 
-command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp ToggleSpace 	:call ATP_ToggleSpace(<f-args>)
-nnoremap <silent> <buffer> 	<Plug>ToggleSpace 		:call ATP_ToggleSpace()<CR>
-nnoremap <silent> <buffer> 	<Plug>ToggleSpaceOn 		:call ATP_ToggleSpace('on')<CR>
-nnoremap <silent> <buffer> 	<Plug>ToggleSpaceOff 		:call ATP_ToggleSpace('off')<CR>
+command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp ToggleSpace 	:echo ATP_ToggleSpace(<f-args>)
+nnoremap <silent> <buffer> 	<Plug>ToggleSpace 		:echo ATP_ToggleSpace()<CR>
+nnoremap <silent> <buffer> 	<Plug>ToggleSpaceOn 		:echo ATP_ToggleSpace('on')<CR>
+nnoremap <silent> <buffer> 	<Plug>ToggleSpaceOff 		:echo ATP_ToggleSpace('off')<CR>
 
 command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp	ToggleCheckMathOpened 	:call ATP_ToggleCheckMathOpened(<f-args>)
 nnoremap <silent> <buffer> 	<Plug>ToggleCheckMathOpened	:call ATP_ToggleCheckMathOpened()<CR>
@@ -1660,6 +1806,7 @@ command! -buffer -nargs=? -complete=customlist,atplib#OnOffComp	ToggleCallBack 	
 nnoremap <silent> <buffer> 	<Plug>ToggleCallBack		:call ATP_ToggleCallBack()<CR>
 
 command! -buffer -nargs=? -complete=custom,ToggleDebugModeCompl	ToggleDebugMode 	:call ATP_ToggleDebugMode("",<f-args>)
+nnoremap <silent> <buffer> 	<Plug>TogglesilentMode		:call ATP_ToggleDebugMode("silent")<CR>
 nnoremap <silent> <buffer> 	<Plug>ToggledebugMode		:call ATP_ToggleDebugMode("debug")<CR>
 nnoremap <silent> <buffer> 	<Plug>ToggleDebugMode		:call ATP_ToggleDebugMode("Debug")<CR>
 
@@ -1686,7 +1833,8 @@ let g:atp_completion_modes=[
 	    \ 'font shape',		'algorithmic',
 	    \ 'beamerthemes', 		'beamerinnerthemes',
 	    \ 'beamerouterthemes', 	'beamercolorthemes',
-	    \ 'beamerfontthemes',	'todonotes' ]
+	    \ 'beamerfontthemes',	'todonotes',
+	    \ 'siunits' ]
 lockvar 2 g:atp_completion_modes
 catch /E741:/
 endtry
@@ -1770,6 +1918,9 @@ endif
 	endif
 	if !exists("g:atp_no_separator") || g:atp_reload_variables
 	    let g:atp_no_separator = 0
+	endif
+	if !g:atp_no_separator
+	    exe "setl iskeyword+=".g:atp_separator
 	endif
 	if !exists("g:atp_no_short_names") || g:atp_reload_variables
 	    let g:atp_env_short_names = 1
@@ -1923,7 +2074,9 @@ endif
 	" real main file. Maybe it is better to use s:mainfile variable.
 
 	if !exists("g:atp_local_completion") || g:atp_reload_variables
-	    let g:atp_local_completion = 1
+	    " if has("python") then fire LocalCommands on startup (BufEnter) if not
+	    " when needed.
+	    let g:atp_local_completion = ( has("python") ? 2 : 1 )
 	endif
 
 
@@ -2160,15 +2313,79 @@ let g:atp_fancyhdr_pagestyles = [ 'fancy' ]
 
 " Completion variable for \pagenumbering{} LaTeX command.
 let g:atp_pagenumbering = [ 'arabic', 'roman', 'Roman', 'alph', 'Alph' ]
-" }}}
-"
+
+" SIunits
+let g:atp_siuinits= [
+ \ '\addprefix', '\addunit', '\ampere', '\amperemetresecond', '\amperepermetre', '\amperepermetrenp',
+ \ '\amperepersquaremetre', '\amperepersquaremetrenp', '\angstrom', '\arad', '\arcminute', '\arcsecond',
+ \ '\are', '\atomicmass', '\atto', '\attod', '\barn', '\bbar',
+ \ '\becquerel', '\becquerelbase', '\bel', '\candela', '\candelapersquaremetre', '\candelapersquaremetrenp',
+ \ '\celsius', '\Celsius', '\celsiusbase', '\centi', '\centid', '\coulomb',
+ \ '\coulombbase', '\coulombpercubicmetre', '\coulombpercubicmetrenp', '\coulombperkilogram', '\coulombperkilogramnp', '\coulombpermol',
+ \ '\coulombpermolnp', '\coulombpersquaremetre', '\coulombpersquaremetrenp', '\cubed', '\cubic', '\cubicmetre',
+ \ '\cubicmetreperkilogram', '\cubicmetrepersecond', '\curie', '\dday', '\deca', '\decad',
+ \ '\deci', '\decid', '\degree', '\degreecelsius', '\deka', '\dekad',
+ \ '\derbecquerel', '\dercelsius', '\dercoulomb', '\derfarad', '\dergray', '\derhenry',
+ \ '\derhertz', '\derjoule', '\derkatal', '\derlumen', '\derlux', '\dernewton',
+ \ '\derohm', '\derpascal', '\derradian', '\dersiemens', '\dersievert', '\dersteradian',
+ \ '\dertesla', '\dervolt', '\derwatt', '\derweber', '\electronvolt', '\exa',
+ \ '\exad', '\farad', '\faradbase', '\faradpermetre', '\faradpermetrenp', '\femto',
+ \ '\femtod', '\fourth', '\gal', '\giga', '\gigad', '\gram',
+ \ '\graybase', '\graypersecond', '\graypersecondnp', '\hectare', '\hecto', '\hectod',
+ \ '\henry', '\henrybase', '\henrypermetre', '\henrypermetrenp', '\hertz', '\hertzbase',
+ \ '\hour', '\joule', '\joulebase', '\joulepercubicmetre', '\joulepercubicmetrenp', '\jouleperkelvin',
+ \ '\jouleperkelvinnp', '\jouleperkilogram', '\jouleperkilogramkelvin', '\jouleperkilogramkelvinnp', '\jouleperkilogramnp', '\joulepermole',
+ \ '\joulepermolekelvin', '\joulepermolekelvinnp', '\joulepermolenp', '\joulepersquaremetre', '\joulepersquaremetrenp', '\joulepertesla',
+ \ '\jouleperteslanp', '\katal', '\katalbase', '\katalpercubicmetre', '\katalpercubicmetrenp', '\kelvin',
+ \ '\kilo', '\kilod', '\kilogram', '\kilogrammetrepersecond', '\kilogrammetrepersecondnp', '\kilogrammetrepersquaresecond', '\kilogrammetrepersquaresecondnp', '\kilogrampercubicmetre', '\kilogrampercubicmetrecoulomb', '\kilogrampercubicmetrecoulombnp', '\kilogrampercubicmetrenp',
+ \ '\kilogramperkilomole', '\kilogramperkilomolenp', '\kilogrampermetre', '\kilogrampermetrenp', '\kilogrampersecond', '\kilogrampersecondcubicmetre',
+ \ '\kilogrampersecondcubicmetrenp', '\kilogrampersecondnp', '\kilogrampersquaremetre', '\kilogrampersquaremetrenp', '\kilogrampersquaremetresecond', '\kilogrampersquaremetresecondnp',
+ \ '\kilogramsquaremetre', '\kilogramsquaremetrenp', '\kilogramsquaremetrepersecond', '\kilogramsquaremetrepersecondnp', '\kilowatthour', '\liter',
+ \ '\litre', '\lumen', '\lumenbase', '\lux', '\luxbase', '\mega',
+ \ '\megad', '\meter', '\metre', '\metrepersecond', '\metrepersecondnp', '\metrepersquaresecond',
+ \ '\metrepersquaresecondnp', '\micro', '\microd', '\milli', '\millid', '\minute',
+ \ '\mole', '\molepercubicmetre', '\molepercubicmetrenp', '\nano', '\nanod', '\neper',
+ \ '\newton', '\newtonbase', '\newtonmetre', '\newtonpercubicmetre', '\newtonpercubicmetrenp', '\newtonperkilogram', '\newtonperkilogramnp', '\newtonpermetre', '\newtonpermetrenp', '\newtonpersquaremetre', '\newtonpersquaremetrenp', '\NoAMS', '\no@qsk', '\ohm', '\ohmbase', '\ohmmetre',
+ \ '\one', '\paminute', '\pascal', '\pascalbase', '\pascalsecond', '\pasecond',
+ \ '\per', '\period@active', '\persquaremetresecond', '\persquaremetresecondnp', '\peta', '\petad',
+ \ '\pico', '\picod', '\power', '\@qsk', '\quantityskip', '\rad',
+ \  '\radian', '\radianbase', '\radianpersecond', '\radianpersecondnp', '\radianpersquaresecond', '\radianpersquaresecondnp', '\reciprocal', '\rem', '\roentgen', '\rp', '\rpcubed',
+ \ '\rpcubic', '\rpcubicmetreperkilogram', '\rpcubicmetrepersecond', '\rperminute', '\rpersecond', '\rpfourth',
+ \ '\rpsquare', '\rpsquared', '\rpsquaremetreperkilogram', '\second', '\siemens', '\siemensbase',
+ \ '\sievert', '\sievertbase', '\square', '\squared', '\squaremetre', '\squaremetrepercubicmetre',
+ \ '\squaremetrepercubicmetrenp', '\squaremetrepercubicsecond', '\squaremetrepercubicsecondnp', '\squaremetreperkilogram', '\squaremetrepernewtonsecond', '\squaremetrepernewtonsecondnp',
+ \ '\squaremetrepersecond', '\squaremetrepersecondnp', '\squaremetrepersquaresecond', '\squaremetrepersquaresecondnp', '\steradian', '\steradianbase',
+ \ '\tera', '\terad', '\tesla', '\teslabase', '\ton', '\tonne',
+ \ '\unit', '\unitskip', '\usk', '\volt', '\voltbase', '\voltpermetre',
+ \ '\voltpermetrenp', '\watt', '\wattbase', '\wattpercubicmetre', '\wattpercubicmetrenp', '\wattperkilogram',
+ \ '\wattperkilogramnp', '\wattpermetrekelvin', '\wattpermetrekelvinnp', '\wattpersquaremetre', '\wattpersquaremetrenp', '\wattpersquaremetresteradian',
+ \ '\wattpersquaremetresteradiannp', '\weber', '\weberbase', '\yocto', '\yoctod', '\yotta',
+ \ '\yottad', '\zepto', '\zeptod', '\zetta', '\zettad' ]
+ " }}}
 
 " AUTOCOMMANDS:
 " Some of the autocommands (Status Line, LocalCommands, Log File):
 " {{{ Autocommands:
 
-
 if !s:did_options
+
+    augroup ATP_UpdateToCLine
+	au!
+	au CursorHold *.tex nested :call UpdateToCLine()
+    augroup END
+
+    function! RedrawToC()
+	if bufwinnr(bufnr("__ToC__")) != -1
+	    let winnr = winnr()
+	    TOC
+	    exe winnr." wincmd w"
+	endif
+    endfunction
+
+    augroup ATP_TOC_tab
+	au!
+	au TabEnter *.tex	:call RedrawToC()
+    augroup END
 
     let g:atp_eventignore		= &l:eventignore
     let g:atp_eventignoreInsertEnter 	= 0
@@ -2230,12 +2447,7 @@ endfunction
 	au FileType qf command! -bang -buffer -nargs=? -complete=custom,DebugComp DebugMode	:call <SID>SetDebugMode(<q-bang>,<f-args>)
 	au FileType qf let w:atp_qf_errorfile=&l:errorfile
 	au FileType qf setl statusline=%{w:atp_qf_errorfile}%=\ %#WarnningMsg#%{ErrorMsg('W')}\ %#ErrorMsg#%{ErrorMsg('E')}
-	"There are %{len(getqflist())} messages"
-	au FileType qf "resize ".min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])
-" 	THIS IS NOT WORKING this might be considered as a vim bug.
-" 	when there are two files it loads the errors from the window which we leave
-" 	rather than we get into.
-" 	au WinEnter *.tex cgetfile
+	au FileType qf exe "resize ".min([atplib#qflength(), g:atp_DebugModeQuickFixHeight])
     augroup END
 
     function! <SID>BufEnterCgetfile()
@@ -2280,14 +2492,14 @@ endfunction
     if (exists("g:atp_statusline") && g:atp_statusline == '1') || !exists("g:atp_statusline")
 	augroup ATP_Status
 	    au!
-	    au BufWinEnter *.tex 	call ATPStatus("")
+	    au BufWinEnter 	*.tex 	call ATPStatus()
 	augroup END
     endif
 
-    if g:atp_local_completion == 2 
+    if g:atp_local_completion == 2
 	augroup ATP_LocaCommands
 	    au!
-	    au BufEnter *.tex 	call LocalCommands()
+	    au BufEnter *.tex 	call LocalCommands(0)
 	augroup END
     endif
 
@@ -2419,7 +2631,11 @@ endif
 
 " Add extra syntax groups
 " {{{1 ATP_SyntaxGroups
-function! s:ATP_SyntaxGroups()
+function! <SID>ATP_SyntaxGroups()
+    if &filetype == ""
+	" this is for :Dsearch window
+	return
+    endif
     " add texMathZoneT syntax group for tikzpicture environment:
     if atplib#SearchPackage('tikz') || atplib#SearchPackage('pgfplots')
 	try
@@ -2437,7 +2653,7 @@ function! s:ATP_SyntaxGroups()
 endfunction
 
 augroup ATP_AddSyntaxGroups
-    au Syntax tex :call <SID>ATP_SyntaxGroups()
+    au BufEnter *.tex :call <SID>ATP_SyntaxGroups()
 augroup END
 
 augroup ATP_Devel

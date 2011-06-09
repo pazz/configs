@@ -10,3 +10,5 @@ let g:atp_statusNotif=1
 let g:atp_statusline=1
 let g:atp_imap_item="i" 
 let g:atp_imap_itemize="I"
+
+let g:atp_debugTabCompletion=0
