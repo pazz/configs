@@ -28,5 +28,5 @@ source ~/.mutt/rc/gpg
 set pgp_sign_as=0x5A76FC4F # specify the uid to use when encrypting/signing
 
 #ldap EDDIR
-set query_command = "mutt_ldap_query '%s' 2>/dev/null "
+set query_command = "addrlookup.sh %s"
 
