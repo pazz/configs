@@ -3,26 +3,25 @@
 :wrap_width: 0
 :ask_for_from: true
 :accounts: 
-  :uoe: 
+  :default: 
     :signature: /home/pazz/.signature
     :email: p.totzke@ed.ac.uk
     :sendmail: msmtp --account=uoe -t
-    :gpgkey: 5A76FC4F
+    :gpgkey: D244DCB0F3A5E43B5B43E61374E7013E5A76FC4F
     :alternates: []
-
     :name: Patrick Totzke
-  :default: 
+  :gmail: 
     :signature: /home/pazz/.signature
     :email: patricktotzke@gmail.com
     :sendmail: msmtp --account=gmail -t
     :gpgkey: D7D6C5AA
     :alternates: []
-
     :name: Patrick Totzke
 :confirm_top_posting: true
 :editor: /usr/bin/vim -f -c 'setlocal spell spelllang=en_us' -c 'set filetype=mail'
 :slip_rows: 0
 :ask_for_to: true
+:ask_for_from: true
 :jump_to_open_message: true
 :ask_for_cc: false
 :discard_snippets_from_encrypted_messages: false
