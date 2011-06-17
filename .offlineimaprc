@@ -32,7 +32,7 @@ holdconnectionopen = yes
 localrepository = uoedir
 remoterepository = uoeimap
 autorefresh = 1
-postsynchook = sup-sync
+postsynchook = notmuch new; ~/bin/sort_mail.py
 
 [Repository uoedir]
 type = Maildir
