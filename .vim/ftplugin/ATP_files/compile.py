@@ -184,6 +184,7 @@ def latex_progress_bar(cmd):
             debug_file.write("UNICODE DECODE ERROR:\n")
             debug_file.write(child.stdout.read(1))
             debug_file.write("\n")
+            debug_file.write("stack="+''.join(stack)+"\n")
             out = ""
         if out == '' and child.poll() != None:
             break
@@ -301,7 +302,7 @@ try:
             shutil.copy(file_cp, tmpdir)
 
     tempdir_list = os.listdir(tmpdir)
-    debug_file.write("ls tmpdir "+str(tempdir_list)+"\n")
+    debug_file.write("\nls tmpdir "+str(tempdir_list)+"\n")
 
 # Set environment
     for var in env:
@@ -439,11 +440,15 @@ try:
             shutil.copy(file_cp, mainfile_dir)
 
 # Copy aux file if there were no compilation errors or if it doesn't exists in mainfile_dir.
+# copy aux file to _aux file (for atplib#GrepAuxFile)
     if latex_returncode == 0 or not os.path.exists(os.path.join(mainfile_dir, basename+".aux")):
         file_cp=basename+".aux"
         if os.path.exists(file_cp):
             shutil.copy(file_cp, mainfile_dir)
     os.chdir(cwd)
+    file_cp=basename+".aux"
+    if os.path.exists(os.path.join(mainfile_dir, basename+".aux")):
+        shutil.copy(file_cp, os.path.join(mainfile_dir, basename+"._aux"))
 
 ####################################
 #

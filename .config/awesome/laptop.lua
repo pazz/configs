@@ -26,7 +26,12 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
+<<<<<<< HEAD
+--mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+mail_cmd = 'urxvt -T alot -e alot'
+=======
 mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+>>>>>>> 12d2922f8f900e46af346520cab7c115413943ba
 gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
 -- Default modkey.
@@ -135,7 +140,11 @@ shifty.config.apps = {
          { match = { "URXVTmedia", "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
          { match = { "URXVTbib" } ,tag='bib'} ,
          { match = { "URXVTcalendar",".*Calendar.*" } ,tag='calendar'} ,
+<<<<<<< HEAD
+         { match = { "URXVTmail","Thunderbird","mutt","alot" } , tag = "mail" } ,
+=======
          { match = { "URXVTmail","Thunderbird","mutt" } , tag = "mail" } ,
+>>>>>>> 12d2922f8f900e46af346520cab7c115413943ba
          { match = { "URXVTim" } ,tag='im'} ,
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
@@ -303,7 +312,7 @@ function (widget, args)
         if args[1] == "↯" or args[1] == "+" then
 		baticon.image = image(beautiful.widget_bat_plug)
 		return fg(yellow,  args[2] .. args[1])
-        elseif args[2] >= 70 and args [2] < 90 then
+        elseif args[2] >= 80 and args [2] < 100 then
 		baticon.image = image(beautiful.widget_bat_4)
 		return fg(green,  args[2] .. args[1])
 	elseif args[2] >= 60 and args[2] < 70 then
@@ -312,10 +321,17 @@ function (widget, args)
 	elseif args[2] >= 50 and args[2] < 60 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
+<<<<<<< HEAD
+	elseif args[2] >= 5 and args[2] < 30 then
+		baticon.image = image(beautiful.widget_bat_2)
+		return fg(red, args[2] .. args[1])
+	elseif args[2] < 5 then
+=======
 	elseif args[2] >= 47 and args[2] < 50 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
 	elseif args[2] < 47 then
+>>>>>>> 12d2922f8f900e46af346520cab7c115413943ba
 		baticon.image = image(beautiful.widget_bat_empty)
 		naughty.notify({ text = "will die soon!", title = "Battery Critical", u='critical'})
 	else
@@ -324,7 +340,11 @@ function (widget, args)
 	end
 
 end
+<<<<<<< HEAD
+		, 31, "BAT0")
+=======
 		, 31, "BAT1")
+>>>>>>> 12d2922f8f900e46af346520cab7c115413943ba
 -- Audio Volume 
 sndicon = widget({ type = "imagebox" })
 volbar  = awful.widget.progressbar({layout = awful.widget.layout.horizontal.rightleft})
@@ -458,7 +478,8 @@ for s = 1, screen.count() do
             mypromptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        mytextclock,
+        mytextclock, spacer,
+        rightcap,weatherwidget,leftcap,spacer,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
         spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
@@ -655,6 +676,10 @@ naughty.config.screen = screen.count()
 os.execute("export $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
+<<<<<<< HEAD
+os.execute("gnome-power-manager&")
+=======
+>>>>>>> 12d2922f8f900e46af346520cab7c115413943ba
 os.execute("xset b 0 s 0 -dpms&")
 os.execute("offlineimap >~/.offlineimap.log&")
 --os.execute("offlineimap -u Noninteractive.Quiet&")

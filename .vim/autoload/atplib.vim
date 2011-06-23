@@ -5,6 +5,79 @@
 " URL:		https://launchpad.net/automatictexplugin
 " Language:	tex
 
+" Kill:
+" {{{
+function! atplib#KillPIDs(pids,...)
+    if len(a:pids) == 0 && a:0 == 0
+	return
+    endif
+python << END
+import os, signal
+from signal import SIGKILL
+pids=vim.eval("a:pids")
+for pid in pids:
+    try:
+	os.kill(int(pid),SIGKILL)
+    except OSError:
+        pass
+END
+endfunction " }}}
+" Write:
+function! atplib#write(...) "{{{
+    let backup		= &backup
+    let writebackup	= &writebackup
+    let project		= b:atp_ProjectScript
+
+    " Disable WriteProjectScript
+    let b:atp_ProjectScript = 0
+    set nobackup
+    set nowritebackup
+
+    if a:0 > 0 && a:1 == "silent"
+	silent! update
+    else
+	update
+    endif
+
+    let b:atp_ProjectScript = project
+    let &backup		= backup
+    let &writebackup	= writebackup
+endfunction "}}}
+" Log:
+function! atplib#Log(file, string, ...) "{{{1
+    if finddir(g:atp_TempDir, "/") == ""
+	call mkdir(g:atp_TempDir, "p", 0700)
+    endif
+    if a:0 >= 1
+	call delete(g:atp_TempDir."/".a:file)
+    else
+	exe "redir >> ".g:atp_TempDir."/".a:file 
+	silent echo a:string
+	redir END
+    endif
+endfunction "}}}1
+
+"Make g:atp_TempDir, where log files are stored.
+"{{{1
+function! atplib#TempDir() 
+    " Return temporary directory, unique for each user.
+if has("python")
+function! ATP_SetTempDir(tmp)
+    let g:atp_TempDir=a:tmp
+endfunction
+python << END
+import tempfile, os
+USER=os.getenv("USER")
+tmp=tempfile.mkdtemp(suffix="", prefix="atp_")
+vim.eval("ATP_SetTempDir('"+tmp+"')")
+END
+delfunction ATP_SetTempDir
+else
+    let g:atp_TempDir=substitute(tempname(), '\d\+$', "atp_debug", '')
+    call mkdir(g:atp_TempDir, "p", 0700)
+endif
+endfunction
+"}}}1
 " Outdir: append to '/' to b:atp_OutDir if it is not present. 
 function! atplib#outdir() "{{{1
     if has("win16") || has("win32") || has("win64") || has("win95")
@@ -33,10 +106,12 @@ function! atplib#FullPath(file_name) "{{{1
     let cwd = getcwd()
     if a:file_name =~ '^\s*\/'
 	let file_path = a:file_name
-    else
+    elseif exists("b:atp_ProjectDir")
 	exe "lcd " . fnameescape(b:atp_ProjectDir)
 	let file_path = fnamemodify(a:file_name, ":p")
 	exe "lcd " . fnameescape(cwd)
+    else
+	let file_path = fnamemodify(a:file_name, ":p")
     endif
     return file_path
 endfunction
@@ -110,6 +185,10 @@ function! atplib#qflength()
     return lines
 endfunction "}}}
 
+function! atplib#Let(varname, varvalue)
+    exe "let ".substitute(string(a:varname), "'", "", "g")."=".substitute(string(a:varvalue), "''\\@!", "", "g")
+endfunction
+
 " IMap Functions:
 " {{{
 " These maps extend ideas from TeX_9 plugin:
@@ -119,17 +198,12 @@ function! atplib#IsInMath()
 endfunction
 function! atplib#MakeMaps(maps, ...)
     let aucmd = ( a:0 >= 1 ? a:1 : '' )
-"     let echo = 0
     for map in a:maps
 	if map[3] != "" && ( !exists(map[5]) || {map[5]} > 0 || 
 		    \ exists(map[5]) && {map[5]} == 0 && aucmd == 'InsertEnter'  )
 	    if exists(map[5]) && {map[5]} == 0 && aucmd == 'InsertEnter'
 		exe "let ".map[5]." =1"
 	    endif
-" 	    if !echo
-" 		echomsg "MAKEMAPS ".aucmd
-" 		let echo = 1
-" 	    endif
 	    exe map[0]." ".map[1]." ".map[2].map[3]." ".map[4]
 	endif
     endfor
@@ -138,30 +212,35 @@ function! atplib#DelMaps(maps)
     for map in a:maps
 	let cmd = matchstr(map[0], '[^m]\ze\%(nore\)\=map') . "unmap"
 	let arg = ( map[1] =~ '<buffer>' ? '<buffer>' : '' )
-	exe "silent! ".cmd." ".arg." ".map[2].map[3]
-" 	echo "silent! ".cmd." ".arg." ".map[2].map[3]."\n"
+	try
+	    exe cmd." ".arg." ".map[2].map[3]
+	catch /E31:/
+	endtry
     endfor
 endfunction
+" From TeX_nine plugin:
 function! atplib#IsLeft(lchar,...)
     let nr = ( a:0 >= 1 ? a:1 : 0 )
-    " From TeX_nine plugin:
-	let left = getline('.')[col('.')-2-nr]
-	if left ==# a:lchar
-	    return 1
-	else
-	    return 0
-	endif
+    let left = getline('.')[col('.')-2-nr]
+    if left ==# a:lchar
+	return 1
+    else
+	return 0
+    endif
 endfunction
-try
-function! atplib#ToggleMathIMaps(var, augroup)
+" try
+function! atplib#ToggleIMaps(var, augroup, ...)
     if atplib#IsInMath() 
 	call atplib#MakeMaps(a:var, a:augroup)
     else
 	call atplib#DelMaps(a:var)
+	if a:0 >= 1
+	    call atplib#MakeMaps(a:1)
+	endif
     endif
 endfunction
-catch E127
-endtry "}}}
+" catch E127
+" endtry "}}}
 
 " Compilation Call Back Communication: 
 " with some help of D. Munger
@@ -192,10 +271,8 @@ function! atplib#CallBack(mode,...)
     " Was compiler called to make bibtex
     let BIBTEX = ( a:0 >= 2 ? a:2 : "False" )
     let BIBTEX = ( BIBTEX == "True" || BIBTEX == 1 ? 1 : 0 )
-    if g:atp_debugCB
-	" WINDOWS NOT COMPATIBLE:
-	exe "redir! > " . g:atp_Temp."/CallBack.log"
-" 	silent echo "BIBTEX =".BIBTEX
+    if g:atp_debugCallBack
+	exe "redir! > ".g:atp_TempDir."/CallBack.log"
     endif
 
     for cmd in keys(g:CompilerMsg_Dict) 
@@ -210,6 +287,13 @@ function! atplib#CallBack(mode,...)
 
     " Read the log file
     cgetfile
+    if g:atp_debugCallBack
+	silent echo "file=".expand("%:p")
+	silent echo "g:atp_HighlightErrors=".g:atp_HighlightErrors
+    endif
+    if g:atp_HighlightErrors
+	call atplib#HighlightErrors()
+    endif
     " /this cgetfile is not working (?)/
     let error	= len(getqflist()) + (BIBTEX ? b:atp_BibtexReturnCode : 0)
 
@@ -234,10 +318,11 @@ function! atplib#CallBack(mode,...)
 	let &l:cmdheight=g:atp_cmdheight
     endif
 
-    if g:atp_debugCB
+    if g:atp_debugCallBack
 	let g:debugCB 		= 0
 	let g:debugCB_mode 	= a:mode
 	let g:debugCB_error 	= error
+	silent echo "mode=".a:mode."\nerror=".error
     endif
 
     let msg_list = []
@@ -247,7 +332,7 @@ function! atplib#CallBack(mode,...)
 
 	if t:atp_QuickFixOpen 
 
-	    if g:atp_debugCB
+	    if g:atp_debugCallBack
 		let g:debugCB .= 7
 	    endif
 
@@ -258,7 +343,7 @@ function! atplib#CallBack(mode,...)
 
     if a:mode ==? 'debug' && !error
 
-	if g:atp_debugCB
+	if g:atp_debugCallBack
 	    let g:debugCB 	.= 3
 	endif
 
@@ -276,7 +361,7 @@ function! atplib#CallBack(mode,...)
     if a:mode ==? 'debug' && error
 	if len(getqflist())
 
-	    if g:atp_debugCB
+	    if g:atp_debugCallBack
 		let g:debugCB .= 4
 	    endif
 
@@ -294,7 +379,7 @@ function! atplib#CallBack(mode,...)
 
 	if BIBTEX && b:atp_BibtexReturnCode
 
-	    if g:atp_debugCB
+	    if g:atp_debugCallBack
 		let g:debugCB .= 8
 	    endif
 
@@ -307,7 +392,7 @@ function! atplib#CallBack(mode,...)
 	" In debug mode, go to first error. 
 	if a:mode ==# "Debug"
 
-	    if g:atp_debugCB
+	    if g:atp_debugCallBack
 		let g:debugCB .= 6
 	    endif
 
@@ -316,6 +401,9 @@ function! atplib#CallBack(mode,...)
     endif
 
     if msg_list == []
+	if g:atp_debugCallBack
+	    redir END
+	endif
 	return
     endif
 
@@ -328,9 +416,11 @@ function! atplib#CallBack(mode,...)
 
     " Show messages/clist
     
-    if g:atp_debugCB
+    if g:atp_debugCallBack
 	let g:msg_list 	= msg_list
 	let g:clist 	= l:clist
+	silent echo "msg_list=\n**************\n".join(msg_list, "\n")."\n**************"
+	silent echo "l:clist=".l:clist
     endif
 
     let cmdheight = &l:cmdheight
@@ -351,7 +441,7 @@ function! atplib#CallBack(mode,...)
     endfor
     let l:redraw	= 1
     if l:clist && len(getqflist()) <= 7 && !t:atp_QuickFixOpen
-	if g:atp_debugCB
+	if g:atp_debugCallBack
 	    let g:debugCB .= "clist"
 	endif
 	try
@@ -374,7 +464,7 @@ function! atplib#CallBack(mode,...)
 	redraw
     endif
     let &l:cmdheight = cmdheight
-    if g:atp_debugCB
+    if g:atp_debugCallBack
 	redir END
     endif
 endfunction "}}}
@@ -460,9 +550,43 @@ endfunction "}}}
 "     call feedkeys("\<left>", "n")
 "     call cursor(cursor_pos)
 " endfunction "}}}
-
+" {{{ HighlightErrors
+function! atplib#HighlightErrors()
+    call atplib#ClearHighlightErrors()
+    let qf_list = getqflist()
+    for error in qf_list
+	if error.type ==? 'e'
+	    let hlgroup = g:atp_Highlight_ErrorGroup
+	else
+	    let hlgroup = g:atp_Highlight_WarningGroup
+	endif
+	if hlgroup == ""
+	    continue
+	endif
+	let m_id = matchadd(hlgroup, '\%'.error.lnum.'l.*', 20)
+	call add(s:matchid, m_id)
+	let error_msg=split(error.text, "\n")
+    endfor
+endfunction "}}}
+" {{{ ClearHighlightErrors
+function! atplib#ClearHighlightErrors()
+    if !exists("s:matchid")
+	let s:matchid=[]
+	return
+    endif
+    for m_id in s:matchid
+	try
+	    silent call matchdelete(m_id)
+	catch /E803:/
+	endtry
+    endfor
+    let s:matchid=[]
+endfunction "}}}
 "{{{ echo
-function! atplib#Echo(msg,cmd,hlgroup)
+function! atplib#Echo(msg, cmd, hlgroup, ...)
+    if a:0 >= 1 && a:1
+	redraw
+    endif
     exe "echohl ".a:hlgroup
     exe a:cmd." '".a:msg."'"
     echohl Normal
@@ -574,7 +698,7 @@ endfunction
 " 		vim --servername VIM
 " and use servername VIM in the Command above.		
 function! atplib#ServerListOfFiles()
-    exe "redir! > " . g:atp_Temp."/ServerListOfFiles.log"
+    exe "redir! > " . g:atp_TempDir."/ServerListOfFiles.log"
     let file_list = []
     for nr in range(1, bufnr('$')-1)
 	let files 	= getbufvar(nr, "ListOfFiles")
@@ -630,10 +754,20 @@ endfunction
 " resove(fnamemodify(bufname("%"),":p"))
 
 " {{{2 --------------- atplib#GrepAuxFile
-silent! function! atplib#GrepAuxFile(...)
+" This function searches in aux file (actually it tries first ._aux file,
+" made by compile.py - this is because compile.py is copying aux file only if
+" there are no errors (for to not affect :Labels command)
+function! atplib#GrepAuxFile(...)
     " Aux file to read:
-    let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
-    let aux_filename	= a:0 == 0 ? fnamemodify(atp_MainFile, ":r") . ".aux" : a:1 
+    if exists("b:atp_MainFile")
+	let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
+    endif
+    if filereadable(fnamemodify(atp_MainFile, ":r") . "._aux")
+	let aux_filename	= ( a:0 == 0 && exists("b:atp_MainFile") ? fnamemodify(atp_MainFile, ":r") . "._aux" : a:1 )
+    else
+	let aux_filename	= ( a:0 == 0 && exists("b:atp_MainFile") ? fnamemodify(atp_MainFile, ":r") . ".aux" : a:1 )
+    endif
+    let tex_filename	= fnamemodify(aux_filename, ":r") . ".tex"
 
     if !filereadable(aux_filename)
 	" We should worn the user that there is no aux file
@@ -671,106 +805,116 @@ silent! function! atplib#GrepAuxFile(...)
 
     " Equation counter depedns on the option \numberwithin{equation}{section}
     " /now this only supports article class.
-    let equation = len(atplib#GrepPreambule('^\s*\\numberwithin{\s*equation\s*}{\s*section\s*}'))
+    let equation = len(atplib#GrepPreambule('^\s*\\numberwithin{\s*equation\s*}{\s*section\s*}', tex_filename))
 "     for line in aux_file
     for line in loc_list
-" 	if line =~ '^\\newlabel' 
-	    " line is of the form:
-	    " \newlabel{<label>}{<rest>}
-	    " where <rest> = {<label_number}{<title>}{<counter_name>.<counter_number>}
-	    " <counter_number> is usually equal to <label_number>.
-	    "
-	    " Document classes: article, book, amsart, amsbook, review:
-	    " NEW DISCOVERY {\zs\%({[^}]*}\|[^}]\)*\ze} matches for inner part of 
-	    " 	{ ... { ... } ... }	/ only one level of being recursive / 
-	    " 	The order inside the main \%( \| \) is important.
-	    "This is in the case that the author put in the title a command,
-	    "for example \mbox{...}, but not something more difficult :)
-	    if line =~ '^\\newlabel{[^}]*}{{[^}]*}{[^}]*}{\%({[^}]*}\|[^}]\)*}{[^}]*}'
-		let debug	= 1
-		let label	= matchstr(line, '^\\newlabel\s*{\zs[^}]*\ze}')
-		let rest	= matchstr(line, '^\\newlabel\s*{[^}]*}\s*{\s*{\zs.*\ze}\s*$')
-		let l:count = 1
-		let i	= 0
-		while l:count != 0 
-		    let l:count = rest[i] == '{' ? l:count+1 : rest[i] == '}' ? l:count-1 : l:count 
-		    let i+= 1
-		endwhile
-		let number	= substitute(strpart(rest,0,i-1), '{\|}', '', 'g')  
-		let rest	= strpart(rest,i)
-		let rest	= substitute(rest, '^{[^}]*}{', '', '')
-		let l:count = 1
-		let i	= 0
-		while l:count != 0 
-		    let l:count = rest[i] == '{' ? l:count+1 : rest[i] == '}' ? l:count-1 : l:count 
-		    let i+= 1
-		endwhile
-		let counter	= substitute(strpart(rest,i-1), '{\|}', '', 'g')  
-		let counter	= strpart(counter, 0, stridx(counter, '.')) 
+    if line =~ '\\newlabel\>'
+	" line is of the form:
+	" \newlabel{<label>}{<rest>}
+	" where <rest> = {<label_number}{<title>}{<counter_name>.<counter_number>}
+	" <counter_number> is usually equal to <label_number>.
+	"
+	" Document classes: article, book, amsart, amsbook, review:
+	" NEW DISCOVERY {\zs\%({[^}]*}\|[^}]\)*\ze} matches for inner part of 
+	" 	{ ... { ... } ... }	/ only one level of being recursive / 
+	" 	The order inside the main \%( \| \) is important.
+	"This is in the case that the author put in the title a command,
+	"for example \mbox{...}, but not something more difficult :)
+	if line =~ '^\\newlabel{[^}]*}{{[^}]*}{[^}]*}{\%({[^}]*}\|[^}]\)*}{[^}]*}'
+	    let debug	= 1
+	    let label	= matchstr(line, '^\\newlabel\s*{\zs[^}]*\ze}')
+	    let rest	= matchstr(line, '^\\newlabel\s*{[^}]*}\s*{\s*{\zs.*\ze}\s*$')
+	    let l:count = 1
+	    let i	= 0
+	    while l:count != 0 
+		let l:count = ( rest[i] == '{' ? l:count+1 : rest[i] == '}' ? l:count-1 : l:count )
+		let i+= 1
+	    endwhile
+	    let number	= substitute(strpart(rest,0,i-1), '{\|}', '', 'g')  
+	    let rest	= strpart(rest,i)
+	    let rest	= substitute(rest, '^{[^}]*}{', '', '')
+	    let l:count = 1
+	    let i	= 0
+	    while l:count != 0 
+		let l:count = rest[i] == '{' ? l:count+1 : rest[i] == '}' ? l:count-1 : l:count 
+		let i+= 1
+	    endwhile
+	    let counter	= substitute(strpart(rest,i-1), '{\|}', '', 'g')  
+	    let counter	= strpart(counter, 0, stridx(counter, '.')) 
 
-	    " Document classes: article, book, amsart, amsbook, review
-	    " (sometimes the format is a little bit different)
-	    elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|\.\)*{\d\%(\d\|\.\)*}}{\d*}{\%({[^}]*}\|[^}]\)*}{[^}]*}'
-		let debug	= 2
-		let list = matchlist(line, 
-		    \ '\\newlabel{\([^}]*\)}{{\(\d\%(\d\|\.\)*{\d\%(\d\|\.\)*\)}}{\d*}{\%({[^}]*}\|[^}]\)*}{\([^}]*\)}')
-	    	let [ label, number, counter ] = [ list[1], list[2], list[3] ]
-		let number	= substitute(number, '{\|}', '', 'g')
-		let counter	= matchstr(counter, '^\w\+')
+	" Document classes: article, book, amsart, amsbook, review
+	" (sometimes the format is a little bit different)
+	elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|\.\)*{\d\%(\d\|\.\)*}}{\d*}{\%({[^}]*}\|[^}]\)*}{[^}]*}'
+	    let debug	= 2
+	    let list = matchlist(line, 
+		\ '\\newlabel{\([^}]*\)}{{\(\d\%(\d\|\.\)*{\d\%(\d\|\.\)*\)}}{\d*}{\%({[^}]*}\|[^}]\)*}{\([^}]*\)}')
+	    let [ label, number, counter ] = [ list[1], list[2], list[3] ]
+	    let number	= substitute(number, '{\|}', '', 'g')
+	    let counter	= matchstr(counter, '^\w\+')
 
-	    " Document class: article
-	    elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|\.\)*}{\d\+}}'
-		let debug	= 3
-		let list = matchlist(line, '\\newlabel{\([^}]*\)}{{\(\d\%(\d\|\.\)*\)}{\d\+}}')
-	    	let [ label, number, counter ] = [ list[1], list[2], "" ]
+	" Document class: article
+	elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|\.\)*}{\d\+}}'
+	    let debug	= 3
+	    let list = matchlist(line, '\\newlabel{\([^}]*\)}{{\(\d\%(\d\|\.\)*\)}{\d\+}}')
+	    let [ label, number, counter ] = [ list[1], list[2], "" ]
 
-	    " Memoir document class uses '\M@TitleReference' command
-	    " which doesn't specify the counter number.
-	    elseif line =~ '\\M@TitleReference' 
-		let debug	= 4
-		let label	= matchstr(line, '^\\newlabel\s*{\zs[^}]*\ze}')
-		let number	= matchstr(line, '\\M@TitleReference\s*{\zs[^}]*\ze}') 
-		let counter	= ""
+	" Memoir document class uses '\M@TitleReference' command
+	" which doesn't specify the counter number.
+	elseif line =~ '\\M@TitleReference' 
+	    let debug	= 4
+	    let label	= matchstr(line, '^\\newlabel\s*{\zs[^}]*\ze}')
+	    let number	= matchstr(line, '\\M@TitleReference\s*{\zs[^}]*\ze}') 
+	    let counter	= ""
 
-	    elseif line =~ '\\newlabel{[^}]*}{.*\\relax\s}{[^}]*}{[^}]*}}'
-		" THIS METHOD MIGHT NOT WORK WELL WITH: book document class.
-		let debug	= 5.0
-		let label 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{.*\\relax\s}{[^}]*}{[^}]*}}')
-		let nc 		= matchstr(line, '\\newlabel{[^}]*}{.*\\relax\s}{\zs[^}]*\ze}{[^}]*}}')
-		let counter	= matchstr(nc, '\zs\a*\ze\(\.\d\+\)\+')
-		let number	= matchstr(nc, '.*\a\.\zs\d\+\(\.\d\+\)\+') 
-		if counter == 'equation' && !equation
-		    let number = matchstr(number, '\d\+\.\zs.*')
-		endif
-
-	    " aamas2010 class
-	    elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|.\)*{\d\%(\d\|.\)*}{[^}]*}}' && atplib#DocumentClass(b:atp_MainFile) =~? 'aamas20\d\d'
-		let debug	= 5.1
-		let label 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{{\d\%(\d\|.\)*{\d\%(\d\|.\)*}{[^}]*}}')
-		let number 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{{\zs\d\%(\d\|.\)*{\d\%(\d\|.\)*\ze}{[^}]*}}')
-		let number	= substitute(number, '{\|}', '', 'g')
-		let counter	= ""
-
-	    " subeqautions
-	    elseif line =~ '\\newlabel{[^}]*}{{[^}]*}{[^}]*}}'
-		let debug	= 6
-		let list = matchlist(line, '\\newlabel{\([^}]*\)}{{\([^}]*\)}{\([^}]*\)}}')
-		let [ label, number ] = [ list[1], list[2] ]
-		let counter	= ""
-
-	    " AMSBook uses \newlabel for tocindent
-	    " which we filter out here.
-	    else
-		let debug	= 7
-		let label	= "nolabel: " . line
+	elseif line =~ '\\newlabel{[^}]*}{.*\\relax\s}{[^}]*}{[^}]*}}'
+	    " THIS METHOD MIGHT NOT WORK WELL WITH: book document class.
+	    let debug	= 5.0
+	    let label 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{.*\\relax\s}{[^}]*}{[^}]*}}')
+	    let nc 		= matchstr(line, '\\newlabel{[^}]*}{.*\\relax\s}{\zs[^}]*\ze}{[^}]*}}')
+	    let counter	= matchstr(nc, '\zs\a*\ze\(\.\d\+\)\+')
+	    let number	= matchstr(nc, '.*\a\.\zs\d\+\(\.\d\+\)\+') 
+	    if counter == 'equation' && !equation
+		let number = matchstr(number, '\d\+\.\zs.*')
 	    endif
-	    if label !~ '^nolabel:\>'
-		call add(labels, [ label, number, counter, debug])
-	    endif
+
+	" aamas2010 class
+	elseif line =~ '\\newlabel{[^}]*}{{\d\%(\d\|.\)*{\d\%(\d\|.\)*}{[^}]*}}' && atplib#DocumentClass(b:atp_MainFile) =~? 'aamas20\d\d'
+	    let debug	= 5.1
+	    let label 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{{\d\%(\d\|.\)*{\d\%(\d\|.\)*}{[^}]*}}')
+	    let number 	= matchstr(line, '\\newlabel{\zs[^}]*\ze}{{\zs\d\%(\d\|.\)*{\d\%(\d\|.\)*\ze}{[^}]*}}')
+	    let number	= substitute(number, '{\|}', '', 'g')
+	    let counter	= ""
+
+	" subeqautions
+	elseif line =~ '\\newlabel{[^}]*}{{[^}]*}{[^}]*}}'
+	    let debug	= 6
+	    let list 	= matchlist(line, '\\newlabel{\([^}]*\)}{{\([^}]*\)}{\([^}]*\)}}')
+	    let [ label, number ] = [ list[1], list[2] ]
+	    let counter	= ""
+
+	" AMSBook uses \newlabel for tocindent
+	" which we filter out here.
+	elseif line =~ '\\newlabel{[^}]*}{{\d\+.\?{\?\d*}\?}{\d\+}}'
+	    let debug	= 7
+	    let list 	= matchlist(line,  '\\newlabel{\([^}]*\)}{{\(\d\+.\?{\?\d*}\?\)}{\(\d\+}\)}')
+	    let [ label, number ] = [ list[1], list[2] ]
+	    let number 	= substitute(number, '\%({\|}\)', '', 'g')
+	    let counter 	= ""
+	else
+	    let debug	= 8
+	    let label	= "nolabel: " . line
+	endif
+
+	let g:debug = debug
+	let g:label = label
+
+	if label !~ '^nolabel:\>'
+	    call add(labels, [ label, number, counter, debug])
 	    if g:atp_debugGAF
 		call extend(g:gaf_debug, { label : [ number, counter, debug ] })
 	    endif
-" 	endif
+	endif
+    endif
     endfor
 
     return labels
@@ -797,7 +941,7 @@ endfunction
 " 	(1) read lables from aux files using GrepAuxFile()
 " 	(2) search all input files (TreeOfFiles()) for labels to get the line
 " 		number 
-" 	   [ this is done using :vimgrep which is fast, when the buffer are not loaded ]
+" 	   [ this is done using :vimgrep which is fast, when the buffer is not loaded ]
 function! atplib#generatelabels(filename, ...)
     let s:labels	= {}
     let bufname		= fnamemodify(a:filename,":t")
@@ -893,9 +1037,8 @@ function! atplib#showlabels(labels)
 
     let l:bname="__Labels__"
 
-    let l:labelswinnr=bufwinnr("^" . l:bname . "$")
     let t:atp_labelswinnr=winnr()
-    let t:atp_labelsbufnr=bufnr("^" . l:bname . "$") 
+    let t:atp_labelsbufnr=bufnr("^".l:bname."$")
     let l:labelswinnr=bufwinnr(t:atp_labelsbufnr)
 
     let tabstop	= 0
@@ -909,6 +1052,7 @@ function! atplib#showlabels(labels)
 
     if l:labelswinnr != -1
 	" Jump to the existing window.
+	redraw
 	exe l:labelswinnr . " wincmd w"
 	if l:labelswinnr != t:atp_labelswinnr
 	    silent exe "%delete"
@@ -927,6 +1071,7 @@ function! atplib#showlabels(labels)
 	endif
 
 	" tabstop option is set to be the longest counter number + 1
+	redraw
 	let l:openbuffer= "keepalt " . t:atp_labels_window_width . "vsplit +setl\\ tabstop=" . tabstop . "\\ nowrap\\ buftype=nofile\\ filetype=toc_atp\\ syntax=labels_atp __Labels__"
 	silent exe l:openbuffer
 	silent call atplib#setwindow()
@@ -935,11 +1080,16 @@ function! atplib#showlabels(labels)
     unlockvar b:atp_Labels
     let b:atp_Labels	= {}
 
+    let g:labels=copy(a:labels)
+
     let line_nr	= 2
     for file in a:labels[1]
-    call setline("$", fnamemodify(file, ":t") . " (" . fnamemodify(file, ":h")  . ")")
-    call extend(b:atp_Labels, { 1 : [ file, 0 ]})
-    for label in get(a:labels[0], file, [])
+	if !(len(get(a:labels[0], file, []))>0)
+	    continue
+	endif
+	call setline("$", fnamemodify(file, ":t") . " (" . fnamemodify(file, ":h")  . ")")
+	call extend(b:atp_Labels, { 1 : [ file, 0 ]})
+	for label in get(a:labels[0], file, [])
 	    " Set line in the format:
 	    " /<label_numberr> \t[<counter>] <label_name> (<label_line_nr>)/
 	    " if the <counter> was given in aux file (see the 'counter' variable in atplib#GrepAuxFile())
@@ -978,6 +1128,29 @@ function! atplib#showlabels(labels)
 endfunction
 " }}}2
 " }}}1
+
+" Table Of Contents Tools:
+function! atplib#getlinenr(...) "{{{
+    let line 	=  a:0 >= 1 ? a:1 : line('.')
+    let labels 	=  a:0 >= 2 ? a:2 : expand("%") == "__Labels__" ? 1 : 0
+
+    if labels == 0
+	return get(b:atp_Toc, line, ["", ""])[1]
+    else
+	return get(b:atp_Labels, line, ["", ""])[1]
+    endif
+endfunction "}}}
+function! atplib#CursorLine() "{{{
+    if exists("t:cursorline_idmatch")
+	try
+	    call matchdelete(t:cursorline_idmatch)
+	catch /E803:/
+	endtry
+    endif
+    if atplib#getlinenr(line(".")) 
+	let t:cursorline_idmatch =  matchadd('CursorLine', '^\%'.line(".").'l.*$')
+    endif
+endfunction "}}}
 
 " Various Comparing Functions:
 "{{{1 atplib#CompareNumbers
@@ -1052,18 +1225,19 @@ endfunction
 " These are all bibsearch realted variables and functions.
 "{{{ BIBSEARCH
 "{{{ atplib#variables
-let atplib#bibflagsdict={ 't' : ['title', 'title        '] , 'a' : ['author', 'author       '], 
-		\ 'b' : ['booktitle', 'booktitle    '], 'c' : ['mrclass', 'mrclass      '], 
-		\ 'e' : ['editor', 'editor       '], 	'j' : ['journal', 'journal      '], 
-		\ 'f' : ['fjournal', 'fjournal     '], 	'y' : ['year', 'year         '], 
-		\ 'n' : ['number', 'number       '], 	'v' : ['volume', 'volume       '], 
-		\ 's' : ['series', 'series       '], 	'p' : ['pages', 'pages        '], 
-		\ 'P' : ['publisher', 'publisher    '], 'N' : ['note', 'note         '], 
-		\ 'S' : ['school', 'school       '], 	'h' : ['howpublished', 'howpublished '], 
-		\ 'o' : ['organization', 'organization '], 'I' : ['institution' , 'institution '],
-		\ 'u' : ['url', 'url          '],
-		\ 'H' : ['homepage', 'homepage     '], 	'i' : ['issn', 'issn         '],
-		\ 'k' : ['key', 'key          '], 	'R' : ['mrreviewer', 'mrreviewer   ']}
+let atplib#bibflagsdict={ 
+                \ 't' : ['title',       'title        '],               'a' : ['author',        'author       '], 
+		\ 'b' : ['booktitle',   'booktitle    '],               'c' : ['mrclass',       'mrclass      '], 
+		\ 'e' : ['editor',      'editor       '], 	        'j' : ['journal',       'journal      '], 
+		\ 'f' : ['fjournal',    'fjournal     '], 	        'y' : ['year',          'year         '], 
+		\ 'n' : ['number',      'number       '], 	        'v' : ['volume',        'volume       '], 
+		\ 's' : ['series',      'series       '], 	        'p' : ['pages',         'pages        '], 
+		\ 'P' : ['publisher',   'publisher    '],               'N' : ['note',          'note         '], 
+		\ 'S' : ['school',      'school       '], 	        'h' : ['howpublished',  'howpublished '], 
+		\ 'o' : ['organization', 'organization '],              'I' : ['institution' ,  'institution '],
+		\ 'u' : ['url',         'url          '],
+		\ 'H' : ['homepage',    'homepage     '], 	        'i' : ['issn',          'issn         '],
+		\ 'k' : ['key',         'key          '], 	        'R' : ['mrreviewer',    'mrreviewer   ']}
 " they do not work in the library script :(
 " using g:bibflags... .
 " let atplib#bibflagslist=keys(atplib#bibflagsdict)
@@ -1075,7 +1249,7 @@ let atplib#bibflagsdict={ 't' : ['title', 'title        '] , 'a' : ['author', 'a
 
 " To make it work after kpsewhich is searching for bib path.
 " let s:bibfiles=FindBibFiles(bufname('%'))
-function! atplib#searchbib(pattern, ...) 
+function! atplib#searchbib(pattern, bibdict, ...) 
 
     call atplib#outdir()
     " for tex files this should be a flat search.
@@ -1083,35 +1257,6 @@ function! atplib#searchbib(pattern, ...)
     let bang	= a:0 >=1 ? a:1 : ""
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
 
-    " Caching bibfiles saves 0.27sec.
-    if !exists("b:ListOfFiles") || !exists("b:TypeDict") || bang == "!"
-	let [ TreeOfFiles, ListOfFiles, TypeDict, LevelDict ] = TreeOfFiles(atp_MainFile, '^[^%]*\\bibliography\s*{', flat)
-	let updated	= 1
-    else
-	let [ ListOfFiles, TypeDict ] = deepcopy([ b:ListOfFiles, b:TypeDict ])
-	let updated	= 0
-    endif
-    let s:bibfiles = []
-    for f in ListOfFiles
-" 	let f	= atplib#FullPath(f)
-	if get(TypeDict, f) == 'bib' 
-	    call add(s:bibfiles, f)
-	elseif !updated
-	    let [ TreeOfFiles, ListOfFiles, TypeDict, LevelDict ] = TreeOfFiles(atp_MainFile, '^[^%]*\\bibliography\s*{', flat)
-	    if get(TypeDict, f) == 'bib' 
-		call add(s:bibfiles, f)
-	    elseif
-		echoerr "ATP Error: list of files mismatch (1)."
-		return
-	    endif
-	else
-	    echoerr "ATP Error: list of files mismatch (2)."
-	    return
-	endif
-    endfor
-    let b:atp_BibFiles	= deepcopy(s:bibfiles)
-
-    
     " Make a pattern which will match for the elements of the list g:bibentries
     let pattern = '^\s*@\%(\<'.g:bibentries[0].'\>'
     for bibentry in g:bibentries['1':len(g:bibentries)]
@@ -1142,7 +1287,7 @@ function! atplib#searchbib(pattern, ...)
     " READ EACH BIBFILE IN TO DICTIONARY s:bibdict, WITH KEY NAME BEING THE bibfilename
     let s:bibdict={}
     let l:bibdict={}
-    for l:f in s:bibfiles
+    for l:f in keys(a:bibdict)
 	let s:bibdict[l:f]=[]
 
 	" read the bibfile if it is in b:atp_OutDir or in g:atp_raw_bibinputs directory
@@ -1154,8 +1299,7 @@ function! atplib#searchbib(pattern, ...)
 " 	    " survive)
 " 	    let s:bibdict[l:f]=readfile(fnameescape(findfile(atplib#append(l:f,'.bib'), atplib#append(l:path,"/") . "**")))
 " 	endfor
-	let s:bibdict[l:f]=readfile(l:f)
-	let l:bibdict[l:f]=copy(s:bibdict[l:f])
+	let l:bibdict[l:f]=copy(a:bibdict[l:f])
 	" clear the s:bibdict values from lines which begin with %    
 	call filter(l:bibdict[l:f], ' v:val !~ "^\\s*\\%(%\\|@\\cstring\\)"')
     endfor
@@ -1165,7 +1309,7 @@ function! atplib#searchbib(pattern, ...)
     endif
 
     if a:pattern != ""
-	for l:f in s:bibfiles
+	for l:f in keys(a:bibdict)
 	    let l:list=[]
 	    let l:nr=1
 	    for l:line in l:bibdict[l:f]
@@ -1383,7 +1527,7 @@ function! atplib#searchbib(pattern, ...)
 				    let s:lbibd[l:lkey]=substitute(s:lbibd[l:lkey],'\s*$','','') . " ". substitute(get(l:bibdict[l:bibfile],l:tlnr+l:y),'^\s*','','')
 				    let l:y+=1
 				    if l:y > 30
-					echoerr "ATP-Error /see :h atp-errors-bibsearch/, missing '}', ')' or '\"' in bibentry at line " . l:linenr . " (check line " . l:tlnr . ") in " . l:f
+					echoerr "ATP-Error /see :h atp-errors-bibsearch/, missing '}', ')' or '\"' in bibentry at line " . l:linenr . " (check line " . l:tlnr . ") in " . l:f)
 					break
 				    endif
 				endwhile
@@ -1416,47 +1560,226 @@ function! atplib#searchbib(pattern, ...)
     return l:bibresults
 endfunction
 "}}}
+" {{{ atplib#searchbib_py
+function! atplib#searchbib_py(pattern, bibfiles, ...)
+    call atplib#outdir()
+    " for tex files this should be a flat search.
+    let flat 	= &filetype == "plaintex" ? 1 : 0
+    let bang	= a:0 >=1 ? a:1 : ""
+    let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
+
+    let b:atp_BibFiles=a:bibfiles
+python << END
+import vim, re
+
+files=vim.eval("b:atp_BibFiles")
+
+def remove_ligatures(string):
+    line_without_ligatures = re.sub( "\\\\'\s*", '', re.sub('{|}|\\\\(?:"|`|\^|=|\.|c|~|v|u|d|b|H|t)\s*', '', string))
+    line_without_ligatures = re.sub('\\\\oe', 'oe', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\OE', 'OE', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\ae', 'ae', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\AE', 'AE', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\o', 'o', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\O', 'O', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\i', 'i', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\j', 'j', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\l', 'l', line_without_ligatures)
+    line_without_ligatures = re.sub('\\\\L', 'L', line_without_ligatures)
+    return line_without_ligatures
+
+def remove_quotes(string):
+    line=re.sub("'", "\"", string)
+    line=re.sub('\\\\', '', line)
+    return line
+type_pattern=re.compile('\s*@(article|book|mvbook|inbook|bookinbook|suppbook|booklet|collection|mvcollection|incollection|suppcollection|manual|misc|online|patent|periodical|supppertiodical|proceedings|mvproceedings|inproceedings|reference|mvreference|inreference|report|set|thesis|unpublished|custom[a-f]|conference|electronic|masterthesis|phdthesis|techreport|www)', re.I)
+
+# types=['abstract', 'addendum', 'afterword', 'annotation', 'author', 'authortype', 'bookauthor', 'bookpaginator', 'booksupbtitle', 'booktitle', 'booktitleaddon', 'chapter', 'commentator', 'date', 'doi', 'edition', 'editor', 'editora', 'editorb', 'editorc', 'editortype', 'editoratype', 'editorbtype', 'editorctype', 'eid', 'eprint', 'eprintclass', 'eprinttype', 'eventdate', 'eventtile', 'file', 'forword', 'holder', 'howpublished', 'indxtitle', 'institution', 'introduction', 'isan', 'isbn', 'ismn', 'isrn', 'issn', 'issue', 'issuesubtitle', 'issuetitle', 'iswc', 'journalsubtitle', 'journaltitle', 'label', 'language', 'library', 'location', 'mainsubtitle', 'maintitle', 'maintitleaddon', 'month', 'nameaddon', 'note', 'number', 'organization', 'origdate', 'origlanguage', 'origpublisher', 'origname', 'pages', 'pagetotal', 'pagination', 'part', 'publisher', 'pubstate', 'reprinttitle', 'series', 'shortauthor', 'shorteditor', 'shorthand', 'shorthandintro', 'shortjournal', 'shortseries', 'subtitle', 'title', 'titleaddon', 'translator', 'type', 'url', 'urldate', 'venue', 'version', 'volume', 'volumes', 'year', 'crossref', 'entryset', 'entrysubtype', 'execute', 'mrreviewer']
+
+types=['author', 'bookauthor', 'booktitle', 'date', 'editor', 'eprint', 'eprintclass', 'eprinttype', 'howpublished', 'institution', 'journal', 'month', 'note', 'number', 'organization', 'pages', 'publisher', 'school', 'series', 'subtitle', 'title', 'url', 'year', 'mrreviewer', 'volume', 'pages']
+
+def parse_bibentry(bib_entry):
+    bib={}
+    bib['bibfield_key']=re.sub('\\r$', '', bib_entry[0])
+    nr=1
+    while nr < len(bib_entry)-1:
+        line=bib_entry[nr]
+        if not re.match('\s*%', line):
+            if not re.search('=', line):
+                while not re.search('=', line) and nr < len(bib_entry)-1:
+                    val=re.sub('\s*$', '', bib[p_e_type])+" "+re.sub('^\s*', '', re.sub('\t', ' ', line))
+                    val=re.sub('%.*', '', val)
+                    bib[p_e_type]=remove_quotes(re.sub('\\r$', '', val))
+                    nr+=1
+                    line=bib_entry[nr]
+            else:
+                v_break=False
+                for e_type in types:
+                    if re.match('\s*'+e_type+'\s*=', line, re.I):
+                        # this is not working when title is two lines!
+                        line=re.sub('%.*', '', line)
+                        bib[e_type]=remove_quotes(re.sub('\\r$', '', re.sub('\t', ' ', line)))
+                        p_e_type=e_type
+                        nr+=1
+                        v_break=True
+                        break
+                if not v_break:
+                    nr+=1
+#    for key in bib.keys():
+#        print(key+"="+bib[key])
+#    print("\n")
+    return bib
+
+pattern=vim.eval("a:pattern")
+
+if pattern == "":
+    pat=""
+else:
+    pat=pattern
+pattern=re.compile(pat, re.I)
+pattern_b=re.compile('\s*@\w+\s*{.+', re.I)
+
+bibresults={}
+for file in files:
+    file_ob=open(file, 'r')
+    file_l=file_ob.read().split("\n")
+    file_ob.close()
+    file_len=len(file_l)
+    lnr=0
+    bibresults[file]={}
+#     if pattern != ""
+    while lnr < file_len:
+        lnr+=1
+        line=file_l[lnr-1]
+	if re.search('@string', line):
+            continue
+        line_without_ligatures=remove_ligatures(line)
+        if re.search(pattern, line_without_ligatures):
+            """find first line"""
+            b_lnr=lnr
+#             print("lnr="+str(lnr))
+            b_line=line
+            while not re.match(pattern_b, b_line) and b_lnr >= 1:
+                b_lnr-=1
+                b_line=file_l[b_lnr-1]
+            """find last line"""
+#             print("b_lnr="+str(b_lnr))
+            e_lnr=lnr
+            e_line=line
+            if re.match(pattern_b, e_line):
+                lnr+=1
+                e_lnr=lnr
+                line=file_l[lnr-1]
+                e_line=file_l[lnr-1]
+#                 print("X "+line)
+            while not re.match(pattern_b, e_line) and e_lnr <= file_len:
+                e_lnr+=1
+                e_line=file_l[min(e_lnr-1, file_len-1)]
+            e_lnr-=1
+            e_line=file_l[min(e_lnr-1, file_len-1)]
+            while re.match('\s*$', e_line):
+                e_lnr-=1
+                e_line=file_l[e_lnr-1]
+#             e_lnr=min(e_lnr, file_len-1)
+            bib_entry=file_l[b_lnr-1:e_lnr]
+#             print("lnr="+str(lnr))
+#             print("b_lnr="+str(b_lnr))
+#             print("e_lnr="+str(e_lnr))
+            if bib_entry != [] and not re.search('@string', bib_entry[0]):
+                entry_dict=parse_bibentry(bib_entry)
+                bibresults[file][b_lnr]=entry_dict
+#             else:
+#                 print("lnr="+str(lnr))
+#                 print("b_lnr="+str(b_lnr))
+#                 print("e_lnr="+str(e_lnr))
+#             print(entry_dict)
+#             print("\n".join(bib_entry))
+            if lnr < e_lnr:
+                lnr=e_lnr
+            else:
+                lnr+=1
+#print(bibresults)
+# for key in bibresults.keys():
+#     for line in bibresults[key].keys():
+#         for bib in bibresults[key][line].keys():
+#                 print(bib+"="+bibresults[key][line][bib])
+#         print("\n")
+vim.command("let bibresults="+str(bibresults))
+END
+let g:bibresults=bibresults
+return bibresults
+endfunction
+"}}}
 "
 " {{{ atplib#SearchBibItems
 " the argument should be b:atp_MainFile but in any case it is made in this way.
 " it specifies in which file to search for include files.
-function! atplib#SearchBibItems(name)
+function! atplib#SearchBibItems()
+    let time=reltime()
 
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
     " we are going to make a dictionary { citekey : label } (see :h \bibitem) 
     let l:citekey_label_dict={}
 
     " make a list of include files.
-    let l:inputfile_dict=FindInputFiles(a:name,0)
     let l:includefile_list=[]
-    for l:key in keys(l:inputfile_dict)
-	if l:inputfile_dict[l:key][0] =~# '^\%(include\|input\|includeonly\)$'
-	    call add(l:includefile_list,atplib#append(l:key,'.tex'))
+    if !exists("b:ListOfFiles") || !exists("b:TypeDict")
+	call TreeOfFiles(b:atp_MainFile)
+    endif
+    for f in b:ListOfFiles
+	if b:TypeDict[f] == "input"
+	    call add(l:includefile_list, f)
 	endif
     endfor
     call add(l:includefile_list, atp_MainFile) 
-"     let b:ifl=l:includefile_list
 
-    " search for bibitems in all include files.
-    for l:ifile in l:includefile_list
+    if has("python")
+python << PEND
+import vim, re
+files=vim.eval("l:includefile_list")
+citekey_label_dict={}
+for f in files:
+    f_o=open(f, 'r')
+    f_l=f_o.read().split("\n")
+    f_o.close()
+    for line in f_l:
+        if re.match('[^%]*\\\\bibitem', line):
+            match=re.search('\\\\bibitem\s*(?:\[([^\]]*)\])?\s*{([^}]*)}\s*(.*)', line)
+            if match:
+                label=match.group(1)
+                if label == None:
+                    label = ""
+                key=match.group(2)
+                if key == None:
+                    key = ""
+                rest=match.group(3)
+                if rest == None:
+                    rest = ""
+                if key != "":
+                    citekey_label_dict[key]={ 'label' : label, 'rest' : rest }
+vim.command("let l:citekey_label_dict="+str(citekey_label_dict))
+PEND
+    else
+        " search for bibitems in all include files.
+        for l:ifile in l:includefile_list
 
-	let l:input_file = atplib#ReadInputFile(l:ifile,0)
+            let l:input_file = atplib#ReadInputFile(l:ifile,0)
 
-	    " search for bibitems and make a dictionary of labels and citekeys
-	    for l:line in l:input_file
-		if l:line =~# '\\bibitem'
-		    let l:label=matchstr(l:line,'\\bibitem\s*\[\zs[^]]*\ze\]')
-		    let l:key=matchstr(l:line,'\\bibitem\s*\%(\[[^]]*\]\)\?\s*{\zs[^}]*\ze}') 
-" 		    if l:label =~ 'bibitem'
-" 			let l:label=''
-" 		    endif
-		    if l:key != ""
-			call extend(l:citekey_label_dict, { l:key : l:label }, 'error') 
-		    endif
-		endif
-	    endfor
-    endfor
+                " search for bibitems and make a dictionary of labels and citekeys
+                for l:line in l:input_file
+                    if l:line =~# '^[^%]*\\bibitem'
+                        let l:label=matchstr(l:line,'\\bibitem\s*\[\zs[^]]*\ze\]')
+                        let l:key=matchstr(l:line,'\\bibitem\s*\%(\[[^]]*\]\)\?\s*{\zs[^}]*\ze}') 
+                        let l:rest=matchstr(l:line,'\\bibitem\s*\%(\[[^]]*\]\)\?\s*{[^}]*}\s*\zs')
+                        if l:key != ""
+                            call extend(l:citekey_label_dict, { l:key : { 'label' : l:label, 'rest' : l:rest } }, 'error') 
+                        endif
+                    endif
+                endfor
+        endfor
+    endif
 	
+    let g:time_SearchBibItems=reltimestr(reltime(time))
     return l:citekey_label_dict
 endfunction
 " }}}
@@ -1484,7 +1807,7 @@ endfunction
 " i - institution
 " R - mrreviewer
 
-function! atplib#showresults(bibresults, flags, pattern)
+function! atplib#showresults(bibresults, flags, pattern, bibdict)
  
     "if nothing was found inform the user and return:
     if len(a:bibresults) == count(a:bibresults, {})
@@ -1502,7 +1825,6 @@ function! atplib#showresults(bibresults, flags, pattern)
 	    silent! echo "atplib#showresults return B - found something. "
 	    redir END
     endif
-
 
     function! s:showvalue(value)
 	return substitute(strpart(a:value,stridx(a:value,"=")+1),'^\s*','','')
@@ -1652,7 +1974,7 @@ function! atplib#showresults(bibresults, flags, pattern)
 		let l:check=1
 	    endif
 	    if l:check == 1 || len(l:kwflagslist) == 0
-		let l:linenumber=index(s:bibdict[l:bibfile],l:values["bibfield_key"])+1
+		let l:linenumber=index(a:bibdict[l:bibfile],l:values["bibfield_key"])+1
  		call setline(l:ln,s:z . ". line " . l:linenumber . "  " . l:values["bibfield_key"])
 		let l:ln+=1
  		let l:c0=atplib#count(l:values["bibfield_key"],'{')-atplib#count(l:values["bibfield_key"],'(')
@@ -1698,7 +2020,14 @@ function! atplib#showresults(bibresults, flags, pattern)
     if g:atp_debugBS
 	let g:pattern	= a:pattern
     endif
-    let pattern_tomatch = substitute(a:pattern, '\Co', 'oe\\=', 'g')
+    if has("python") || g:atp_bibsearch == "python"
+        let pattern_tomatch = substitute(a:pattern, '(', '\\(', 'g')
+        let pattern_tomatch = substitute(pattern_tomatch, ')', '\\)', 'g')
+        let pattern_tomatch = substitute(pattern_tomatch, '|', '\\|', 'g')
+    else
+        let pattern_tomatch = a:pattern
+    endif
+    let pattern_tomatch = substitute(pattern_tomatch, '\Co', 'oe\\=', 'g')
     let pattern_tomatch = substitute(pattern_tomatch, '\CO', 'OE\\=', 'g')
     let pattern_tomatch = substitute(pattern_tomatch, '\Ca', 'ae\\=', 'g')
     let pattern_tomatch = substitute(pattern_tomatch, '\CA', 'AE\\=', 'g')
@@ -1709,8 +2038,10 @@ function! atplib#showresults(bibresults, flags, pattern)
     if g:atp_debugBS
 	let g:pattern_tomatch = pattern_tomatch
     endif
-    silent! call matchadd("Search", '\c' . pattern_tomatch)
-    let @/=pattern_tomatch
+    if pattern_tomatch != "" && pattern_tomatch != ".*"
+	silent! call matchadd("Search", '\c' . pattern_tomatch)
+	let @/=pattern_tomatch
+    endif
     " return l:listofkeys which will be available in the bib search buffer
     " as b:ListOfKeys (see the BibSearch function below)
     let b:ListOfBibKeys = l:listofkeys
@@ -2139,7 +2470,7 @@ function! atplib#SearchPackage(name,...)
 	if stop_line != 0
 
 	    keepjumps call setpos(".",[0,1,1,0])
-	    keepjumps let ret = search('^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW', stop_line)
+	    keepjumps let ret = search('\C^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW', stop_line)
 	    keepjump call setpos(".",saved_pos)
 
 	    exe "lcd " . fnameescape(cwd)
@@ -2148,7 +2479,7 @@ function! atplib#SearchPackage(name,...)
 	else
 
 	    keepjumps call setpos(".",[0,1,1,0])
-	    keepjumps let ret = search('^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW')
+	    keepjumps let ret = search('\C^[^%]*\\'.com."\s*{[^}]*".a:name,'ncW')
 	    keepjump call setpos(".", saved_pos)
 
 	    exe "lcd " . fnameescape(cwd)
@@ -2167,7 +2498,7 @@ function! atplib#SearchPackage(name,...)
 	endif
 	let lnum = 1
 	for line in s:Preambule
-	    if line =~ '^[^%]*\\'.com."\s*{[^}]*".a:name
+	    if line =~ '^[^%]*\\'.com."\s*{[^}]*\C".a:name
 
 " 		echo reltimestr(reltime(time))
 		exe "lcd " . fnameescape(cwd)
@@ -2240,16 +2571,17 @@ function! atplib#GrepPackageList(...)
     return pre_list
 endfunction
 "{{{1 atplib#GrepPreambule
-function! atplib#GrepPreambule(pattern)
-    let saved_loclist = getloclist(0)
+function! atplib#GrepPreambule(pattern, ...)
+    let saved_loclist 	= getloclist(0)
+    let atp_MainFile	= ( a:0 >= 1 ? a:1 : b:atp_MainFile ) 
     let winview = winsaveview()
-    exe 'silent! 1lvimgrep /^[^%]*\\begin\s*{\s*document\s*}/j ' . fnameescape(b:atp_MainFile)
+    exe 'silent! 1lvimgrep /^[^%]*\\begin\s*{\s*document\s*}/j ' . fnameescape(atp_MainFile)
     let linenr = get(get(getloclist(0), 0, {}), 'lnum', 'nomatch')
     if linenr == "nomatch"
 	call setloclist(0, saved_loclist)
 	return
     endif
-    exe 'silent! lvimgrep /'.a:pattern.'\%<'.linenr.'l/jg ' . fnameescape(b:atp_MainFile) 
+    exe 'silent! lvimgrep /'.a:pattern.'\%<'.linenr.'l/jg ' . fnameescape(atp_MainFile) 
     let matches = getloclist(0)
     call setloclist(0, saved_loclist)
     return matches
@@ -2339,7 +2671,7 @@ endfunction
 " the arguments are similar to atplib#KpsewhichGlob except that the a:000 list
 " is shifted:
 " a:1		= path	
-" 			if set to "" then kpsewhich finds the path.
+" 			if set to "" then kpsewhich will find the path.
 " a:2		= count (as for findfile())
 " a:3		= modifiers 
 " a:4		= positive filter for path (see KpsewhichGLob a:1)
@@ -2447,6 +2779,7 @@ endfunction
 " 	if one wants to find an environment name it must be 0 or "" or not
 " 	given at all.
 " a:4 = line and column number (in a vim list) where environment is opened
+" a:5 = return only (only return the closing code (implemented only for a:2="math") 
 " ToDo: Ad a highlight to messages!!! AND MAKE IT NOT DISAPPEAR SOME HOW?
 " (redrawing doesn't help) CHECK lazyredraw. 
 " Note: this function tries to not double the checks what to close if it is
@@ -2457,14 +2790,15 @@ function! atplib#CloseLastEnvironment(...)
     let l:com	= a:0 >= 1 ? a:1 : 'i'
     let l:close = a:0 >= 2 && a:2 != "" ? a:2 : 0
     if a:0 >= 3
-	let l:env_name	= a:3 == "" ? 0 : a:3
+	let l:env_name	= ( a:3 == "" ? 0 : a:3 )
 	let l:close 	= ( a:3 != '' ? "environment" : l:close )
     else
 	let l:env_name 	= 0
     endif
-    let l:bpos_env	= a:0 >= 4 ? a:4 : [0, 0]
+    let l:bpos_env	= ( a:0 >= 4 ? a:4 : [0, 0] )
+    let return_only	= ( a:0 >= 5 ? a:5 : 0 )
 
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	exe "redir! > " . g:atp_TempDir."/CloseLastEnvironment.log"
 	let g:CLEargs 	= l:com . " " . l:close . " " . l:env_name . " " . string(l:bpos_env)
 	silent echo "args=".g:CLEargs
@@ -2507,7 +2841,7 @@ function! atplib#CloseLastEnvironment(...)
 	" file. If it is fined the starting position.
 
 	let synstack		= map(synstack(line("."),max([1, col(".")-1])), 'synIDattr(v:val, "name")')
-	if g:atp_debugCLE
+	if g:atp_debugCloseLastEnvironment
 	    let g:synstackCLE	= deepcopy(synstack)
 	    let g:openCLE	= getline(".")[col(".")-1] . getline(".")[col(".")]
 	    silent echo "synstack=".string(synstack)
@@ -2560,7 +2894,7 @@ function! atplib#CloseLastEnvironment(...)
 		let l:begin_line= bpos_math_4[0]
 		let math_mode	= "texMathZoneY"
 	    endif
-	if g:atp_debugCLE
+	if g:atp_debugCloseLastEnvironment
 	    let g:math 	= []
 	    let g:bound = []
 	    for i in [1,2,3,4]
@@ -2604,7 +2938,7 @@ function! atplib#CloseLastEnvironment(...)
 	    let math_mode	= "texMathZoneY"
 	endif
 	call cursor([ saved_pos[1], saved_pos[2] ]) 
-	if g:atp_debugCLE
+	if g:atp_debugCloseLastEnvironment
 	    if exists("math_mode")
 		let g:math_mode  	= math_mode
 		silent echo "math_mode=".math_mode
@@ -2621,17 +2955,17 @@ function! atplib#CloseLastEnvironment(...)
 	endif
 	if exists("math_mode")
 	    let l:begin_line 	= l:bpos_env[0]
-	    if g:atp_debugCLE
+	    if g:atp_debugCloseLastEnvironment
 		silent echo "math_mode=".math_mode
 		silent echo "l:begin_line=".l:begin_line
 		redir END
 	    endif
 	else
-	    if g:atp_debugCLE
+	    if g:atp_debugCloseLastEnvironment
 		silent echo "Given coordinates are closed."
 		redir END
 	    endif
-	    return " Given coordinates are closed."
+	    return ''
 	endif
     endif
 "}}}2
@@ -2646,14 +2980,14 @@ if a:0 <= 1
     elseif l:env_name
 	let l:close = 'environment'
     else
-	if g:atp_debugCLE
+	if g:atp_debugCloseLastEnvironment
 	    silent echo "return: l:env_name=".string(l:env_name)." && math_1+...+math_4=".string(math_1+math_2+math_3+math_4)
 	    redir END
 	endif
-	return
+	return ''
     endif
 endif
-if g:atp_debugCLE
+if g:atp_debugCloseLastEnvironment
     let g:close = l:close
     silent echo "g:close=".string(l:close)
     silent echo "l:env_name=".l:env_name
@@ -2662,29 +2996,29 @@ let l:env=l:env_name
 "}}}2
 
 if l:close == "0" || l:close == 'math' && !exists("begin_line")
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	silent echo "there was nothing to close"
 	redir END
     endif
-    return "there was nothing to close"
+    return ''
 endif
 if ( &filetype != "plaintex" && b:atp_TexFlavor != "plaintex" && exists("math_4") && math_4 )
     echohl ErrorMsg
     echomsg "[ATP:] $$:$$ in LaTeX are deprecated (this breaks some LaTeX packages)" 
     echomsg "       You can set b:atp_TexFlavor = 'plaintex', and ATP will ignore this. "
     echohl Normal
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	silent echo "return A"
 	redir END
     endif
-    return 
+    return  ''
 endif
 if l:env_name =~ '^\s*document\s*$'
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	silent echo "return B"
 	redir END
     endif
-    return ""
+    return ''
 endif
 let l:cline	= getline(".")
 let l:pos	= getpos(".")
@@ -2694,7 +3028,7 @@ elseif l:close == "environment"
     let l:line	= getline(l:bpos_env[0])
 endif
 
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	let g:line = exists("l:line") ? l:line : 0
 	silent echo "g:line=".g:line
     endif
@@ -2779,7 +3113,7 @@ let l:eindent=atplib#CopyIndentation(l:line)
 
 		let l:pos=getpos(".")
 		let l:pos_saved=deepcopy(l:pos)
-		if g:atp_debugCLE
+		if g:atp_debugCloseLastEnvironment
 		    let g:pos_saved0 = copy(l:pos_saved)
 		endif
 
@@ -2810,11 +3144,11 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			
 		if getline(l:line_nr) =~ '\%(%.*\)\@<!\%(\\def\|\%(re\)\?newcommand\)' && l:line_nr != line(".")
 " 		    let b:cle_return="def"
-		    if g:atp_debugCLE
+		    if g:atp_debugCloseLastEnvironment
 			silent echo "return C"
 			redir END
 		    endif
-		    return
+		    return ''
 		endif
 
 		" get all names of environments which begin in this line
@@ -2865,11 +3199,11 @@ let l:eindent=atplib#CopyIndentation(l:line)
 		    " Do not append empty lines (l:str is empty if all l:uenv
 		    " belongs to the g:atp_no_complete list.
 		    if len(l:str) == 0
-			if g:atp_debugCLE
+			if g:atp_debugCloseLastEnvironment
 			    silent echo "return D"
 			    redir END
 			endif
-			return 0
+			return ''
 		    endif
 		    let l:eindent=atplib#CopyIndentation(getline(l:line_nr))
 		    let l:pos=getpos(".")
@@ -2881,7 +3215,7 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			" pair (below l:pos[1]). (I assume every env is in
 			" a seprate line!
 			let l:end=atplib#CheckClosed('\%(%.*\)\@<!\\begin\s*{','\%(%.*\)\@<!\\end\s*{',l:line_nr,g:atp_completion_limits[2],1)
-			if g:atp_debugCLE
+			if g:atp_debugCloseLastEnvironment
 			    let g:info= " l:max=".l:max." l:end=".l:end." line('.')=".line(".")." l:line_nr=".l:line_nr
 			endif
 			" if the line was found append just befor it.
@@ -2925,7 +3259,7 @@ let l:eindent=atplib#CopyIndentation(l:line)
 			" found
 			keepjumps call setpos(".",[0,l:line_nr,len(getline(l:line_nr)),0])
 			let l:cline	= getline(l:pos_saved[1])
-			if g:atp_debugCLE
+			if g:atp_debugCloseLastEnvironment
 			    let g:cline		= l:cline
 			    let g:pos_saved 	= copy(l:pos_saved)
 			    let g:line		= l:pos_saved[1]
@@ -2959,18 +3293,18 @@ let l:eindent=atplib#CopyIndentation(l:line)
 				endif
 			    endif
 			endif 
-			if g:atp_debugCLE
+			if g:atp_debugCloseLastEnvironment
 			    silent echo "return E"
 			    redir END
 			endif
-			return 1
+			return ''
 		    endif
 		else
-		    if g:atp_debugCLE
+		    if g:atp_debugCloseLastEnvironment
 			silent echo "return F"
 			redir END
 		    endif
-		    return "this is too hard?"
+		    return ''
 		endif
 		unlet! l:env_names
 		unlet! l:env_dict
@@ -2984,94 +3318,129 @@ let l:eindent=atplib#CopyIndentation(l:line)
     "{{{2 close math: texMathZoneV, texMathZoneW, texMathZoneX, texMathZoneY 
     else
 	"{{{3 Close math in the current line
-	echomsg "[ATP:] closing math from line " . l:begin_line
+	if !return_only
+	    echomsg "[ATP:] closing math from line " . l:begin_line
+	endif
 	if    math_mode == 'texMathZoneV' && l:line !~ '^\s*\\(\s*$' 	||
 	    \ math_mode == 'texMathZoneW' && l:line !~ '^\s*\\\[\s*$' 	||
 	    \ math_mode == 'texMathZoneX' && l:line !~ '^\s*\$\s*$' 	||
 	    \ math_mode == 'texMathZoneY' && l:line !~ '^\s*\$\{2,2}\s*$'
 	    if math_mode == "texMathZoneW"
-	 	if l:com == 'a' 
-		    if getline(l:begin_line) =~ '^\s*\\\[\s*$'
-			call append(line("."),atplib#CopyIndentation(getline(l:begin_line)).'\]')
+		if !return_only
+		    if l:com == 'a' 
+			if getline(l:begin_line) =~ '^\s*\\\[\s*$'
+			    call append(line("."),atplib#CopyIndentation(getline(l:begin_line)).'\]')
+			else
+			    call setline(line("."), strpart(l:cline,0,getpos(".")[2]) . '\]'. strpart(l:cline,getpos(".")[2]))
+			endif
 		    else
-			call setline(line("."), strpart(l:cline,0,getpos(".")[2]) . '\]'. strpart(l:cline,getpos(".")[2]))
+			if getline(l:begin_line) =~ '^\s*\\\[\s*$'
+			    call append(line("."),atplib#CopyIndentation(getline(l:begin_line)).'\]')
+			else
+			    call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '\]'. strpart(l:cline,getpos(".")[2]-1))
+    " TODO: This could be optional: (but the option rather
+    " should be an argument of this function rather than
+    " here!
+			endif
+			let l:pos=getpos(".")
+			let l:pos[2]+=2
+			keepjumps call setpos(("."),l:pos)
+			let b:cle_return="texMathZoneW"
 		    endif
 		else
-		    if getline(l:begin_line) =~ '^\s*\\\[\s*$'
-			call append(line("."),atplib#CopyIndentation(getline(l:begin_line)).'\]')
-		    else
-			call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '\]'. strpart(l:cline,getpos(".")[2]-1))
-" TODO: This could be optional: (but the option rather
-" should be an argument of this function rather than
-" here!
-		    endif
-		    let l:pos=getpos(".")
-		    let l:pos[2]+=2
-		    keepjumps call setpos(("."),l:pos)
-		    let b:cle_return="texMathZoneW"
+		    return '\]'
 		endif
 	    elseif math_mode == "texMathZoneV"
-		if l:com == 'a'
-		    call setline(line("."), strpart(l:cline,0,getpos(".")[2]) . '\)'. strpart(l:cline,getpos(".")[2]))
+		if !return_only
+		    if l:com == 'a'
+			call setline(line("."), strpart(l:cline,0,getpos(".")[2]) . '\)'. strpart(l:cline,getpos(".")[2]))
+		    else
+			call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '\)'. strpart(l:cline,getpos(".")[2]-1))
+			call cursor(line("."),col(".")+2)
+			let b:cle_return="V"
+		    endif
 		else
-		    call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '\)'. strpart(l:cline,getpos(".")[2]-1))
-		    call cursor(line("."),col(".")+2)
-		    let b:cle_return="V"
+		    return '\)'
 		endif
 	    elseif math_mode == "texMathZoneX" 
-		call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '$'. strpart(l:cline,getpos(".")[2]-1))
-		call cursor(line("."),col(".")+1)
+		if !return_only
+		    call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '$'. strpart(l:cline,getpos(".")[2]-1))
+		    call cursor(line("."),col(".")+1)
+		else
+		    return "$"
+		endif
 	    elseif math_mode == "texMathZoneY" 
-		call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '$$'. strpart(l:cline,getpos(".")[2]-1))
-		call cursor(line("."),col(".")+2)
+		if !return_only
+		    call setline(line("."), strpart(l:cline,0,getpos(".")[2]-1) . '$$'. strpart(l:cline,getpos(".")[2]-1))
+		    call cursor(line("."),col(".")+2)
+		else
+		    return '$$'
+		endif
 	    endif " }}}3
 	"{{{3 Close math in a new line, preserv the indentation.
 	else 	    
 	    let l:eindent=atplib#CopyIndentation(l:line)
 	    if math_mode == 'texMathZoneW'
-		let l:iline=line(".")
-		" if the current line is empty append before it.
-		if getline(".") =~ '^\s*$' && l:iline > 1
-		    let l:iline-=1
+		if !return_only
+		    let l:iline=line(".")
+		    " if the current line is empty append before it.
+		    if getline(".") =~ '^\s*$' && l:iline > 1
+			let l:iline-=1
+		    endif
+		    call append(l:iline, l:eindent . '\]')
+		    echomsg "[ATP:] \[ closed in line " . l:iline
+		else
+		    return '\]'
 		endif
-		call append(l:iline, l:eindent . '\]')
-		echomsg "[ATP:] \[ closed in line " . l:iline
-" 		let b:cle_return=2 . " dispalyed math " . l:iline  . " indent " . len(l:eindent) " DEBUG
+    " 		let b:cle_return=2 . " dispalyed math " . l:iline  . " indent " . len(l:eindent) " DEBUG
 	    elseif math_mode == 'texMathZoneV'
-		let l:iline=line(".")
-		" if the current line is empty append before it.
-		if getline(".") =~ '^\s*$' && l:iline > 1
-		    let l:iline-=1
+		if !return_only
+		    let l:iline=line(".")
+		    " if the current line is empty append before it.
+		    if getline(".") =~ '^\s*$' && l:iline > 1
+			let l:iline-=1
+		    endif
+		    call append(l:iline, l:eindent . '\)')
+		    echomsg "[ATP:] \( closed in line " . l:iline
+		else
+		    return '\)'
 		endif
-		call append(l:iline, l:eindent . '\)')
-		echomsg "[ATP:] \( closed in line " . l:iline
-" 		let b:cle_return=2 . " inline math " . l:iline . " indent " .len(l:eindent) " DEBUG
+    " 		let b:cle_return=2 . " inline math " . l:iline . " indent " .len(l:eindent) " DEBUG
 	    elseif math_mode == 'texMathZoneX'
-		let l:iline=line(".")
-		" if the current line is empty append before it.
-		if getline(".") =~ '^\s*$' && l:iline > 1
-		    let l:iline-=1
+		if !return_only
+		    let l:iline=line(".")
+		    " if the current line is empty append before it.
+		    if getline(".") =~ '^\s*$' && l:iline > 1
+			let l:iline-=1
+		    endif
+		    let sindent=atplib#CopyIndentation(getline(search('\$', 'bnW')))
+		    call append(l:iline, sindent . '$')
+		    echomsg "[ATP:] $ closed in line " . l:iline
+		else
+		    return '$'
 		endif
-		let sindent=atplib#CopyIndentation(getline(search('\$', 'bnW')))
-		call append(l:iline, sindent . '$')
-		echomsg "[ATP:] $ closed in line " . l:iline
 	    elseif math_mode == 'texMathZoneY'
-		let l:iline=line(".")
-		" if the current line is empty append before it.
-		if getline(".") =~ '^\s*$' && l:iline > 1
-		    let l:iline-=1
+		if !return_only
+		    let l:iline=line(".")
+		    " if the current line is empty append before it.
+		    if getline(".") =~ '^\s*$' && l:iline > 1
+			let l:iline-=1
+		    endif
+		    let sindent=atplib#CopyIndentation(getline(search('\$\$', 'bnW')))
+		    call append(l:iline, sindent . '$$')
+		    echomsg "[ATP:] $ closed in line " . l:iline
+		else
+		    return '$$'
 		endif
-		let sindent=atplib#CopyIndentation(getline(search('\$\$', 'bnW')))
-		call append(l:iline, sindent . '$$')
-		echomsg "[ATP:] $ closed in line " . l:iline
 	    endif
 	endif "}}3
     endif
-    if g:atp_debugCLE
+    if g:atp_debugCloseLastEnvironment
 	silent echo "return G"
 	redir END
     endif
     "}}}2
+    return ''
 endfunction
 " imap <F7> <Esc>:call atplib#CloseLastEnvironment()<CR>
 " }}}1
@@ -3100,7 +3469,8 @@ function! atplib#CheckBracket(bracket_dict)
    " want to close closed bracket and delete the old one.
    
    let check_list = []
-   if g:atp_debugCB
+   if g:atp_debugCheckBracket
+       call atplib#Log("CheckBracket.log","", "init")
        let g:check_list	= check_list
    endif
 
@@ -3112,7 +3482,7 @@ function! atplib#CheckBracket(bracket_dict)
 	let pos		= deepcopy(pos_saved)
 	let pair_{i}	= searchpairpos(escape(ket,'\[]'),'', escape(a:bracket_dict[ket], '\[]'). 
 		    \ ( ket_pattern != "" ? '\|'.ket_pattern.'\.' : '' ) ,'bnW',"",limit_line)
-	if g:atp_debugCB >= 2
+	if g:atp_debugCheckBracket >= 2
 	    echomsg escape(ket,'\[]') . " pair_".i."=".string(pair_{i}) . " limit_line=" . limit_line
 	endif
 	let pos[1]	= pair_{i}[0]
@@ -3121,7 +3491,7 @@ function! atplib#CheckBracket(bracket_dict)
 	let check_{i}	= atplib#CheckClosed(escape(ket, '\[]'), escape(a:bracket_dict[ket], '\[]'), line("."), g:atp_completion_limits[0],1) == '0'
 	" check_dot_{i} is 1 if the bracket is closed with a dot (\right.) . 
 	let check_dot_{i} = atplib#CheckClosed(escape(ket, '\'), '\\\%(right\|\cb\Cig\{1,2}\%(g\|l\)\@!r\=\)\s*\.',line("."),g:atp_completion_limits[0],1) == '0'
-	if g:atp_debugCB >= 2
+	if g:atp_debugCheckBracket >= 2
 	    echomsg escape(ket,'\[]') . " check_".i."=".string(check_{i}) . " check_dot_".i."=".string(check_dot_{i})
 	endif
 	let check_{i}	= min([check_{i}, check_dot_{i}])
@@ -3136,13 +3506,12 @@ function! atplib#CheckBracket(bracket_dict)
     let g:check_list = check_list
     let [ open_line, open_col, open_bracket_nr ] 	= check_list[0]
     let [ s:open_line, s:open_col, s:opening_bracket ] 	= [ open_line, open_col, bracket_list[open_bracket_nr] ]
-    if g:atp_debugCLB
+    if g:atp_debugCheckBracket
 	let [ g:open_lineCB, g:open_colCB, g:opening_bracketCB ] = [ open_line, open_col, bracket_list[open_bracket_nr] ]
-	silent echo "return:"
-	silent echo "open_line=".open_line
-	silent echo "open_col=".open_col
-	silent echo "opening_bracketCB=".g:opening_bracketCB
-	redir END
+	call atplib#Log("CheckBracket.log", "return:")
+	call atplib#Log("CheckBracket.log", "open_line=".open_line)
+	call atplib#Log("CheckBracket.log", "open_col=".open_col)
+	call atplib#Log("CheckBracket.log", "opening_bracketCB=".g:opening_bracketCB)
     endif
     return [ open_line, open_col, bracket_list[open_bracket_nr] ]
 endfunction
@@ -3177,12 +3546,12 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
     let pattern_b	= '\C\%('.join(size_patterns,'\|').'\)'
     let pattern_o	= '\%('.join(map(keys(a:bracket_dict),'escape(v:val,"\\[]")'),'\|').'\)'
 
-    if g:atp_debugCLB
-	exe "redir! > ".g:atp_TempDir."/CloseLastBracket.log"
+    if g:atp_debugCloseLastBracket
+	call atplib#Log("CloseLastBracket.log","","init")
 	let g:pattern_b	= pattern_b
 	let g:pattern_o	= pattern_o
-	silent echo "pattern_b=".pattern_b
-	silent echo "pattern_o=".pattern_o
+	call atplib#Log("CloseLastBracket.log", "pattern_b=".pattern_b)
+	call atplib#Log("CloseLastBracket.log", "pattern_o=".pattern_o)
     endif
 
     let limit_line	= max([1,(line(".")-g:atp_completion_limits[1])])
@@ -3204,19 +3573,16 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	    let env_name 	= matchstr(strpart(getline(open_env[0]),open_env[1]-1), '\\begin\s*{\s*\zs[^}]*\ze*\s*}')
 	    if open_env[0] && atplib#CompareCoordinates([(exists("open_line") ? open_line : 0),(exists("open_line") ? open_col : 0)], open_env)
 		call atplib#CloseLastEnvironment('i', 'environment', env_name, open_env)
-		if g:atp_debugCLB
-		    redir END
-		endif
 		return 'closeing ' . env_name . ' at ' . string(open_env) 
 	    endif
 	endfor
 
    " Debug:
-   if g:atp_debugCLB
+   if g:atp_debugCloseLastBracket
        let g:open_line	= open_line
        let g:open_col	= open_col 
-       silent echo "open_line=".open_line
-       silent echo "open_col=".open_col
+       call atplib#Log("CloseLastBracket.log", "open_line=".open_line)
+       call atplib#Log("CloseLastBracket.log", "open_col=".open_col)
    endif
 
     "}}}3
@@ -3224,26 +3590,22 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 
    if getline(open_line)[open_col-3] . getline(open_line)[open_col-2] . getline(open_line)[open_col-1] =~ '\\\@<!\\\%((\|\[\)$'
        call atplib#CloseLastEnvironment('i', 'math', '', [ open_line, open_col ])
-       if g:atp_debugCLB
+       if g:atp_debugCloseLastBracket
 	   let b:atp_debugCLB = "call atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
-	   silent echo "calling atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])"
+	   call atplib#Log("CloseLastBracket.log", "calling atplib#CloseLastEnvironment('i', 'math', '', [ ".open_line.", ".open_col." ])")
        endif
-	if g:atp_debugCLB
-	    redir END
-	endif
        return
    endif
 
    if open_col 
 	let line	= getline(open_line)
-
 	let bline	= strpart(line,0,(open_col-1))
 	let eline	= strpart(line,open_col-1,2)
-	if g:atp_debugCLB
+	if g:atp_debugCloseLastBracket
 	    let g:bline = bline
 	    let g:eline = eline
-	    silent echo "bline=".bline
-	    silent echo "eline=".eline
+	    call atplib#Log("CloseLastBracket.log", "bline=".bline)
+	    call atplib#Log("CloseLastBracket.log", "eline=".eline)
 	endif
 
 	let opening_size=matchstr(bline,'\zs'.pattern_b.'\ze\s*$')
@@ -3258,34 +3620,34 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	    let closing_size	= closing_size2.closing_size
 
 	    " DEBUG
-	    if g:atp_debugCLB
+	    if g:atp_debugCloseLastBracket
 		let g:bbline		= bbline
 		let g:opening_size2	= opening_size2
 		let g:closing_size2	= closing_size2
-		silent echo "bbline=".bbline
-		silent echo "opening_size2=".opening_size2
-		silent echo "closing_size2=".closing_size2
+		call atplib#Log("CloseLastBracket.log", "bbline=".bbline)
+		call atplib#Log("CloseLastBracket.log", "opening_size2=".opening_size2)
+		call atplib#Log("CloseLastBracket.log", "closing_size2=".closing_size2)
 	    endif
 	endif
 
 	echomsg "[ATP:] closing " . opening_size . opening_bracket . " from line " . open_line
 
 	" DEBUG:
-	if g:atp_debugCLB
+	if g:atp_debugCloseLastBracket
 	    let g:o_bra		= opening_bracket
-	    silen echo "opening_bracket=".opening_bracket
+	    call atplib#Log("CloseLastBracket.log", "opening_bracket=".opening_bracket)
 	    let g:o_size	= opening_size
-	    silen echo "opening_size=".opening_size
+	    call atplib#Log("CloseLastBracket.log", "opening_size=".opening_size)
 	    let g:bline		= bline
-	    silent echo "bline=".bline
+	    call atplib#Log("CloseLastBracket.log", "bline=".bline)
 	    let g:line		= line
-	    silent echo "line=".line
+	    call atplib#Log("CloseLastBracket.log", "line=".line)
 	    let g:eline		= eline
-	    silent echo "eline=".eline
+	    call atplib#Log("CloseLastBracket.log", "eline=".eline)
 	    let g:opening_size	= opening_size
-	    silent echo "opening_size=".opening_size
+	    call atplib#Log("CloseLastBracket.log", "opening_size=".opening_size)
 	    let g:closing_size	= closing_size
-	    silent echo "closing_size=".closing_size
+	    call atplib#Log("CloseLastBracket.log", "closing_size=".closing_size)
 	endif
 
 	let cline=getline(line("."))
@@ -3308,9 +3670,6 @@ function! atplib#CloseLastBracket(bracket_dict, ...)
 	let pos[2]+=len(closing_size.get(a:bracket_dict, opening_bracket))
 	keepjumps call setpos(".", pos)
 
-	if g:atp_debugCLB
-	    redir END
-	endif
 	return l:return
    endif
    " }}}3
@@ -3363,6 +3722,11 @@ endfunction
 try
 " Main tab completion function
 function! atplib#TabCompletion(expert_mode,...)
+
+    if g:atp_debugTabCompletion
+	call atplib#Log("TabCompletion.log", "", "init")
+    endif
+
     let atp_MainFile	= atplib#FullPath(b:atp_MainFile)
     " {{{2 Match the completed word 
     let normal_mode=0
@@ -3415,26 +3779,43 @@ function! atplib#TabCompletion(expert_mode,...)
 
     let limit_line=max([1,(pos[1]-g:atp_completion_limits[1])])
 
-    if g:atp_debugTC
+    if g:atp_debugTabCompletion
 	let g:nchar	= nchar
+	call atplib#Log("TabCompletion.log", "nchar=".nchar)
 	let g:l		= l
+	call atplib#Log("TabCompletion.log", "l=".l)
 	let g:n		= n
+	call atplib#Log("TabCompletion.log", "n=".n)
 	let g:o		= o
+	call atplib#Log("TabCompletion.log", "o=".o)
 	let g:s		= s
+	call atplib#Log("TabCompletion.log", "s=".s)
 	let g:p		= p
+	call atplib#Log("TabCompletion.log", "p=".p)
 	let g:a		= a
+	call atplib#Log("TabCompletion.log", "a=".a)
 	let g:nr	= nr
+	call atplib#Log("TabCompletion.log", "nr=".nr)
 
 	let g:line	= line    
+	call atplib#Log("TabCompletion.log", "line=".line)
 	let g:abegin	= abegin
+	call atplib#Log("TabCompletion.log", "abegin=".abegin)
 	let g:tbegin	= tbegin
+	call atplib#Log("TabCompletion.log", "tbegin=".tbegin)
 	let g:cbegin	= cbegin
+	call atplib#Log("TabCompletion.log", "cbegin=".cbegin)
 	let g:obegin	= obegin
+	call atplib#Log("TabCompletion.log", "obegin=".obegin)
 	let g:begin	= begin 
+	call atplib#Log("TabCompletion.log", "begin=".begin)
 	let g:pline	= pline
+	call atplib#Log("TabCompletion.log", "pline=".pline)
 	let g:ppline	= ppline
+	call atplib#Log("TabCompletion.log", "ppline=".ppline)
 
 	let g:limit_line= limit_line
+	call atplib#Log("TabCompletion.log", "limit_line=".limit_line)
     endif
 
 
@@ -3460,6 +3841,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	    let completion_method='command'
 	    " DEBUG:
 	    let b:comp_method='command'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 " 	    let b:comp_method='command fast return'
 	    return ''
@@ -3470,6 +3852,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	    let completion_method='environment_names'
 	    " DEBUG:
 	    let b:comp_method='environment_names'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 " 	    let b:comp_method='environment_names fast return'
 	    return ''
@@ -3480,14 +3863,17 @@ function! atplib#TabCompletion(expert_mode,...)
 	let completion_method='colors'
 	" DEBUG:
 	let b:comp_method='colors'
+	call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
     "{{{3 --------- label
     elseif l =~ '\\\%(eq\)\?ref\s*{[^}]*$' && !normal_mode
 	if index(g:atp_completion_active_modes, 'labels') != -1 
 	    let completion_method='labels'
 	    " DEBUG:
 	    let b:comp_method='labels'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='labels fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- pagestyle
@@ -3495,19 +3881,23 @@ function! atplib#TabCompletion(expert_mode,...)
 	let completion_method='pagestyle'
 	" DEBUG:
 	let b:comp_method='pagestyle'
+	call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
     "{{{3 --------- pagenumbering
     elseif l =~ '\\pagenumbering{\s*$'
 	let completion_method='pagenumbering'
 	" DEBUG:
 	let b:comp_method='pagenumbering'
+	call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
     "{{{3 --------- bibitems
     elseif ppline =~ '\\\%(no\)\?cite\(\s*\[[^]]*\]\s*\)\={[^}]*$' && !normal_mode
 	if index(g:atp_completion_active_modes, 'bibitems') != -1
 	    let completion_method='bibitems'
 	    " DEBUG:
 	    let b:comp_method='bibitems'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='bibitems fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- tikzpicture
@@ -3519,9 +3909,11 @@ function! atplib#TabCompletion(expert_mode,...)
 	    if index(g:atp_completion_active_modes, 'tikzpicture keywords') != -1 
 		" DEBUG:
 		let b:comp_method='tikzpicture keywords'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		let completion_method="tikzpicture keywords"
 	    else
 		let b:comp_method='tikzpicture keywords fast return'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		return ''
 	    endif
 	"{{{4 ----------- tikzpicture commands
@@ -3529,9 +3921,11 @@ function! atplib#TabCompletion(expert_mode,...)
 	    if index(g:atp_completion_active_modes, 'tikzpicture commands') != -1
 		" DEBUG:
 		let b:comp_method='tikzpicture commands'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		let completion_method="tikzpicture commands"
 	    else
 		let b:comp_method='tikzpicture commands fast return'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		return ''
 	    endif
 	"{{{4 ----------- close_env tikzpicture
@@ -3544,9 +3938,11 @@ function! atplib#TabCompletion(expert_mode,...)
 			\ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'close environments') != -1 )
 		" DEBUG:
 		let b:comp_method='close_env tikzpicture'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		let completion_method="close_env"
 	    else
 		let b:comp_method='close_env tikzpicture fast return'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		return ''
 	    endif
 	endif
@@ -3556,8 +3952,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	    let completion_method='package'
 	    " DEBUG:
 	    let b:comp_method='package'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='package fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- tikz libraries
@@ -3566,8 +3964,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	    let completion_method='tikz libraries'
 	    " DEBUG:
 	    let b:comp_method='tikz libraries'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='tikz libraries fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- inputfiles
@@ -3581,18 +3981,35 @@ function! atplib#TabCompletion(expert_mode,...)
 	    let completion_method='inputfiles'
 	    " DEBUG:
 	    let b:comp_method='inputfiles'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='inputfiles fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
+    "{{{3 --------- includegraphics
+    elseif (l =~ '\\includegraphics\s*\(\[[^\]]*\]\s*\)\?{[^}]*$')
+	if index(g:atp_completion_active_modes, 'includegraphics') != -1
+	    let completion_method='includegraphics'
+	    " DEBUG:
+	    let b:comp_method='includegraphics'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
+	else
+	    let b:comp_method='includegraphics fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
+	    return ''
+	endif
+
     "{{{3 --------- bibfiles
-    elseif pline =~ '\\bibliography\%(style\)\@!' && !normal_mode
+    elseif pline =~ '\\\%(bibliography\%(style\)\@!\|addbibresource\|addglobalbib\)' && !normal_mode
 	if index(g:atp_completion_active_modes, 'bibfiles') != -1
 	    let completion_method='bibfiles'
 	    " DEBUG:
 	    let b:comp_method='bibfiles'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='bibfiles fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- bibstyles
@@ -3600,25 +4017,31 @@ function! atplib#TabCompletion(expert_mode,...)
 	if ( index(g:atp_completion_active_modes, 'bibstyles') != -1 ) 
 	    let completion_method='bibstyles'
 	    let b:comp_method='bibstyles'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='bibstyles fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- todo & missingfigure options
-    elseif obegin =~ '\\todo\[[^\]]*'
+    elseif obegin =~ '\\todo\[[^\]]*$'
 	if ( index(g:atp_completion_active_modes, 'todonotes') != -1 ) 
 	    let completion_method='todo options'
 	    let b:comp_method='todo options'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='todo options fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
-    elseif obegin =~ '\\missingfigure\[[^\]]*'
+    elseif obegin =~ '\\missingfigure\[[^\]]*$'
 	if ( index(g:atp_completion_active_modes, 'todonotes') != -1 ) 
 	    let completion_method='missingfigure options'
 	    let b:comp_method='missingfigure options'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='missingfigure options fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- documentclass
@@ -3626,8 +4049,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'documentclass') != -1
 	    let completion_method='documentclass'
 	    let b:comp_method='documentclass'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='documentclass fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- Beamer Themes
@@ -3635,8 +4060,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'beamerthemes') != -1
 	    let completion_method='beamerthemes'
 	    let b:comp_method='beamerthemes'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='beamerthemes fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- Beamer Inner Themes
@@ -3644,8 +4071,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'beamerinnerthemes') != -1
 	    let completion_method='beamerinnerthemes'
 	    let b:comp_method='beamerinnerthemes'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='beamerinnerthemes fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- Beamer Outer Themes
@@ -3653,8 +4082,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'beamerouterthemes') != -1
 	    let completion_method='beamerouterthemes'
 	    let b:comp_method='beamerouterthemes'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='beamerouterthemes fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- Beamer Color Themes
@@ -3662,8 +4093,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'beamercolorthemes') != -1
 	    let completion_method='beamercolorthemes'
 	    let b:comp_method='beamercolorthemes'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='beamercolorthemes fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- Beamer Font Themes
@@ -3671,8 +4104,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'beamerfontthemes') != -1
 	    let completion_method='beamerfontthemes'
 	    let b:comp_method='beamerfontthemes'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='beamerfontthemes fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- font family
@@ -3680,8 +4115,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'font family') != -1
 	    let completion_method='font family'
 	    let b:comp_method='font family'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='font family fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- font series
@@ -3689,8 +4126,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'font series') != -1
 	    let completion_method='font series'
 	    let b:comp_method='font series'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='font series fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- font shape
@@ -3698,8 +4137,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'font shape') != -1
 	    let completion_method='font shape'
 	    let b:comp_method='font shape'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='font shape fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
     "{{{3 --------- font encoding
@@ -3707,33 +4148,34 @@ function! atplib#TabCompletion(expert_mode,...)
 	if index(g:atp_completion_active_modes, 'font encoding') != -1
 	    let completion_method='font encoding'
 	    let b:comp_method='font encoding'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	else
 	    let b:comp_method='font encoding fast return'
+	    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    return ''
 	endif
-    "{{{3 --------- brackets
+    "{{{3 --------- brackets, algorithmic, abbreviations, close environments
     else
+	"{{{4 --------- brackets and math zones \(:\),\[:\],$:$,$$:$$.
 	let begParen = atplib#CheckBracket(g:atp_bracket_dict)
-" 	let g:begParen = copy(begParen)
-	if begParen[1] != 0
+	if begParen[1] != 0 || atplib#CheckSyntaxGroups(['texMathZoneX', 'texMathZoneY'])
 	    if (!normal_mode &&  index(g:atp_completion_active_modes, 'brackets') != -1 ) ||
 		    \ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'brackets') != -1 )
 		let b:comp_method='brackets'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		if atplib#CheckSyntaxGroups(['texMathZoneV'])
-		    let pattern = '\\\@!\\('
+		    let pattern = '\\\@<!\\(\zs'
 		elseif atplib#CheckSyntaxGroups(['texMathZoneW'])
-		    let pattern = '\\\@<!\\\['
+		    let pattern = '\\\@<!\\\[\zs'
 		elseif atplib#CheckSyntaxGroups(['texMathZoneX'])
-		    let pattern = '\%(\\\|\$\)\@<!\$\$\@!'
+		    let pattern = '\%(\\\|\$\)\@<!\$\$\@!\zs'
 		elseif atplib#CheckSyntaxGroups(['texMathZoneY'])
-		    let pattern = '\\\@<!\$\$'
+		    let pattern = '\\\@<!\$\$\zs'
 		else
 		    let pattern = ''
 		endif
-" 		let g:pattern = pattern
 		if !empty(pattern)
 		    let begMathZone = searchpos(pattern, 'bnW')
-" 		    let g:begMathZone = copy(begMathZone)
 		    if atplib#CompareCoordinates([ begParen[0], begParen[1] ], begMathZone)
 			call atplib#CloseLastEnvironment(append, 'math')
 		    else
@@ -3745,34 +4187,40 @@ function! atplib#TabCompletion(expert_mode,...)
 		return '' 
 	    else
 		let b:comp_method='brackets fast return'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		return ''
 	    endif
-    "{{{3 --------- algorithmic
+    "{{{4 --------- algorithmic
 	elseif atplib#CheckBracket(g:atp_algorithmic_dict)[1] != 0
 		if atplib#CheckSyntaxGroups(['texMathZoneALG']) && (
 			\ (!normal_mode && index(g:atp_completion_active_modes, 'algorithmic' ) != -1 ) ||
 			\ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'algorithmic') != -1 )
 			\ )
 		    let b:comp_method='algorithmic'
+		    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		    call atplib#CloseLastBracket(g:atp_algorithmic_dict, 0, 1)
 		    return '' 
 		else
 		    let b:comp_method='algorithmic fast return'
+		    call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		    return ''
 		endif
-    "{{{3 --------- abbreviations
+    "{{{4 --------- abbreviations
     elseif l =~ '=\w\+\*\=$'
 	let completion_method='abbreviations' 
 	let b:comp_method='abbreviations'
-    "{{{3 --------- close environments
+	call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
+    "{{{4 --------- close environments
 	else
 	    if (!normal_mode &&  index(g:atp_completion_active_modes, 'close environments') != '-1' ) ||
 			\ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'close environments') != '-1' )
 		let completion_method='close_env'
 		" DEBUG:
 		let b:comp_method='close_env a' 
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    else
 		let b:comp_method='close_env a fast return' 
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 		return ''
 	    endif
 	endif
@@ -3849,8 +4297,12 @@ function! atplib#TabCompletion(expert_mode,...)
 	    if g:atp_local_completion
 		" Make a list of local envs and commands
 		if !exists("s:atp_LocalEnvironments") 
-		    let s:atp_LocalEnvironments=LocalCommands()[1]
-		    endif
+		    LocalCommands
+		    let s:atp_LocalEnvironments=copy(b:atp_LocalEnvironments)
+		elseif has("python")
+		    LocalCommands
+		    let s:atp_LocalEnvironments=copy(b:atp_LocalEnvironments)
+		endif
 		let completion_list=atplib#Extend(completion_list,s:atp_LocalEnvironments)
 	    endif
 	    let completion_list=atplib#Add(completion_list,'}')
@@ -3863,8 +4315,12 @@ function! atplib#TabCompletion(expert_mode,...)
 	    if g:atp_local_completion
 		" Make a list of local envs and commands
 		if !exists("s:atp_LocalEnvironments") 
-		    let s:atp_LocalEnvironments=LocalCommands()[1]
-		    endif
+		    LocalCommands
+		    let s:atp_LocalEnvironments=copy(b:atp_LocalEnvironments)
+		elseif has("python")
+		    LocalCommands
+		    let s:atp_LocalEnvironments=copy(b:atp_LocalEnvironments)
+		endif
 		call atplib#Extend(completion_list,s:atp_LocalEnvironments)
 	    endif
 	endif
@@ -3898,15 +4354,24 @@ function! atplib#TabCompletion(expert_mode,...)
 	if exists("g:atp_LatexPackages")
 	    let completion_list	= copy(g:atp_LatexPackages)
 	else
+	    if g:atp_debugTabCompletion
+		let debugTabCompletion_LatexPackages_TimeStart=reltime()
+	    endif
 	    let g:atp_LatexPackages	= atplib#KpsewhichGlobPath("tex", "", "*.sty")
 	    let completion_list	= deepcopy(g:atp_LatexPackages)
+	    if g:atp_debugTabCompletion
+		let g:debugTabCompletion_LatexPackages_Time=reltimestr(reltime(debugTabCompletion_LatexPackages_TimeStart))
+		call atplib#Log("TabCompletion.log", "LatexPackages Time: ".g:debugTabCompletion_LatexPackages_Time)
+	    endif
 	endif
     "{{{3 ------------ COLORS
     elseif completion_method == 'colors'
 	" To Do: make a predefined lists of colors depending on package
 	" options! 
 	if !exists("b:atp_LocalColors") 
-	    call LocalCommands()
+	    LocalCommands
+	elseif has("python")
+	    LocalCommands
 	endif
 	let completion_list=copy(b:atp_LocalColors)
     "{{{3 ------------ PAGESTYLE
@@ -3977,23 +4442,12 @@ function! atplib#TabCompletion(expert_mode,...)
 	endif
 	 
 	" Are we in the math mode?
-	let math_is_opened	= atplib#CheckSyntaxGroups(g:atp_MathZones) && !atplib#CheckSyntaxGroups(['texMathText'])
+	let math_is_opened	= atplib#IsInMath()
 
-   	"{{{4 -------------------- picture
-	if searchpair('\\begin\s*{picture}','','\\end\s*{picture}','bnW',"", max([ 1, (line(".")-g:atp_completion_limits[2])]))
-	    call extend(completion_list,g:atp_picture_commands)
-	endif 
-   	"{{{4 -------------------- hyperref
-	if searchpair('\\\@<!{', '', '\\\@<!}', 'bnW', "", max([ 1, (line(".")-g:atp_completion_limits[0])]))
-	    call extend(completion_list, g:atp_Commands)
-	    if atplib#SearchPackage('herref')
-		call extend(completion_list, g:atp_hyperref_commands)
-	    endif
-	endif
-	" {{{4 -------------------- MATH commands 
+	" {{{4 -------------------- MATH commands: amsmath, amssymb, mathtools, nicefrac, SIunits, math non expert mode.
 	" if we are in math mode or if we do not check for it.
 	if g:atp_no_math_command_completion != 1 &&  ( !g:atp_MathOpened || math_is_opened )
-	    call extend(completion_list,g:atp_math_commands)
+	    call extend(completion_list, g:atp_math_commands)
 	    " amsmath && amssymb {{{5
 	    " if g:atp_amsmath is set or the document class is ams...
 	    if (g:atp_amsmath != 0 || atplib#DocumentClass(b:atp_MainFile) =~ '^ams')
@@ -4023,12 +4477,16 @@ function! atplib#TabCompletion(expert_mode,...)
 	    call extend(completion_list, g:atp_math_commands_PRE, 0)
 	
 	    " nicefrac {{{5
-	    if atplib#SearchPackage('nicefrac',stop_line)
-		call add(completion_list,"\\nicefrac")
+	    if atplib#SearchPackage('nicefrac', stop_line)
+		call add(completion_list,"\\nicefrac{")
+	    endif
+	    " SIunits {{{5
+	    if atplib#SearchPackage('SIunits', stop_line) && ( index(g:atp_completion_active_modes, 'SIunits') != -1 || index(g:atp_completion_active_modes, 'siunits') != -1 )
+		call extend(completion_list, g:atp_siuinits)
 	    endif
 	    " math non expert mode {{{5
 	    if a:expert_mode == 0
-		call extend(completion_list,g:atp_math_commands_non_expert_mode)
+		call extend(completion_list, g:atp_math_commands_non_expert_mode)
 	    endif
 	endif
 	" {{{4 -------------------- BEAMER commands
@@ -4039,37 +4497,41 @@ function! atplib#TabCompletion(expert_mode,...)
 	if g:atp_local_completion
 	    " make a list of local envs and commands:
 	    if !exists("b:atp_LocalCommands") 
-		call LocalCommands()
+		LocalCommands
+	    elseif has("python")
+		LocalCommands
 	    endif
-	    call extend(completion_list,b:atp_LocalCommands)
+	    call extend(completion_list, b:atp_LocalCommands)
 	endif
 	" {{{4 -------------------- TIKZ commands
 	" if tikz is declared and we are in tikz environment.
-	let in_tikz=searchpair('\\begin\s*{tikzpicture}','','\\end\s*{tikzpicture}','bnW',"", max([1,(line(".")-g:atp_completion_limits[2])])) || atplib#CheckOpened('\\tikz{','}',line("."),g:atp_completion_limits[0])
+	if atplib#SearchPackage('\(tikz\|pgf\)')
+	    let in_tikz=searchpair('\\begin\s*{tikzpicture}','','\\end\s*{tikzpicture}','bnW',"", max([1,(line(".")-g:atp_completion_limits[2])])) || atplib#CheckOpened('\\tikz{','}',line("."),g:atp_completion_limits[0])
 
-	if in_tikz
-	    " find all tikz libraries at once:
-	    let tikz_libraries	= atplib#GrepPackageList('\\use\%(tikz\|pgf\)library\s*{')
+	    if in_tikz
+		" find all tikz libraries at once:
+		let tikz_libraries	= atplib#GrepPackageList('\\use\%(tikz\|pgf\)library\s*{')
 
-	    " add every set of library commands:
-	    for lib in tikz_libraries  
-		if exists("g:atp_tikz_library_".lib."_commands")
-		    call extend(completion_list, g:atp_tikz_library_{lib}_commands)
-		endif   
-	    endfor
+		" add every set of library commands:
+		for lib in tikz_libraries  
+		    if exists("g:atp_tikz_library_".lib."_commands")
+			call extend(completion_list, g:atp_tikz_library_{lib}_commands)
+		    endif   
+		endfor
 
-	    " add common tikz commands:
-	    call extend(completion_list, g:atp_tikz_commands)
+		" add common tikz commands:
+		call extend(completion_list, g:atp_tikz_commands)
 
-	    " if in text mode add normal commands:
-	    if searchpair('\\\@<!{', '', '\\\@<!}', 'bnW', "", max([ 1, (line(".")-g:atp_completion_limits[0])]))
-		call extend(completion_list, g:atp_Commands)
-	    endif
-	endif 
-	" {{{4 -------------------- COMMANDS
+		" if in text mode add normal commands:
+		if searchpair('\\\@<!{', '', '\\\@<!}', 'bnW', "", max([ 1, (line(".")-g:atp_completion_limits[0])]))
+		    call extend(completion_list, g:atp_Commands)
+		endif
+	    endif 
+	endif
+	" {{{4 -------------------- Commands
 "	if we are not in math mode or if we do not care about it or we are in non expert mode.
 	if (!g:atp_MathOpened || !math_is_opened ) || a:expert_mode == 0
-	    call extend(completion_list,g:atp_Commands)
+	    call extend(completion_list, g:atp_Commands)
 	    " FANCYHDR
 	    if atplib#SearchPackage('fancyhdr', stop_line)
 		call extend(completion_list, g:atp_fancyhdr_commands)
@@ -4087,6 +4549,14 @@ function! atplib#TabCompletion(expert_mode,...)
 	    call extend(completion_list, g:atp_TodoNotes_commands)
 	endif
 	"}}}4 
+   	"{{{4 -------------------- picture
+	if searchpair('\\begin\s*{\s*picture\s*}','','\\end\s*{\s*picture\s*}','bnW',"", max([ 1, (line(".")-g:atp_completion_limits[2])]))
+	    call extend(completion_list, g:atp_picture_commands)
+	endif 
+   	"{{{4 -------------------- hyperref
+	if atplib#SearchPackage('hyperref')
+	    call extend(completion_list, g:atp_hyperref_commands)
+	endif
 	" ToDo: add layout commands and many more packages. (COMMANDS FOR
 	" PREAMBULE)
 	"{{{4 -------------------- final stuff
@@ -4144,6 +4614,30 @@ function! atplib#TabCompletion(expert_mode,...)
 	let completion_list=[]
 	call  extend(completion_list, atplib#KpsewhichGlobPath('tex', b:atp_OutDir . ',' . g:atp_texinputs, '*.tex', ':t:r', '^\%(\/home\|\.\|.*users\)', '\%(^\\usr\|texlive\|miktex\|kpsewhich\|generic\)'))
 	call sort(completion_list)
+    " {{{3 ------------ TEX INCLUDEGRAPHICS
+    elseif completion_method == 'includegraphics'
+	" Search for \graphicspath but only in the preamble
+	let matches=atplib#GrepPreambule('\\graphicspath')
+	for match in matches
+	    let dirs = map(split(matchstr(match['text'], '\graphicspath\s*{\zs.*\ze}'), '}'), "substitute(v:val, '^\s*{', '', '')")
+	    call map(dirs, "substitute(v:val, '\/\/', '/**', 'g')")
+	endfor
+	let gr_dirs= ( len(dirs) == 0 ? "./" : join(dirs,',') )
+	if b:atp_TexCompiler == "latex"
+	    let gr = ["*.eps", "*.EPS"]
+	else
+	    let gr = ["*.gif", "*jpeg", "*.jpg", "*.png", "*.pdf", "*.pdf_tex", "*.eps",
+			\ "*.GIF", "*JPEG", "*.JPG", "*.PNG", "*.PDF", "*.PDF_TEX", "*.EPS"]
+	endif
+	let completion_list=[]
+	if begin !~ '\(gif\|jpe\?g\|png\|pdf\|pdf_tex\|eps\)$'
+	    for ext in gr
+		let completion_list+=split(globpath(gr_dirs, begin.ext), "\n")
+	    endfor
+	else
+	    let completion_list+=split(globpath(gr_dirs, begin), "\n")
+	endif
+	call map(completion_list, "substitute(v:val, '^\s*\.\/', '', '')")
     " {{{3 ------------ BIBFILES
     elseif completion_method ==  'bibfiles'
 	let  completion_list=[]
@@ -4157,7 +4651,14 @@ function! atplib#TabCompletion(expert_mode,...)
 	if exists("g:atp_LatexClasses")
 	    let completion_list	= copy(g:atp_LatexClasses)
 	else
+	    if g:atp_debugTabCompletion
+		let debugTabCompletion_LatexClasses_TimeStart=reltime()
+	    endif
 	    let g:atp_LatexClasses	= atplib#KpsewhichGlobPath("tex", "", "*.cls")
+	    if g:atp_debugTabCompletion
+		let g:debugTabCompletion_LatexClasses_Time=reltimestr(reltime(debugTabCompletion_LatexClasses_TimeStart))
+		call atplib#Log("TabCompletion.log", "LatexClasses Time: ".g:debugTabCompletion_LatexClasses_Time)
+	    endif
 	    let completion_list		= deepcopy(g:atp_LatexClasses)
 	endif
 	" \documentclass must be closed right after the name ends:
@@ -4181,6 +4682,8 @@ function! atplib#TabCompletion(expert_mode,...)
 	let completion_list = g:atp_BeamerFontThemes
     "{{{3 ------------ FONT FAMILY
     elseif completion_method == 'font family'
+	echo "[ATP:] searching through fd files ..."
+	let time=reltime()
 	let bpos=searchpos('\\selectfon\zst','bnW',line("."))[1]
 	let epos=searchpos('\\selectfont','nW',line("."))[1]-1
 	if epos == -1
@@ -4191,15 +4694,16 @@ function! atplib#TabCompletion(expert_mode,...)
 	if encoding == ""
 	    let encoding=g:atp_font_encoding
 	endif
-" 	    let g:encoding=encoding
+	    let g:encoding=encoding
 	let completion_list=[]
 	let fd_list=atplib#FdSearch('^'.encoding.begin)
-" 	    let g:fd_list=copy(fd_list)
-" 	    let g:begin = begin
+	    let g:fd_list=copy(fd_list)
 	for file in fd_list
-	    call extend(completion_list,map(atplib#ShowFonts(file),'matchstr(v:val,"usefont\\s*{[^}]*}\\s*{\\zs[^}]*\\ze}")'))
+            call extend(completion_list,map(atplib#ShowFonts(file),'matchstr(v:val,"usefont\\s*{[^}]*}\\s*{\\zs[^}]*\\ze}")'))
 	endfor
 	call filter(completion_list,'count(completion_list,v:val) == 1 ')
+	redraw
+	let g:time_font_family=reltimestr(reltime(time))
     "{{{3 ------------ FONT SERIES
     elseif completion_method == 'font series'
 	let bpos=searchpos('\\selectfon\zst','bnW',line("."))[1]
@@ -4215,6 +4719,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	endif
 " 	    let g:encoding = encoding 
 	let font_family=matchstr(fline,'\\\%(usefont\s*{[^}]*}\|DeclareFixedFont\s*{[^}]*}\s*{[^}]*}\|fontfamily\)\s*{\zs[^}]*\ze}')
+	echo "[ATP:] searching through fd files ..."
 " 	    let g:font_family=font_family
 	let completion_list=[]
 	let fd_list=atplib#FdSearch(encoding.font_family)
@@ -4223,6 +4728,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	    call extend(completion_list,map(atplib#ShowFonts(file),'matchstr(v:val,"usefont{[^}]*}{[^}]*}{\\zs[^}]*\\ze}")'))
 	endfor
 	call filter(completion_list,'count(completion_list,v:val) == 1 ')
+	redraw
     "{{{3 ------------ FONT SHAPE
     elseif completion_method == 'font shape'
 	let bpos=searchpos('\\selectfon\zst','bnW',line("."))[1]
@@ -4237,6 +4743,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	endif
 	let font_family=matchstr(fline,'\\\%(usefont{[^}]*}\|DeclareFixedFont\s*{[^}]*}\s*{[^}]*}\|fontfamily\)\s*{\zs[^}]*\ze}')
 	let font_series=matchstr(fline,'\\\%(usefont\s*{[^}]*}\s*{[^}]*}\|DeclareFixedFont\s*{[^}]*}\s*{[^}]*}\s*{[^}]*}\|fontseries\)\s*{\zs[^}]*\ze}')
+	echo "[ATP:] searching through fd files ..."
 	let completion_list=[]
 	let fd_list=atplib#FdSearch('^'.encoding.font_family)
 
@@ -4244,6 +4751,7 @@ function! atplib#TabCompletion(expert_mode,...)
 	    call extend(completion_list,map(atplib#ShowFonts(file),'matchstr(v:val,"usefont{[^}]*}{'.font_family.'}{'.font_series.'}{\\zs[^}]*\\ze}")'))
 	endfor
 	call filter(completion_list,'count(completion_list,v:val) == 1 ')
+	redraw
     " {{{3 ------------ FONT ENCODING
     elseif completion_method == 'font encoding'
 	let bpos=searchpos('\\selectfon\zst','bnW',line("."))[1]
@@ -4254,8 +4762,10 @@ function! atplib#TabCompletion(expert_mode,...)
 	let fline=strpart(line,bpos,epos-bpos)
 	let font_family=matchstr(fline,'\\\%(usefont\s*{[^}]*}\|DeclareFixedFont\s*{[^}]*}\s*{[^}]*}\|fontfamily\)\s*{\zs[^}]*\ze}')
 	if font_family != ""
+	    echo "[ATP:] searching through fd files ..."
 	    let fd_list=atplib#FdSearch(font_family)
 	    let completion_list=map(copy(fd_list),'toupper(substitute(fnamemodify(v:val,":t"),"'.font_family.'.*$","",""))')
+	    redraw
 	else
 " 	    let completion_list=[]
 " 	    for fd_file in fd_list
@@ -4268,85 +4778,121 @@ function! atplib#TabCompletion(expert_mode,...)
 	endif
     " {{{3 ------------ BIBITEMS
     elseif completion_method == 'bibitems'
+	let time_bibitems=reltime()
 	let col = col('.') - 1
 	while col > 0 && line[col - 1] !~ '{\|,'
 		let col -= 1
 	endwhile
-	let pat=strpart(l,col)
-	let g:pat=pat
-	let bibitems_list=values(atplib#searchbib(pat))
-	if g:atp_debugTC
-	    let g:pat = pat
-	endif
-	let pre_completion_list=[]
-	let completion_dict=[]
-	let completion_list=[]
-	for dict in bibitems_list
-	    for key in keys(dict)
-		" ToDo: change dict[key][...] to get() to not get errors
-		" if it is not present or to handle situations when it is not
-		" present!
-		call add(pre_completion_list, dict[key]['bibfield_key']) 
-		let bibkey=dict[key]['bibfield_key']
-		let bibkey=substitute(strpart(bibkey,max([stridx(bibkey,'{'),stridx(bibkey,'(')])+1),',\s*','','')
-		if nchar != ',' && nchar != '}'
-		    let bibkey.="}"
-		endif
-		let title=get(dict[key],'title','notitle')
-		let title=substitute(matchstr(title,'^\s*title\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*\%(,\|$\)'),'{\|}','','g')
-		let year=get(dict[key],'year',"")
-		let year=matchstr(year,'^\s*year\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*\%(,\|$\)')
-		let abbr=get(dict[key],'author',"noauthor")
-		let author = matchstr(abbr,'^\s*author\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*,')
-		if abbr=="noauthor" || abbr == ""
-		    let abbr=get(dict[key],'editor',"")
-		    let author = matchstr(abbr,'^\s*editor\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*,')
-		endif
-		if len(author) >= 40
-		    if match(author,'\sand\s')
-			let author=strpart(author,0,match(author,'\sand\s')) . ' et al.'
-		    else
-			let author=strpart(author,0,40)
+" 	let pat = ( strpart(l,col) == "" ? '.*' : strpart(l,col) )
+	let pat = strpart(l,col)
+	let searchbib_time=reltime()
+	if len(filter(values(copy(b:TypeDict)), "v:val == 'bib'"))
+	    if !exists("b:ListOfFiles") && !exists("b:TypeDict")
+		call TreeOfFiles(b:atp_MainFile)
+	    endif
+	    if has("python") && g:atp_bibsearch == "python" && pat != ""
+		let bibfiles=[]
+		for f in b:ListOfFiles
+		    if b:TypeDict[f] == 'bib'
+			call add(bibfiles, f)
 		    endif
-		endif
-		let author=substitute(author,'{\|}','','g')
-		if dict[key]['bibfield_key'] =~ 'article'
-		    let type="[a]"
-		elseif dict[key]['bibfield_key'] =~ 'book\>'
-		    let type="[B]"
-		elseif dict[key]['bibfield_key'] =~ 'booklet'
-		    let type="[b]"
-		elseif  dict[key]['bibfield_key'] =~ 'proceedings\|conference'
-		    let type="[p]"
-		elseif dict[key]['bibfield_key'] =~ 'unpublished'
-		    let type="[u]"
-		elseif dict[key]['bibfield_key'] =~ 'incollection'
-		    let type="[c]"
-		elseif dict[key]['bibfield_key'] =~ 'phdthesis'
-		    let type="[PhD]"
-		elseif dict[key]['bibfield_key'] =~ 'masterthesis'
-		    let type="[M]"
-		elseif dict[key]['bibfield_key'] =~ 'misc'
-		    let type="[-]"
-		elseif dict[key]['bibfield_key'] =~ 'techreport'
-		    let type="[t]"
-		elseif dict[key]['bibfield_key'] =~ 'manual'
-		    let type="[m]"
-		else
-		    let type="   "
-		endif
+		endfor
+		let bibitems_list=values(atplib#searchbib_py(pat, bibfiles))
+	    else
+		let bibdict={}
+		for f in b:ListOfFiles
+		    if b:TypeDict[f] == 'bib'
+			let bibdict[f]=readfile(f)
+		    endif
+		endfor
+		let bibitems_list=values(atplib#searchbib(pat, bibdict))
+	    endif
+	    let g:bibitems_list=bibitems_list
+	    let g:time_searchbib_py=reltimestr(reltime(searchbib_time))
+	    if g:atp_debugTabCompletion
+		let g:pat = pat
+	    endif
+	    let pre_completion_list=[]
+	    let completion_dict=[]
+	    let completion_list=[]
+	    let time_bibitems_for=reltime()
+	    for dict in bibitems_list
+		for key in keys(dict)
+		    " ToDo: change dict[key][...] to get() to not get errors
+		    " if it is not present or to handle situations when it is not
+		    " present!
+		    call add(pre_completion_list, dict[key]['bibfield_key']) 
+		    let bibkey=dict[key]['bibfield_key']
+		    let bibkey=substitute(strpart(bibkey,max([stridx(bibkey,'{'),stridx(bibkey,'(')])+1),',\s*','','')
+		    if nchar != ',' && nchar != '}'
+			let bibkey.="}"
+		    endif
+		    let title=get(dict[key],'title','notitle')
+		    let title=substitute(matchstr(title,'^\s*title\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*\%(,\|$\)'),'{\|}','','g')
+		    let year=get(dict[key],'year',"")
+		    let year=matchstr(year,'^\s*year\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*\%(,\|$\)')
+		    let abbr=get(dict[key],'author',"noauthor")
+		    let author = matchstr(abbr,'^\s*author\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*,')
+		    if abbr=="noauthor" || abbr == ""
+			let abbr=get(dict[key],'editor',"")
+			let author = matchstr(abbr,'^\s*editor\s*=\s*\%("\|{\|(\)\zs.*\ze\%("\|}\|)\)\s*,')
+		    endif
+		    if len(author) >= 40
+			if match(author,'\sand\s')
+			    let author=strpart(author,0,match(author,'\sand\s')) . ' et al.'
+			else
+			    let author=strpart(author,0,40)
+			endif
+		    endif
+		    let author=substitute(author,'{\|}','','g')
+		    if dict[key]['bibfield_key'] =~ 'article'
+			let type="[a]"
+		    elseif dict[key]['bibfield_key'] =~ 'book\>'
+			let type="[B]"
+		    elseif dict[key]['bibfield_key'] =~ 'booklet'
+			let type="[b]"
+		    elseif  dict[key]['bibfield_key'] =~ 'proceedings\|conference'
+			let type="[p]"
+		    elseif dict[key]['bibfield_key'] =~ 'unpublished'
+			let type="[u]"
+		    elseif dict[key]['bibfield_key'] =~ 'incollection'
+			let type="[c]"
+		    elseif dict[key]['bibfield_key'] =~ 'phdthesis'
+			let type="[PhD]"
+		    elseif dict[key]['bibfield_key'] =~ 'masterthesis'
+			let type="[M]"
+		    elseif dict[key]['bibfield_key'] =~ 'misc'
+			let type="[-]"
+		    elseif dict[key]['bibfield_key'] =~ 'techreport'
+			let type="[t]"
+		    elseif dict[key]['bibfield_key'] =~ 'manual'
+			let type="[m]"
+		    else
+			let type="   "
+		    endif
 
-		let abbr=type." ".author." (".year.") "
+		    let abbr=type." ".author." (".year.") "
 
-		call add(completion_dict, { "word" : bibkey, "menu" : title, "abbr" : abbr }) 
+		    call add(completion_dict, { "word" : bibkey, "menu" : title, "abbr" : abbr }) 
+		endfor
 	    endfor
-	endfor
-	for key in pre_completion_list
-	    call add(completion_list,substitute(strpart(key,max([stridx(key,'{'),stridx(key,'(')])+1),',\s*','',''))
-	endfor
-
-	" add the \bibitems found in include files
-	call extend(completion_list,keys(atplib#SearchBibItems(atp_MainFile)))
+            let g:completion_dict=completion_dict
+	    for key in pre_completion_list
+		call add(completion_list,substitute(strpart(key,max([stridx(key,'{'),stridx(key,'(')])+1),',\s*','',''))
+	    endfor
+	else
+	    " add the \bibitems found in include files
+	    let time_bibitems_SearchBibItems=reltime()
+            let completion_dict=[]
+            let dict=atplib#SearchBibItems()
+            for key in keys(dict)
+		if a:expert_mode && key =~ '^'.begin || !a:expert_mode && key =~ begin
+		    call add(completion_dict, { "word" : key, "menu" : dict[key]['rest'], "abbrev" : dict[key]['label'] })
+		endif
+            endfor
+	    let g:time_bibitems_SearchBibItems=reltimestr(reltime(time_bibitems_SearchBibItems))
+	endif
+	let g:time_bibitems=reltimestr(reltime(time_bibitems))
     " {{{3 ------------ TodoNotes todo & missing figure options
     elseif completion_method == 'todo options'
 	let completion_list = g:atp_TodoNotes_todo_options
@@ -4437,16 +4983,18 @@ function! atplib#TabCompletion(expert_mode,...)
 		" Complete label by string or number:
 		
 		let aux_data	= atplib#GrepAuxFile()
-		let completions = []
-		let pattern 	= matchstr(l, '\%(.\|\\ref\)*\\ref\s*{\zs\S*$')  
+		let completion_dict = []
+		let pattern 	= matchstr(l, '\%(.\|\\\%(eq\)\=ref\)*\\\%(eq\)\=ref\s*{\zs\S*$')
 		for data in aux_data
 		    " match label by string or number
-		    if ( data[0] =~ '^' . pattern || data[1] =~ '^'. pattern . '$' ) && a:expert_mode || 
-				\ ( data[0] =~ pattern || data[1] =~ '^'. pattern ) && !a:expert_mode
-			let close = nchar == '}' ? '' : '}'
-			call add(completions, data[0] . close)
+		    if ( data[0] =~ '^' . pattern || data[1] =~ '^'. pattern . '$' ) && a:expert_mode || ( data[0] =~ pattern || data[1] =~ '^'. pattern ) && !a:expert_mode
+			let close = ( nchar == '}' ? '' : '}' )
+			call add(completion_dict, { "word" : data[0].close, "abbr" : data[0], "menu" : ( data[2] == 'equation' && data[1] != "" ? "(".data[1].")" : data[1] ) , "kind" : data[2][0] })
 		    endif
-		endfor
+		endfor 
+	    " {{{4 --------- includegraphics
+	    elseif completion_method == 'includegraphics'
+		let completions=completion_list
 	    endif
     "{{{3 --------- else: try to close environment
     else
@@ -4458,8 +5006,8 @@ function! atplib#TabCompletion(expert_mode,...)
     " ToDo: we will not truncate if completion method is specific, this should be
     " made by a variable! Maybe better is to provide a positive list !!!
     if g:atp_completion_truncate && a:expert_mode && 
-		\ index(['bibfiles', 'bibitems', 'bibstyles', 'labels', 
-		\ 'font family', 'font series', 'font shape', 'font encoding' ],completion_method) == -1
+		\ index(['bibfiles', 'bibitems', 'bibstyles', 'font family',
+		\ 'font series', 'font shape', 'font encoding' ],completion_method) == -1
 	call filter(completions,'len(substitute(v:val,"^\\","","")) >= g:atp_completion_truncate')
     endif
 "     THINK: about this ...
@@ -4477,7 +5025,7 @@ function! atplib#TabCompletion(expert_mode,...)
     " DEBUG
     let b:completions=completions 
     " {{{2 COMPLETE 
-    " {{{3 labels, package, tikz libraries, environment_names, colors, bibfiles, bibstyles, documentclass, font family, font series, font shape font encoding and input files 
+    " {{{3 package, tikz libraries, environment_names, colors, bibfiles, bibstyles, documentclass, font family, font series, font shape font encoding, input files, includegraphics
     if
 		\ completion_method == 'package' 	|| 
 		\ completion_method == 'tikz libraries'    || 
@@ -4495,21 +5043,72 @@ function! atplib#TabCompletion(expert_mode,...)
 		\ completion_method == 'font encoding'||
 		\ completion_method == 'todo options' ||
 		\ completion_method == 'missingfigure options' ||
-		\ completion_method == 'inputfiles' 
+		\ completion_method == 'inputfiles' ||
+		\ completion_method == 'includegraphics' 
 	call complete(nr+2,completions)
     "{{{3 labels
     elseif completion_method == 'labels'
-	call complete(match(l, '\%(.\|\\ref\)*\\ref\s*{\zs\S*$')+1,completions)
+	let col=match(l, '\%(.\|\\\%(eq\)\=ref\)*\\\(eq\)\=ref\s*{\zs\S*$')+1
+	call complete(col, completion_dict)
     "{{{3 colors
     elseif completion_method == 'colors'
 	call complete(color_nr+2,completions)
     " {{{3 bibitems
     elseif !normal_mode && completion_method == 'bibitems'
-	call complete(col+1,completion_dict)
+        if exists("completion_dict")
+            " for bibtex, biblatex
+            call complete(col+1,completion_dict)
+        else
+            " for thebibliography environment
+            call complete(col+1,completion_list)
+        endif
     " {{{3 command, tikzcpicture commands
     elseif !normal_mode && (completion_method == 'command' || completion_method == 'tikzpicture commands')
+	" We are not completing greek letters, but we add them if cbegin is
+	" one. 
+	if count(g:atp_greek_letters, cbegin) >= 1
+	    " Add here brackets - somebody might want to
+	    " close a bracket after \nu and not get \numberwithin{ (which is
+	    " rarely used).
+	    let g:debug = 0
+	    if (!normal_mode &&  index(g:atp_completion_active_modes, 'brackets') != -1 ) ||
+		    \ (normal_mode && index(g:atp_completion_active_modes_normal_mode, 'brackets') != -1 )
+		let g:debug = 1
+		let begParen = atplib#CheckBracket(g:atp_bracket_dict)
+		let g:begParen = begParen
+		if begParen[1] != 0  || atplib#CheckSyntaxGroups(['texMathZoneX', 'texMathZoneY'])
+		    if atplib#CheckSyntaxGroups(['texMathZoneV'])
+			let pattern = '\\\@<!\\(\zs'
+		    elseif atplib#CheckSyntaxGroups(['texMathZoneW'])
+			let pattern = '\\\@<!\\\[\zs'
+		    elseif atplib#CheckSyntaxGroups(['texMathZoneX'])
+			let pattern = '\%(\\\|\$\)\@<!\$\$\@!\zs'
+		    elseif atplib#CheckSyntaxGroups(['texMathZoneY'])
+			let pattern = '\\\@<!\$\$\zs'
+		    else
+			let pattern = ''
+		    endif
+		    let g:pattern_1 = pattern
+		    if !empty(pattern)
+			let begMathZone = searchpos(pattern, 'bnW')
+			let g:begMathZone = begMathZone
+			if atplib#CompareCoordinates([ begParen[0], begParen[1] ], begMathZone)
+			    let bracket = atplib#CloseLastEnvironment(append, 'math', '', [0, 0], 1)
+			else
+			    let bracket = atplib#CloseLastBracket(g:atp_bracket_dict, 1, 1)
+			endif
+		    else
+			let bracket =  atplib#CloseLastBracket(g:atp_bracket_dict, 1, 1)
+		    endif
+		    let g:bracket=bracket
+		    if bracket != "0" && bracket != ""
+			call add(completions, cbegin.bracket)
+		    endif
+		endif
+	    endif
+	    call add(completions, cbegin)
+	endif
 	call complete(o+1,completions)
-	let b:tc_return="command X"
     " {{{3 tikzpicture keywords
     elseif !normal_mode && (completion_method == 'tikzpicture keywords')
 	let t=match(l,'\zs\<\w*$')
@@ -4533,7 +5132,7 @@ function! atplib#TabCompletion(expert_mode,...)
 
 	    " Check Brackets 
 	    let cl_return 	= atplib#CloseLastBracket(g:atp_bracket_dict)
-	    if g:atp_debugTC
+	    if g:atp_debugTabCompletion
 		let g:return	= cl_return
 	    endif
 	    " If the bracket was closed return
@@ -4560,11 +5159,13 @@ function! atplib#TabCompletion(expert_mode,...)
 	    endif
 	    " DEBUG
 	    if exists("zone")
-		let b:tc_return.=" close_env end " . zone
-		let b:comp_method.=' close_env end ' . zone
+		let b:tc_return =" close_env end " . zone
+		let b:comp_method=' close_env end ' . zone
+		call atplib#Log("TabCompletion.log", "b:comp_method.=".b:comp_method)
 	    else
-		let b:tc_return.=" close_env end"
-		let b:comp_method.=' close_env end'
+		let b:tc_return=" close_env end"
+		let b:comp_method=' close_env end'
+		call atplib#Log("TabCompletion.log", "b:comp_method=".b:comp_method)
 	    endif
 	elseif completion_method == 'package' || 
 		    \  completion_method == 'bibstyles' || 
@@ -4575,17 +5176,6 @@ function! atplib#TabCompletion(expert_mode,...)
     endif
     "}}}3
 ""}}}2
-"  ToDo: (a challenging one)  
-"  Move one step after completion is done (see the condition).
-"  for this one have to end till complete() function will end, and this can be
-"  done using (g)vim server functions.
-"     let b:check=0
-"     if completion_method == 'environment_names' && end =~ '\s*}'
-" 	let b:check=1
-" 	let pos=getpos(".")
-" 	let pos[2]+=1
-" 	call setpos(".",pos) 
-"     endif
 "
     " unlet variables if there were defined.
     if exists("completion_list")
@@ -4629,7 +5219,7 @@ function! atplib#FdSearch(...)
     let path	= substitute(path,':\|\n',',','g')
     let fd 	= split(globpath(path,"**/*.fd"),'\n') 
 
-"     let g:fd	= copy(fd)
+    let g:fd	= copy(fd)
 
     " Match for l:pattern
     let fd_matches=[]
@@ -4989,7 +5579,7 @@ function! atplib#FontPreview(method, fd_file,...)
 endfunction
 "}}}2
 " {{{2 atplib#ShowFonts
-function! atplib#ShowFonts(fd_file)
+function! atplib#ShowFonts_vim(fd_file)
     let l:declare_command='\C\%(DeclareFontShape\%(WithSizes\)\?\|sauter@\%(tt\)\?family\|EC@\%(tt\)\?family\|krntstexmplfamily\|HFO@\%(tt\)\?family\)'
     
     let l:font_decl=[]
@@ -5005,6 +5595,36 @@ function! atplib#ShowFonts(fd_file)
 		    \ l:declare_command,'usefont',''))
     endfor
     return l:font_commands
+endfunction
+function! atplib#ShowFonts_py(fd_file)
+python << END
+import vim, re
+file=vim.eval("a:fd_file")
+try:
+    file_o=open(file, "r")
+    file_l=file_o.readlines()
+    declare_pat=re.compile('(?:DeclareFontShape(?:WithSizes)?|sauter@(?:tt)?family|EC@(?:tt)?family|krntstexmplfamily|HFO@(?:tt)?family)')
+    font_pat=re.compile('(\\\\(?:DeclareFontShape(?:WithSizes)?|sauter@(?:tt)?family|EC@(?:tt)?family|krntstexmplfamily|HFO@(?:tt)?family)\s*{[^#}]*}\s*{[^#}]*}\s*{[^#}]*}\s*{[^#}]*})')
+    font_commands=[]
+    for line in file_l:
+        if re.search(declare_pat, line):
+            font_cmd=re.search(font_pat, line)
+            if font_cmd:
+                font=font_cmd.group(0)
+                font=re.sub(declare_pat, 'usefont', font)
+                font_commands.append(font)
+        vim.command("let s:return_ShowFonts_py="+str(font_commands))
+except IOError:
+    vim.command("let s:return_ShowFonts_py=[]")
+END
+return map(s:return_ShowFonts_py, "substitute(v:val, '^\\', '', '')")
+endfunction
+function! atplib#ShowFonts(fd_file)
+    if has("python")
+        return atplib#ShowFonts_py(a:fd_file)
+    else
+        return atplib#ShowFonts(a:fd_file)
+    endif
 endfunction
 "}}}2
 " }}}1
