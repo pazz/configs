@@ -307,13 +307,13 @@ function (widget, args)
         elseif args[2] >= 80 and args [2] < 100 then
 		baticon.image = image(beautiful.widget_bat_4)
 		return fg(green,  args[2] .. args[1])
-	elseif args[2] >= 60 and args[2] < 70 then
+	elseif args[2] >= 50 and args[2] < 80 then
 		baticon.image = image(beautiful.widget_bat_3)
 		return fg(yellow, args[2] .. args[1])
-	elseif args[2] >= 50 and args[2] < 60 then
+	elseif args[2] >= 20 and args[2] < 50 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
-	elseif args[2] >= 5 and args[2] < 30 then
+	elseif args[2] >= 5 and args[2] < 20 then
 		baticon.image = image(beautiful.widget_bat_2)
 		return fg(red, args[2] .. args[1])
 	elseif args[2] < 5 then
@@ -406,7 +406,7 @@ vicious.register(wifiwidget, vicious.widgets.wifi,
 				wifiicon.image = image(beautiful.widget_wifi_hi)
 		 	end
 			return args["{ssid}"]
-		 end, 11, "wlan0")
+		 end, 11, "wlan1")
 wifibuttons = awful.util.table.join(
 	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
 )
@@ -551,10 +551,10 @@ globalkeys = awful.util.table.join(
     --awful.key({}, "XF86Battery", function () awful.util.spawn('samsung-scripts ') end),
     awful.key({}, "XF86WLAN", function () awful.util.spawn('samsung-tools -n -W toggle') end),
     awful.key({}, "XF86AudioMute", function () awful.util.spawn('amixer -q set Master toggle') end),
-    --awful.key({}, "XF86AudioRaiseVolume", function () alsaw:raise() end),
     awful.key({}, "XF86AudioRaiseVolume", function () awful.util.spawn('amixer -q set Master 5%+') end),
-    awful.key({}, "XF86AudioLowerVolume", function () awful.util.spawn('amixer -q set Master 5%-') end),
-    awful.key({}, "XF86MonBrightnessUp", function () awful.util.spawn('xbacklight +15') end)
+    awful.key({}, "XF86AudioLowerVolume", function () awful.util.spawn('amixer -q set Master 5%-') end)
+    --awful.key({}, "XF86MonBrightnessUp", function () awful.util.spawn('xbacklight +10') end),
+    --awful.key({}, "XF86MonBrightnessDown", function () awful.util.spawn('xbacklight -10') end)
 )
 
 clientkeys = awful.util.table.join(
@@ -574,11 +574,6 @@ clientkeys = awful.util.table.join(
             c.maximized_vertical   = not c.maximized_vertical
         end)
 )
-
---clientbuttons = awful.util.table.join(
---    awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
---    awful.button({ modkey }, 1, awful.mouse.client.move),
---    awful.button({ modkey }, 3, awful.mouse.client.resize))
 
 for i=1,9 do
   globalkeys = awful.util.table.join(globalkeys, awful.key({ modkey }, i,
@@ -654,7 +649,7 @@ naughty.config.presets.critical.bg     = beautiful.bg_urgent
 naughty.config.presets.critical.fg     = beautiful.fg_urgent
 naughty.config.screen = screen.count()
 
-os.execute("export $(gnome-keyring-daemon -s)")
+--os.execute("export $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("gnome-power-manager&")
