@@ -23,7 +23,7 @@ irc_cmd = terminal .. " -T irssi -e ssh -X pazz@0x7fffffff.net"
 mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
-mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
+mail_cmd = 'urxvt -T alot -e alot'
 --mail_cmd = 'urxvt -T sup -e sup'
 gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
 
@@ -125,7 +125,7 @@ clientbuttons = awful.util.table.join(
 -- order here matters, early rules will be applied first
 shifty.config.apps = {
          { match = { "Firefox" }, tag = "web" } ,
-         { match = { "Shredder.*","Thunderbird","mutt", "Sup.*" } , tag = "mail" } ,
+         { match = { "Shredder.*","Thunderbird","mutt", "alot" } , tag = "mail" } ,
          { match = { ".*Calendar.*" } , tag = "calendar" } ,
          { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
          { match = { terminal } ,slave = true } ,
