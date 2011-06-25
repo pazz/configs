@@ -958,17 +958,17 @@ if !exists("g:atp_ignore_unmatched") || g:atp_reload_variables
     " boolean
     let g:atp_ignore_unmatched 	= 1
 endif
-if !exists("g:atp_imap_first_leader") || g:atp_reload_variables
-    let g:atp_imap_first_leader	= "#"
+if !exists("g:atp_imap_leader_1") || g:atp_reload_variables
+    let g:atp_imap_leader_1	= "#"
 endif
-if !exists("g:atp_imap_second_leader") || g:atp_reload_variables
-    let g:atp_imap_second_leader= "##"
+if !exists("g:atp_imap_leader_2") || g:atp_reload_variables
+    let g:atp_imap_leader_2= "##"
 endif
-if !exists("g:atp_imap_third_leader") || g:atp_reload_variables
-    let g:atp_imap_third_leader	= "]"
+if !exists("g:atp_imap_leader_3") || g:atp_reload_variables
+    let g:atp_imap_leader_3	= "]"
 endif
-if !exists("g:atp_imap_fourth_leader") || g:atp_reload_variables
-    let g:atp_imap_fourth_leader= "["
+if !exists("g:atp_imap_leader_4") || g:atp_reload_variables
+    let g:atp_imap_leader_4= "["
 endif
 " todo: to doc.
 if !exists("g:atp_completion_font_encodings") || g:atp_reload_variables

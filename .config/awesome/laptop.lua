@@ -309,16 +309,17 @@ function (widget, args)
 		return fg(green,  args[2] .. args[1])
 	elseif args[2] >= 50 and args[2] < 80 then
 		baticon.image = image(beautiful.widget_bat_3)
-		return fg(yellow, args[2] .. args[1])
+		return fg(green, args[2] .. args[1])
 	elseif args[2] >= 20 and args[2] < 50 then
 		baticon.image = image(beautiful.widget_bat_2)
-		return fg(red, args[2] .. args[1])
+		return fg(yellow, args[2] .. args[1])
 	elseif args[2] >= 5 and args[2] < 20 then
 		baticon.image = image(beautiful.widget_bat_2)
-		return fg(red, args[2] .. args[1])
+		return fg(yellow, args[2] .. args[1])
 	elseif args[2] < 5 then
 		baticon.image = image(beautiful.widget_bat_empty)
-		naughty.notify({ text = "will die soon!", title = "Battery Critical", u='critical'})
+		return fg(red, args[2] .. args[1])
+		--naughty.notify({ text = "will die soon!", title = "Battery Critical", u='critical'})
 	else
 		baticon.image = image(beautiful.widget_bat_full)
 		return fg(green, args[2] .. args[1])
@@ -468,7 +469,6 @@ for s = 1, screen.count() do
         rightcap,battery,midcap, baticon,leftcap, spacer,
         rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
         rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
-        rightcap,weatherwidget,leftcap,spacer,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
