@@ -447,7 +447,7 @@ try:
             shutil.copy(file_cp, mainfile_dir)
     os.chdir(cwd)
     file_cp=basename+".aux"
-    if os.path.exists(os.path.join(mainfile_dir, basename+".aux")):
+    if os.path.exists(file_cp):
         shutil.copy(file_cp, os.path.join(mainfile_dir, basename+"._aux"))
 
 ####################################
