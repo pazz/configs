@@ -6,8 +6,6 @@ pythonfile = ~/.offlineimap.py
 [Account GMail]
 localrepository = gmaildir
 remoterepository = gmailimap
-autorefresh = 1
-postsynchook = notmuch new;~/bin/sort_mail.py
 
 [Repository gmaildir]
 type = Maildir
@@ -29,8 +27,6 @@ idlefolders = ['INBOX']
 [Account UoE]
 localrepository = uoedir
 remoterepository = uoeimap
-autorefresh = 1
-#postsynchook = sup-sync
 
 [Repository uoedir]
 type = Maildir
