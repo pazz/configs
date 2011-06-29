@@ -407,7 +407,7 @@ vicious.register(wifiwidget, vicious.widgets.wifi,
 				wifiicon.image = image(beautiful.widget_wifi_hi)
 		 	end
 			return args["{ssid}"]
-		 end, 11, "wlan1")
+		 end, 11, "wlan0")
 wifibuttons = awful.util.table.join(
 	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
 )
@@ -460,15 +460,51 @@ for s = 1, screen.count() do
             mypromptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        mytextclock, spacer,
-        rightcap,weatherwidget,leftcap,spacer,
+        s == 1 and mytextclock or nil,
+        s == 1 and spacer or nil,
+        s == 1 and rightcap or nil,
+        s == 1 and weatherwidget or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
         s == 1 and mysystray or nil,
-        --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
-        spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
-        rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
-        rightcap,battery,midcap, baticon,leftcap, spacer,
-        rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
-        rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and mailicon or nil,
+        s == 1 and midcap or nil,
+        s == 1 and gmailicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and cpuwidget.widget or nil,
+        s == 1 and cpuicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and battery or nil,
+        s == 1 and midcap or nil,
+        s == 1 and baticon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and wifiwidget or nil,
+        s == 1 and midcap or nil,
+        s == 1 and wifiicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and mpdwidget or nil,
+        s == 1 and midcap or nil,
+        s == 1 and volbar.widget or nil,
+        s == 1 and mpdicon or nil,
+        s == 1 and sndicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
@@ -649,7 +685,7 @@ naughty.config.presets.critical.bg     = beautiful.bg_urgent
 naughty.config.presets.critical.fg     = beautiful.fg_urgent
 naughty.config.screen = screen.count()
 
---os.execute("export $(gnome-keyring-daemon -s)")
+os.execute("export $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("gnome-power-manager&")
