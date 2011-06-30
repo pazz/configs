@@ -4,6 +4,7 @@ require("awful.autofocus")
 require("awful.rules")
 require('shifty')
 require('vicious')
+require('vicious.contrib')
 -- Theme handling library
 require("beautiful")
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -235,88 +236,24 @@ mailfolders =   {
     '/home/pazz/mail/uoe/lists.seminars',
     '/home/pazz/mail/uoe/lists.phd-students',
 }
-mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
-vicious.register(mailicon, vicious.widgets.mdir, 
+mailhoover.addToWidget(mailicon, mailfolders , 'UOE')
+vicious.register(mailicon, vicious.contrib.notmuch, 
 function (widget, args)
-	if args[1] > 0 then
-		mailicon.image = image(beautiful.widget_mail)
-	else
-		mailicon.image = image(beautiful.widget_nomail)
-	end
-	return nil
-end, 10, mailfolders)
+    if args[1] > 0 then
+            mailicon.image = image(beautiful.widget_mail)
+    else
+            mailicon.image = image(beautiful.widget_nomail)
+    end
+    return args[1]
+end,
+10, "is:inbox and not tag:killed")
 mailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
 )
 mailicon:buttons(mailbuttons)
 
-gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
-gmailfolders= { '/home/pazz/mail/gmail/INBOX'}
-mailhoover.addToWidget(gmailicon, gmailfolders , 'GMAIL')
-vicious.register(gmailicon, vicious.widgets.mdir, 
-function (widget, args)
-	if args[1] > 0 then
-		gmailicon.image = image(beautiful.widget_mail)
-	else
-		gmailicon.image = image(beautiful.widget_nomail)
-	end
-	return nil
-end, 10, gmailfolders)
-gmailbuttons = awful.util.table.join(
-	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
-)
-gmailicon:buttons(gmailbuttons)
 
--- Battery state
--- icon
---baticon = widget({ type = "imagebox" })
---baticon.image = image(beautiful.widget_bat)
----- textpart
---batwidget = widget({ type = "textbox" })
-----vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT1")
---vicious.register(batwidget, vicious.widgets.bat, "$1", 61, "BAT1")
----- bar
---batbar = awful.widget.progressbar()
---batbar:set_width(8)
---batbar:set_height(18)
---batbar:set_vertical(true)
---batbar:set_background_color("#494B4F")
-----barbar:set_background_color(beautiful.bg_normal)
---batbar:set_color(beautiful.border_focus)
-----barbar:set_gradient_colors({ "#AECF96", "#88A175", "#FF5656" })
---vicious.register(batbar, vicious.widgets.bat, "$2", 61, "BAT1")
 
---baticon = widget({ type = "imagebox" })
---baticon.image = image(beautiful.widget_bat_hi)
---battery = widget({ type = "textbox" }) --display battery state and charge
---vicious.register(battery, vicious.widgets.bat,
---function (widget, args)
---        if args[1] == "↯" or args[1] == "⌃" then
---		baticon.image = image(beautiful.widget_bat_plug)
---		return fg(yellow,  args[2] .. args[1])
---        elseif args[2] >= 70 and args [2] < 90 then
---		baticon.image = image(beautiful.widget_bat_4)
---		return fg(green,  args[2] .. args[1])
---	elseif args[2] >= 50 and args[2] < 70 then
---		baticon.image = image(beautiful.widget_bat_3)
---		return fg(yellow, args[2] .. args[1])
---	elseif args[2] >= 30 and args[2] < 50 then
---		baticon.image = image(beautiful.widget_bat_2)
---		return fg(red, args[2] .. args[1])
---	elseif args[2] >= 10 and args[2] < 30 then
---		baticon.image = image(beautiful.widget_bat_2)
---		return fg(red, args[2] .. args[1])
---	elseif args[2] < 10 then
---		baticon.image = image(beautiful.widget_bat_empty)
---		naughty.notify({ text = "Battery critical!", title = "Battery Critical", fg = beautiful.fg_urgent, bg = beautiful.bg_urgent })
---	else
---		baticon.image = image(beautiful.widget_bat_full)
---		return fg(green, args[2] .. args[1])
---	end
---
---end
---		, 61, "BAT1")
--- Audio Volume 
 sndicon = widget({ type = "imagebox" })
 volbar  = awful.widget.progressbar({layout = awful.widget.layout.horizontal.rightleft})
 volbar:set_width(8)
@@ -457,7 +394,7 @@ for s = 1, screen.count() do
         rightcap,weatherwidget, leftcap, spacer,
         s == 1 and mysystray or nil,
         --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
-        spacer, rightcap, mailicon, midcap, gmailicon, leftcap, spacer,
+        spacer, rightcap, mailicon, leftcap, spacer,
         rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
         --rightcap,battery,midcap, baticon,leftcap, spacer,
         --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
@@ -646,4 +583,4 @@ naughty.config.screen = screen.count()
 
 os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("xset b 0 s 0 -dpms&")
-os.execute("offlineimap -u Noninteractive.Quiet&")
+--os.execute("offlineimap -u Noninteractive.Quiet&")
