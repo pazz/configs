@@ -1,7 +1,7 @@
----------------------------------------------------
--- Licensed under the GNU General Public License v2
---  * (c) 2010, Adrian C. <anrxc@sysphere.org>
----------------------------------------------------
+----------------------------------------------------------
+-- Licensed under the GNU General Public License v2     --
+-- * (c) 2011, Patrick Totzke <patricktotzke@gmail.com> --
+----------------------------------------------------------
 
 -- {{{ Grab environment
 local io = { popen = io.popen }
@@ -10,7 +10,7 @@ local setmetatable = setmetatable
 -- }}}
 
 
--- Notmuch: provides mailcount for a requested querystring
+-- Notmuch: provides number of mails that match the given querystring
 module("vicious.contrib.notmuch")
 
 
