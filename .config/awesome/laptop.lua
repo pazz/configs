@@ -4,6 +4,7 @@ require("awful.autofocus")
 require("awful.rules")
 require('shifty')
 require('vicious')
+require('notmuch')
 -- Theme handling library
 require("beautiful")
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -246,36 +247,20 @@ mailfolders =   {
     '/home/pazz/mail/uoe/lists.phd-students',
 }
 mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
-vicious.register(mailicon, vicious.widgets.mdir, 
+vicious.register(mailicon, vicious.contrib.notmuch, 
 function (widget, args)
-	if args[1] > 0 then
-		mailicon.image = image(beautiful.widget_mail)
-	else
-		mailicon.image = image(beautiful.widget_nomail)
-	end
-	return nil
-end, 10, mailfolders)
+    if args[1] > 0 then
+            mailicon.image = image(beautiful.widget_mail)
+    else
+            mailicon.image = image(beautiful.widget_nomail)
+    end
+    return args[1]
+end,
+10, "is:inbox and not tag:killed")
 mailbuttons = awful.util.table.join(
 	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
 )
 mailicon:buttons(mailbuttons)
-
-gmailicon = widget({ type = 'imagebox', name = 'mailicon'})
-gmailfolders= { '/home/pazz/mail/gmail/INBOX'}
-mailhoover.addToWidget(gmailicon, gmailfolders , 'GMAIL')
-vicious.register(gmailicon, vicious.widgets.mdir, 
-function (widget, args)
-	if args[1] > 0 then
-		gmailicon.image = image(beautiful.widget_mail)
-	else
-		gmailicon.image = image(beautiful.widget_nomail)
-	end
-	return nil
-end, 10, gmailfolders)
-gmailbuttons = awful.util.table.join(
-	awful.button({ }, 1, function () awful.util.spawn(gmail_cmd) end)
-)
-gmailicon:buttons(gmailbuttons)
 
 -- Battery state
 -- icon
@@ -472,8 +457,6 @@ for s = 1, screen.count() do
 
         s == 1 and rightcap or nil,
         s == 1 and mailicon or nil,
-        s == 1 and midcap or nil,
-        s == 1 and gmailicon or nil,
         s == 1 and leftcap or nil,
         s == 1 and spacer or nil,
 
@@ -685,7 +668,7 @@ naughty.config.presets.critical.bg     = beautiful.bg_urgent
 naughty.config.presets.critical.fg     = beautiful.fg_urgent
 naughty.config.screen = screen.count()
 
-os.execute("export $(gnome-keyring-daemon -s)")
+--os.execute("export $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 os.execute("gnome-power-manager&")
