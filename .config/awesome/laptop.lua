@@ -240,6 +240,22 @@ end, 1 )
 
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
+mailtext = widget({ type = "textbox" })
+querystring = "is:inbox and not tag:killed"
+vicious.register(mailtext, vicious.contrib.notmuch, 
+function (widget, args)
+    if args["count"] > 0 then
+            mailicon.image = image(beautiful.widget_mail)
+    else
+            mailicon.image = image(beautiful.widget_nomail)
+    end
+    return nil
+end,
+10, querystring)
+mailbuttons = awful.util.table.join(
+  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot '"..querystring.."'") end)
+)
+mailicon:buttons(mailbuttons)
 mailfolders =   {
     '/home/pazz/mail/uoe/INBOX', 
     '/home/pazz/mail/uoe/lists.lfcs',
@@ -247,40 +263,6 @@ mailfolders =   {
     '/home/pazz/mail/uoe/lists.phd-students',
 }
 mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
-mailtext = widget({ type = "textbox" })
-vicious.register(mailtext, vicious.contrib.notmuch, 
-function (widget, args)
-    if args[1] > 0 then
-            mailicon.image = image(beautiful.widget_mail)
-    else
-            mailicon.image = image(beautiful.widget_nomail)
-    end
-    return args[2]['date_relative']
-end,
-10, "is:inbox and not tag:killed")
-mailbuttons = awful.util.table.join(
-	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
-)
-mailicon:buttons(mailbuttons)
-
--- Battery state
--- icon
---baticon = widget({ type = "imagebox" })
---baticon.image = image(beautiful.widget_bat)
----- textpart
---batwidget = widget({ type = "textbox" })
-----vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT1")
---vicious.register(batwidget, vicious.widgets.bat, "$1", 61, "BAT1")
----- bar
---batbar = awful.widget.progressbar()
---batbar:set_width(8)
---batbar:set_height(18)
---batbar:set_vertical(true)
---batbar:set_background_color("#494B4F")
-----barbar:set_background_color(beautiful.bg_normal)
---batbar:set_color(beautiful.border_focus)
-----barbar:set_gradient_colors({ "#AECF96", "#88A175", "#FF5656" })
---vicious.register(batbar, vicious.widgets.bat, "$2", 61, "BAT1")
 
 baticon = widget({ type = "imagebox" })
 baticon.image = image(beautiful.widget_bat_hi)
