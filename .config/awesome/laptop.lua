@@ -15,7 +15,7 @@ require("naughty")
 --require('secret')
 --calendar
 require('calendar2')
-require('mailhoover')
+require('notmuchhoover')
 require('weatherhoover')
 
 -- This is used later as the default terminal and editor to run.
@@ -262,7 +262,7 @@ mailfolders =   {
     '/home/pazz/mail/uoe/lists.seminars',
     '/home/pazz/mail/uoe/lists.phd-students',
 }
-mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
+notmuchhoover.addToWidget(mailicon, querystring, 30)
 
 baticon = widget({ type = "imagebox" })
 baticon.image = image(beautiful.widget_bat_hi)
