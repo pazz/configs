@@ -256,12 +256,6 @@ mailbuttons = awful.util.table.join(
   awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
-mailfolders =   {
-    '/home/pazz/mail/uoe/INBOX', 
-    '/home/pazz/mail/uoe/lists.lfcs',
-    '/home/pazz/mail/uoe/lists.seminars',
-    '/home/pazz/mail/uoe/lists.phd-students',
-}
 notmuchhoover.addToWidget(mailicon, querystring, 30)
 
 baticon = widget({ type = "imagebox" })

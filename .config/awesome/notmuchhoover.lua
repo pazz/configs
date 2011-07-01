@@ -15,7 +15,7 @@ module("notmuchhoover")
 
 local popup
 local query_format = "<span color='" .. beautiful.fg_urgent .."'><b><u>%s</u>\n</b></span>"
-local msg_format = "<span color='" .. beautiful.fg_focus .. "'>%s: </span><span color='" .. beautiful.fg_normal .."'>%s </span></span><span color='" .. beautiful.fg_urgent .."'>(%s)"
+local thread_format = "<span color='" .. beautiful.fg_normal .. "'>%s: </span><span color='" .. beautiful.fg_focus .."'>%s </span><span color='" .. beautiful.fg_normal .."'>%s </span><span color='" .. beautiful.fg_urgent .."'>(%s)</span>"
 
 function addToWidget(mywidget, querystring, maxcount)
   mywidget:add_signal('mouse::enter', function ()
@@ -35,20 +35,20 @@ function read_index(querystring,maxcount)
     local count = 0
 
     local f = io.popen("notmuch show --format=json "..querystring)
-    local msgs = json.decode(f:read("*all"))
+    local threads = json.decode(f:read("*all"))
     f:close()
 
-    for i,v in pairs(msgs) do
+    for i,v in pairs(threads) do
         if count == maxcount then break else count = count +1 end
-        msg = v[1][1]
-        date = msg["date_relative"]
-        subject = msg["headers"]["Subject"]
+        thread = v[1][1]
+        date = thread["date_relative"]
+        subject = thread["headers"]["Subject"]
         subject = string.gsub(subject, "<(.*)>","\<%1\>")
-        from = msg["headers"]["From"]
+        from = thread["headers"]["From"]
         from = string.gsub(from, "<(.*)>","")
-        tags = table.concat(msg["tags"],', ')
+        tags = table.concat(thread["tags"],', ')
 
-        info = info .. string.format(msg_format,from,subject,tags) .. '\n' 
+        info = info .. string.format(thread_format,date,from,subject,tags) .. '\n' 
     end
    return info
 end
