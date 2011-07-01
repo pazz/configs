@@ -247,14 +247,15 @@ mailfolders =   {
     '/home/pazz/mail/uoe/lists.phd-students',
 }
 mailhoover.addToWidget(mailicon, mailfolders, 'UoE')
-vicious.register(mailicon, vicious.contrib.notmuch, 
+mailtext = widget({ type = "textbox" })
+vicious.register(mailtext, vicious.contrib.notmuch, 
 function (widget, args)
     if args[1] > 0 then
             mailicon.image = image(beautiful.widget_mail)
     else
             mailicon.image = image(beautiful.widget_nomail)
     end
-    return args[1]
+    return args[2]['date_relative']
 end,
 10, "is:inbox and not tag:killed")
 mailbuttons = awful.util.table.join(
@@ -457,6 +458,8 @@ for s = 1, screen.count() do
 
         s == 1 and rightcap or nil,
         s == 1 and mailicon or nil,
+        s == 1 and midcap or nil,
+        s == 1 and mailtext or nil,
         s == 1 and leftcap or nil,
         s == 1 and spacer or nil,
 
