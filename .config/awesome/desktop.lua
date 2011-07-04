@@ -4,7 +4,7 @@ require("awful.autofocus")
 require("awful.rules")
 require('shifty')
 require('vicious')
-require('vicious.contrib')
+require('notmuch')
 -- Theme handling library
 require("beautiful")
 beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
@@ -12,7 +12,7 @@ beautiful.init("/home/pazz/.config/awesome/themes/pazz/theme.lua")
 require("naughty")
 --calendar
 require('calendar2')
-require('mailhoover')
+require('notmuchhoover')
 require('weatherhoover')
 
 -- This is used later as the default terminal and editor to run.
@@ -49,14 +49,6 @@ layouts =
 }
 -- }}}
 
--- {{{ Tags
--- Define a tag table which hold all screen tags.
---tags = {}
---for s = 1, screen.count() do
---    -- Each screen has its own tag table.
---    tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, s, layouts[1])
---end
--- }}}
 --{{{ SHIFTY: configured tags
 shifty.config.tags = {
     ["sys"] = { 
@@ -198,9 +190,6 @@ calendar2.addCalendarToWidget(mytextclock)
 -- Create a systray
 mysystray = widget({ type = "systray" })
 
---imap
---iwidgets, iicons = delightful.widgets.imap:load(secret.imap_cfg)
-
 -- CPU widget
 cpuicon = widget({type = "imagebox" })
 cpuicon.image = image(beautiful.widget_cpu_lo)
@@ -229,31 +218,27 @@ function (widget, args)
 	return args[1]
 end, 1 )
 
+-- notmuch
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
-mailfolders =   {
-    '/home/pazz/mail/uoe/INBOX', 
-    '/home/pazz/mail/uoe/lists.lfcs',
-    '/home/pazz/mail/uoe/lists.seminars',
-    '/home/pazz/mail/uoe/lists.phd-students',
-}
-mailhoover.addToWidget(mailicon, mailfolders , 'UOE')
-vicious.register(mailicon, vicious.contrib.notmuch, 
+mailtext = widget({ type = "textbox" })
+querystring = "is:inbox and not tag:killed"
+vicious.register(mailtext, vicious.contrib.notmuch, 
 function (widget, args)
-    if args[1] > 0 then
+    if args["count"] > 0 then
             mailicon.image = image(beautiful.widget_mail)
     else
             mailicon.image = image(beautiful.widget_nomail)
     end
-    return args[1]
+    return nil
 end,
-10, "is:inbox and not tag:killed")
+10, querystring)
 mailbuttons = awful.util.table.join(
-	awful.button({ }, 1, function () awful.util.spawn(mail_cmd) end)
+  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
+notmuchhoover.addToWidget(mailicon, querystring, 30)
 
-
-
+-- alsa
 sndicon = widget({ type = "imagebox" })
 volbar  = awful.widget.progressbar({layout = awful.widget.layout.horizontal.rightleft})
 volbar:set_width(8)
@@ -317,30 +302,6 @@ vicious.register(mpdwidget, vicious.widgets.mpd,
     end, 1)
 
 
---wifiicon = widget({type = "imagebox" })
---wifiicon.image = image(beautiful.widget_wifi_hi)
---wifiwidget = widget({ type = "textbox" }) --display SSID and rate
---vicious.register(wifiwidget, vicious.widgets.wifi,
---		 function (widget, args)
---			if args["{link}"] == 0 then
---				wifiicon.image = image(beautiful.widget_wifi_off)
---				return fg(bred, "∅")
---			elseif args["{rate}"] <= 11 then
---				wifiicon.image = image(beautiful.widget_wifi_lo)
---			elseif args["{rate}"] > 11 and args["{rate}"] < 54 then
---				wifiicon.image = image(beautiful.widget_wifi_mid)
---			else
---				wifiicon.image = image(beautiful.widget_wifi_hi)
---		 	end
---			return args["{ssid}"]
---		 end, 11, "wlan0")
---wifibuttons = awful.util.table.join(
---	awful.button({ }, 3, function () awful.util.spawn("indicator-network-settings") end)
---)
---wifiicon:buttons(wifibuttons)
---wifiwidget:buttons(wifibuttons)
---
-
 -- Weather widget
 weatherwidget = widget({ type = "textbox" })
 weatherhoover.addToWidget(weatherwidget, 'EGPH')
@@ -349,8 +310,6 @@ weatherwidget.text = "weather"
     function (widget, args)
         return args["{tempc}"] .. "°C" 
     end, 300, "EGPH" )
---weatherwidget:buttons(awful.util.table.join(awful.button({}, 3, function () awful.util.spawn ( browser .. " http://www.wunderground.com/US/ME/Bath.html") end)))
-
 
 
  --Create a wibox for each screen and add it
@@ -390,15 +349,37 @@ for s = 1, screen.count() do
             mypromptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        mytextclock, spacer,
-        rightcap,weatherwidget, leftcap, spacer,
+        s == 1 and mytextclock or nil,
+        s == 1 and spacer or nil,
+        s == 1 and rightcap or nil,
+        s == 1 and weatherwidget or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
         s == 1 and mysystray or nil,
-        --spacer,rightcap,iicons[1],midcap,iicons[2],leftcap,spacer,
-        spacer, rightcap, mailicon, leftcap, spacer,
-        rightcap,cpuwidget.widget,cpuicon,leftcap,spacer,
-        --rightcap,battery,midcap, baticon,leftcap, spacer,
-        --rightcap,wifiwidget, midcap,wifiicon,leftcap, spacer,
-        rightcap,mpdwidget,midcap,volbar.widget,mpdicon,sndicon,leftcap,spacer,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and mailicon or nil,
+        s == 1 and midcap or nil,
+        s == 1 and mailtext or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and cpuwidget.widget or nil,
+        s == 1 and cpuicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
+
+        s == 1 and rightcap or nil,
+        s == 1 and mpdwidget or nil,
+        s == 1 and midcap or nil,
+        s == 1 and volbar.widget or nil,
+        s == 1 and mpdicon or nil,
+        s == 1 and sndicon or nil,
+        s == 1 and leftcap or nil,
+        s == 1 and spacer or nil,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
