@@ -3,6 +3,8 @@ application/pdf; zathura %s
 application/postscript; gv %s
 application/x-dvi; xdvi %s
 audio/*; mplayer %s
+# Convert images to text using the netpbm tools
+image/*; (anytopnm %s | pnmscale -xysize 80 46 | ppmtopgm | pgmtopbm | pbmtoascii -1x2 ) 2>&1 ; copiousoutput
 image/gif; gqview %s
 image/jpeg; gqview %s
 image/jpg; gqview %s

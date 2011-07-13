@@ -18,12 +18,14 @@
 " along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 "
 " Authors: Bart Trojanowski <bart@jukie.net>
-" Contributors: Peter Hartman <peterjohnhartman@gmail.com>
+" Contributors: Felipe Contreras <felipe.contreras@gmail.com>,
+"   Peter Hartman <peterjohnhartman@gmail.com>
 "
 " --- configuration defaults {{{1
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
+        \ 'g:notmuch_sendmail':                      'sendmail'                   ,
         \ 'g:notmuch_debug':                         0                            ,
         \
         \ 'g:notmuch_search_newest_first':           1                            ,
@@ -118,8 +120,10 @@ let g:notmuch_search_maps = {
         \ '<Space>':    ':call <SID>NM_search_show_thread(0)<CR>',
         \ '<Enter>':    ':call <SID>NM_search_show_thread(1)<CR>',
         \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
+        \ 'I':          ':call <SID>NM_search_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_search_mark_read_then_archive_thread()<CR>',
+        \ 'D':          ':call <SID>NM_search_delete_thread()<CR>',
         \ 'f':          ':call <SID>NM_search_filter()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ 'o':          ':call <SID>NM_search_toggle_order()<CR>',
@@ -147,8 +151,11 @@ let g:notmuch_show_maps = {
         \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
         \ 'i':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \
+        \ 'I':          ':call <SID>NM_show_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_show_mark_read_then_archive_thread()<CR>',
+        \ 'D':          ':call <SID>NM_show_delete_thread()<CR>',
+        \ 'd':          ':call <SID>NM_show_delete_message()<CR>',
         \ 'N':          ':call <SID>NM_show_mark_read_then_next_open_message()<CR>',
         \ 'v':          ':call <SID>NM_show_view_all_mime_parts()<CR>',
         \ '+':          ':call <SID>NM_show_add_tag()<CR>',
@@ -307,13 +314,23 @@ function! s:NM_search_edit()
         endif
 endfunction
 
+function! s:NM_search_mark_read_thread()
+        call <SID>NM_tag([], ['-unread'])
+        norm j
+endfunction
+
 function! s:NM_search_archive_thread()
-        call <SID>NM_add_remove_tags([], '-', ['inbox'])
+        call <SID>NM_tag([], ['-inbox'])
         norm j
 endfunction
 
 function! s:NM_search_mark_read_then_archive_thread()
-        call <SID>NM_add_remove_tags([], '-', ['unread', 'inbox'])
+        call <SID>NM_tag([], ['-unread', '-inbox'])
+        norm j
+endfunction
+
+function! s:NM_search_delete_thread()
+        call <SID>NM_tag([], ['+delete','-inbox','-unread'])
         norm j
 endfunction
 
@@ -404,7 +421,8 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
         else
                 let tags = a:intags
         endif
-        call <SID>NM_add_remove_tags([], a:prefix, tags)
+        call map(tags, 'a:prefix . v:val')
+        call <SID>NM_tag([], tags)
 endfunction
 
 " --- implement show screen {{{1
@@ -493,13 +511,29 @@ function! s:NM_show_next_thread()
         endif
 endfunction
 
+function! s:NM_show_mark_read_thread()
+        call <SID>NM_tag(b:nm_search_words, ['-unread'])
+        call <SID>NM_show_next_thread()
+endfunction
+
 function! s:NM_show_archive_thread()
-        echo 'not implemented'
+        call <SID>NM_tag(b:nm_search_words, ['-inbox'])
+        call <SID>NM_show_next_thread()
 endfunction
 
 function! s:NM_show_mark_read_then_archive_thread()
-        call <SID>NM_add_remove_tags(b:nm_search_words, '-', ['unread', 'inbox'])
+        call <SID>NM_tag(b:nm_search_words, ['-unread', '-inbox'])
         call <SID>NM_show_next_thread()
+endfunction
+
+function! s:NM_show_delete_thread()
+        call <SID>NM_tag(b:nm_search_words, ['+delete', '-inbox', '-unread'])
+        call <SID>NM_show_next_thread()
+endfunction
+
+function! s:NM_show_delete_message()
+        let msg = <SID>NM_show_get_message_for_line(line('.'))
+        call <SID>NM_tag([msg['id']], ['+delete', '-inbox', '-unread'])
 endfunction
 
 function! s:NM_show_mark_read_then_next_open_message()
@@ -562,7 +596,8 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                          \ + ['AND']
                          \ + <SID>NM_combine_tags('', ids, 'OR', '()')
-                call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                call map(advance_tags, '"+" . v:val')
+                call <SID>NM_tag(filter, advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
         endif
@@ -581,7 +616,8 @@ function! s:NM_show_advance_marking_read_and_archiving()
                         " do this last to hide the latency
                         let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                                  \ + ['AND', msg_top['id']]
-                        call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                        call map(advance_tags, '"-" . v:val')
+                        call <SID>NM_tag(filter, advance_tags)
                 endif
                 return
         endif
@@ -729,7 +765,7 @@ function! s:NM_cmd_show_parse(inlines)
 
                         if part_end
                                 " FIXME: this is a hack for handling two folds being added for one line
-                                "         we should handle addinga fold in a function
+                                "         we should handle adding a fold in a function
                                 if len(foldinfo) && foldinfo[1] < foldinfo[2]
                                         call add(info['folds'], foldinfo[0:3])
                                         let info['foldtext'][foldinfo[1]] = foldinfo[4]
@@ -944,18 +980,28 @@ function! s:NM_compose_send()
         let line = getline(lnum)
         let lst_hdr = ''
         while match(line, '^$') == -1
-                if match(line, '^Notmuch-Help:') == -1
+                if !exists("hdr_starts") && match(line, '^Notmuch-Help:') == -1
                         let hdr_starts = lnum - 1
-                        break
                 endif
                 let lnum = lnum + 1
                 let line = getline(lnum)
         endwhile
+        let body_starts = lnum - 1
 
+        call append(body_starts, 'Date: ' . strftime('%a, %d %b %Y %H:%M:%S %z'))
         exec printf(':0,%dd', hdr_starts)
         write
 
-        let cmdtxt = 'mailx -t < ' . fname
+        let line = getline(1)
+        let m = matchlist(line, '^From:\s*\(.*\)\s*<\(.*\)>$')
+        if (len(m) >= 2)
+                let from = m[2]
+        else
+                let m = matchlist(line, '^From:\s*\(.*\)$')
+                let from = m[1]
+        endif
+
+        let cmdtxt = g:notmuch_sendmail . ' -t -f ' . from . ' < ' . fname
         let out = system(cmdtxt)
         let err = v:shell_error
         if err
@@ -1265,12 +1311,11 @@ function! s:NM_search_expand(arg)
         let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
-function! s:NM_add_remove_tags(filter, prefix, tags)
+function! s:NM_tag(filter, tags)
         let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
         if !len(filter)
-                throw 'Eeek! I couldn''t find the thead id!'
+                throw 'Eeek! I couldn''t find the thread id!'
         endif
-        call map(a:tags, 'a:prefix . v:val')
         let args = ['tag']
         call extend(args, a:tags)
         call add(args, '--')
