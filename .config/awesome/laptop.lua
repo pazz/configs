@@ -241,7 +241,7 @@ end, 1 )
 
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
 mailtext = widget({ type = "textbox" })
-querystring = "is:inbox and not tag:killed"
+querystring = "is:inbox and is:unread and not tag:killed"
 vicious.register(mailtext, vicious.contrib.notmuch, 
 function (widget, args)
     if args["count"] > 0 then

@@ -11,7 +11,7 @@ set sort_alias= alias
 set reverse_alias=no
 source $alias_file
 
-auto_view text/html
+auto_view text/html image/*
 
 set mime_forward=no  #forward mails inline 
 set mime_forward_rest=yes #undecodable attachments will be forwarded
