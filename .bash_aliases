@@ -10,7 +10,7 @@ alias texcleanup="tc"
 alias tc="for f in *bbl *toc *aux *log *blg *out *~; do rm \$f 2>/dev/null; done"
 
 alias o="ssh -X $one"
-alias s='ssh -X -L8888:129.215.90.80:80 s0976898@ssh.inf.ed.ac.uk'
+alias s='ssh -X -L8888:129.215.91.36:80 s0976898@ssh.inf.ed.ac.uk'
 alias trc='transmission-remote-cli -c `~/bin/getpwd Transmission`@openwrt'
 alias gmutt="mutt -F ~/.muttrc.gmail"
 alias gb="goobook dquery"
