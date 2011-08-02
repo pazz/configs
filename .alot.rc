@@ -1,0 +1,35 @@
+[general]
+colourmode = 256  ; number of colours your terminal supports
+spawn_editor = True
+authors_maxlength = 30
+displayed_headers = From,To,Cc,Bcc,Subject
+notify_timeout = 5
+
+[account gmail]
+realname = Patrick Totzke
+address = patricktotzke@gmail.com
+gpg_key = D7D6C5AA
+signature = 
+sender_type = sendmail
+sendmail_command = msmtp --account=gmail -t
+sent_mailbox = maildir:///home/pazz/mail/gmail/Sent
+
+[account uoe]
+realname = Patrick Totzke
+address = p.totzke@ed.ac.uk
+sender_type = sendmail
+sendmail_command = msmtp --account=uoe -t
+sent_mailbox = maildir:///home/pazz/mail/uoe/Sent
+
+[search-maps]
+t = toggletag todo
+
+[highcolour-theme]
+tag_todo_bg = dark red
+tag_todo_fg = white
+tag_unread_fg = #ff8
+tag_unread_bg = g15
+tag_G+_fg = #0ff
+tag_G+_bg = #00f
+tag_lfcs_fg = #6da
+tag_lfcs_bg = g27
