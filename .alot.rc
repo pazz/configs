@@ -25,11 +25,45 @@ sent_mailbox = maildir:///home/pazz/mail/uoe/Sent
 t = toggletag todo
 
 [highcolour-theme]
-tag_todo_bg = dark red
+tag_todo_bg = #d66
 tag_todo_fg = white
-tag_unread_fg = #ff8
-tag_unread_bg = g15
+tag_killed_bg = g66
+tag_killed_fg = black
+tag_list_bg = g23
+tag_list_fg = g74
+
+tag_flagged_fg = #d86
+tag_flagged_bg = g23
+tag_unread_fg = #dd8
+tag_unread_bg = g23
+tag_sent_fg = #ff8
+tag_sent_bg = g23
+
 tag_G+_fg = #0ff
 tag_G+_bg = #00f
+tag_edlug_bg = #08d
+tag_edlug_fg = #006
+tag_peergroup_bg = #08d
+tag_peergroup_fg = #006
+tag_soc_bg = #08d
+tag_soc_fg = #6da
+tag_foo_bg = #08d
+tag_foo_fg = #6da
+tag_wols_bg = #08d
+tag_wols_fg = #6da
+
 tag_lfcs_fg = #6da
-tag_lfcs_bg = g27
+tag_lfcs_bg = #060
+tag_sicsa_fg = #6da
+tag_sicsa_bg = #060
+tag_gradschool_fg = #6da
+tag_gradschool_bg = #060
+tag_students_fg = g74
+tag_students_bg = #080
+
+tag_sup_bg = #606
+tag_sup_fg = #d8a
+tag_notmuch_bg = #60a
+tag_notmuch_fg = #dfa
+tag_urwid_bg = #606
+tag_urwid_fg = #d8a
