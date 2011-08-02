@@ -24,6 +24,9 @@ sent_mailbox = maildir:///home/pazz/mail/uoe/Sent
 [search-maps]
 t = toggletag todo
 
+[tag translate]
+flagged = ⚑
+
 [highcolour-theme]
 tag_todo_bg = #d66
 tag_todo_fg = white
@@ -32,8 +35,8 @@ tag_killed_fg = black
 tag_list_bg = g23
 tag_list_fg = g74
 
-tag_flagged_fg = #d86
-tag_flagged_bg = g23
+tag_flagged_fg = light red
+#tag_flagged_bg = #d86
 tag_unread_fg = #dd8
 tag_unread_bg = g23
 tag_sent_fg = #ff8
