@@ -26,6 +26,8 @@ t = toggletag todo
 
 [tag translate]
 flagged = ⚑
+unread = ◇
+replied = ↺
 
 [highcolour-theme]
 tag_todo_bg = #d66
@@ -38,7 +40,7 @@ tag_list_fg = g74
 tag_flagged_fg = light red
 #tag_flagged_bg = #d86
 tag_unread_fg = #dd8
-tag_unread_bg = g23
+#tag_unread_bg = g23
 tag_sent_fg = #ff8
 tag_sent_bg = g23
 
@@ -57,12 +59,16 @@ tag_wols_fg = #6da
 
 tag_lfcs_fg = #6da
 tag_lfcs_bg = #060
+tag_PA_fg = #6da
+tag_PA_bg = #060
 tag_sicsa_fg = #6da
 tag_sicsa_bg = #060
 tag_gradschool_fg = #6da
 tag_gradschool_bg = #060
 tag_students_fg = g74
 tag_students_bg = #080
+tag_automata_fg = g74
+tag_automata_bg = #060
 
 tag_sup_bg = #606
 tag_sup_fg = #d8a
