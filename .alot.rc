@@ -1,35 +1,43 @@
 [general]
-colourmode = 256  ; number of colours your terminal supports
+colourmode = 256
 spawn_editor = True
 authors_maxlength = 30
 displayed_headers = From,To,Cc,Bcc,Subject
+display_content_in_threadline = True
 notify_timeout = 5
+bug_on_exit = False
 
 [account gmail]
 realname = Patrick Totzke
 address = patricktotzke@gmail.com
+aliases = patricktotzke@googlemail.com
 gpg_key = D7D6C5AA
 signature = 
-sender_type = sendmail
+type = sendmail
 sendmail_command = msmtp --account=gmail -t
-sent_mailbox = maildir:///home/pazz/mail/gmail/Sent
 
 [account uoe]
 realname = Patrick Totzke
 address = p.totzke@ed.ac.uk
-sender_type = sendmail
+aliases = p.totzke@sms.ed.ac.uk;s0976898@sms.ed.ac.uk
+type = sendmail
 sendmail_command = msmtp --account=uoe -t
 sent_mailbox = maildir:///home/pazz/mail/uoe/Sent
+
+[global-maps]
+T = search is:todo
 
 [search-maps]
 t = toggletag todo
 
 [tag translate]
 flagged = ⚑
-unread = ◇
-replied = ↺
+unread = ✉
+replied = ⇄
+encrypted = ⚷
+signed = ®
 
-[highcolour-theme]
+[256c-theme]
 tag_todo_bg = #d66
 tag_todo_fg = white
 tag_killed_bg = g66
@@ -38,11 +46,11 @@ tag_list_bg = g23
 tag_list_fg = g74
 
 tag_flagged_fg = light red
-#tag_flagged_bg = #d86
-tag_unread_fg = #dd8
-#tag_unread_bg = g23
+tag_unread_fg = white
 tag_sent_fg = #ff8
 tag_sent_bg = g23
+tag_encrypted_fg = #0ff
+tag_encrypted_bg = #006
 
 tag_G+_fg = #0ff
 tag_G+_bg = #00f

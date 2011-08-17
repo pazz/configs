@@ -1,5 +1,6 @@
-# hooks get two parameters, an alot.ui.UI object, and an alt.db.DBManager object
-# for all commands X, pre_X gets called before, post_X after X is applied.
-
-def pre_exit(ui,dbman):
-    ui.logger.info('goodbye!')
+def pre_exit(ui, dbman, accountman, config):
+    accounts = accountman.get_accounts()
+    if accounts:
+        ui.logger.info('goodbye, %s!' % accounts[0].realname)
+    else:
+        ui.logger.info('goodbye!')
