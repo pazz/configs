@@ -566,7 +566,6 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey,           }, "j",     function (c) awful.client.incwfact(0.05,c)  end),
     awful.key({ modkey,           }, "k",     function (c) awful.client.incwfact(-0.05,c)  end),
     awful.key({ modkey, "Control" }, "t",      function (c) c.ontop = not c.ontop            end),
-    awful.key({ modkey,           }, "n",      function (c) c.minimized = not c.minimized    end),
     awful.key({ modkey, "Shift"   }, "m",
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
