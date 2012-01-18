@@ -1,6 +1,8 @@
 local string = string
 local tostring = tostring
 local io = io
+local print = print
+local os = os
 local table = table
 local pairs = pairs
 local capi = {
@@ -34,21 +36,22 @@ function read_index(querystring,maxcount)
     local info = ""
     local count = 0
 
-    local f = io.popen("notmuch show --format=json "..querystring)
-    local threads = json.decode(f:read("*all"))
+    local f = io.popen("notmuch search --format=json "..querystring)
+    local out = f:read("*all")
+    print(out)
     f:close()
+    local threads = json.decode(out)
 
-    for i,v in pairs(threads) do
+    for num,thread in pairs(threads) do
         if count == maxcount then break else count = count +1 end
-        thread = v[1][1]
-        date = thread["date_relative"]
-        subject = thread["headers"]["Subject"]
+        date = os.date("%c",thread["timestamp"])
+        subject = thread["subject"]
         subject = string.gsub(subject, "<(.*)>","\<%1\>")
-        from = thread["headers"]["From"]
-        from = string.gsub(from, "<(.*)>","")
+        authors = thread["authors"]
+        authors = string.gsub(authors, "<(.*)>","")
         tags = table.concat(thread["tags"],', ')
 
-        info = info .. string.format(thread_format,date,from,subject,tags) .. '\n' 
+        info = info .. string.format(thread_format,date,authors,subject,tags) .. '\n' 
     end
    return info
 end
