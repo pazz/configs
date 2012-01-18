@@ -1,0 +1,134 @@
+[general]
+
+search_threads_sort_order = newest_first
+thread_highlight_components = date,mailcount,authors,subject
+
+editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
+#editor_spawn = True
+#editor_in_thread = True
+#edit_headers_whitelist = From, Subject, To
+edit_headers_whitelist = 
+
+notify_timeout = 5
+#show_statusbar = False
+
+print_cmd = muttprint -F Utopia
+#complete_matching_abook_only = False
+
+
+[account gmail]
+realname = Patrick Totzke
+address = patricktotzke@gmail.com
+aliases = patricktotzke@googlemail.com
+gpg_key = D7D6C5AA
+#signature = ~/.signature
+type = sendmail
+sendmail_command = msmtp --account=gmail -t
+
+# abook_command = goobook query
+# abook_command = abook --mutt-query
+# abook_regexp = (?P<email>.+?@.+?)\s\s+(?P<name>.+)\s\s+.+
+# notoomuch
+abook_command = nottoomuch-addresses.sh
+abook_regexp = \"(?P<name>.+)\"\s*<(?P<email>.*.+?@.+?)>
+draft_box = maildir:///home/pazz/mail/gmail/drafts
+sent_box = maildir:///home/pazz/mail/gmail/sent
+#sent_tags = sent
+
+[account uoe]
+realname = Patrick Totzke
+address = p.totzke@ed.ac.uk
+aliases = p.totzke@sms.ed.ac.uk;s0976898@sms.ed.ac.uk
+type = sendmail
+sendmail_command = msmtp --account=uoe -t
+sent_box = maildir:///home/pazz/mail/uoe/Sent
+draft_box = maildir:///home/pazz/mail/uoe/Drafts
+abook_command = abook --mutt-query
+signature = ~/.pt.uni.vcf
+signature_filename = p.totzke.vcf
+signature_as_attachment = True
+
+[global-maps]
+1 = compose --template bpp
+T = search is:todo
+A = search is:alot
+% = shellescape '/home/pazz/bin/pullmail.py'
+^ = shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'
+
+[envelope-maps]
+! = sign
+
+
+[thread-maps]
+G = pipeto 'git am'
+t = toggletags todo
+a = toggletags inbox
+f = toggletags flagged
+v = verify
+
+[search-maps]
+t = toggletags todo
+f = toggletags flagged
+
+[tag-translate]
+flagged = ⚑
+unread = ✉
+replied = ⏎
+encrypted = ⚷
+signed = ®
+inbox = ⊡
+
+[256c-theme]
+tag_todo_bg = #d66
+tag_todo_fg = white
+tag_killed_bg = g38
+tag_killed_fg = black
+tag_list_bg = g23
+tag_list_fg = g74
+tag_C4P_bg = g23
+tag_C4P_fg = g74
+tag_seminars_bg = g23
+tag_seminars_fg = g74
+
+tag_flagged_fg = light red
+tag_unread_fg = white
+tag_sent_fg = #ff8
+tag_sent_bg = g23
+tag_encrypted_fg = #0ff
+tag_encrypted_bg = #006
+
+tag_G+_fg = #0ff
+tag_G+_bg = #00f
+tag_edlug_bg = #08d
+tag_edlug_fg = #006
+tag_peergroup_bg = #08d
+tag_peergroup_fg = #006
+tag_soc_bg = #08d
+tag_soc_fg = #6da
+tag_foo_bg = #08d
+#tag_foo_fg = #6da
+#tag_foo_fg = #0d0
+tag_wols_bg = #08d
+tag_wols_fg = #6da
+
+tag_lfcs_fg = #6da
+tag_lfcs_bg = #060
+tag_PA_fg = #df0
+tag_PA_bg = #060
+tag_sicsa_fg = #6da
+tag_sicsa_bg = #060
+tag_gradschool_fg = #6da
+tag_gradschool_bg = #060
+tag_students_fg = g74
+tag_students_bg = #080
+tag_automata_fg = g74
+tag_automata_bg = #060
+
+tag_sup_bg = #606
+tag_sup_fg = #d8a
+tag_alot_bg = #df6
+tag_alot_fg = #80d,bold
+tag_notmuch_bg = #60a
+tag_notmuch_fg = #dfa
+tag_urwid_bg = #606
+tag_urwid_fg = #d8a
