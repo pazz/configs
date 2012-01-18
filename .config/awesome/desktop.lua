@@ -81,6 +81,12 @@ shifty.config.tags = {
         init = false,
         spawn = mpd_cmd
     },
+    ["docs"] = { 	
+        mwfact = 0.65,
+        position = 5, 
+        init = false,
+        screen = math.max(screen.count(), 2)
+    },
     ["bib"] = { 	
         position = 6, 
         init = false,
@@ -88,7 +94,7 @@ shifty.config.tags = {
         icon= beautiful.tag_bib,
     },
     ["calendar"] = {  
-        spawn="prism-google-calendar",
+        spawn="firefox -safe-mode -new-window http://calendar.google.com",
         icon= beautiful.tag_cal,
         position = 7,
     },
@@ -118,14 +124,15 @@ clientbuttons = awful.util.table.join(
 -- order here matters, early rules will be applied first
 shifty.config.apps = {
          { match = { "Firefox" }, tag = "web" } ,
+         --{ match = { ".*alendar" } , tag = {"calendar"} } ,
          { match = { "Shredder.*","Thunderbird","mutt", "alot" } , tag = "mail" } ,
-         { match = { ".*Calendar.*" } , tag = "calendar" } ,
          { match = { "MPlayer", "Gnuplot", "galculator" } , float = true } ,
          { match = { terminal } ,slave = true } ,
          { match = { "Pidgin" } ,nopopup=true, honorsizehints = true, slave = true, tag='im'} ,
          { match = { "mupdf" } ,nopopup=true, honorsizehints = true, slave = true} ,
          { match = { "irssi" } ,nopopup=true, honorsizehints = true, slave = false, tag='im'} ,
          { match = { "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "zathura", "evince" } ,tag='docs'} ,
          { match = { "" } , buttons = clientbuttons },
 }
 --}}}
@@ -221,7 +228,7 @@ end, 1 )
 -- notmuch
 mailicon = widget({ type = 'imagebox', name = 'mailicon'})
 mailtext = widget({ type = "textbox" })
-querystring = "is:inbox and not tag:killed"
+querystring = "is:inbox and tag:unread and not tag:killed"
 vicious.register(mailtext, vicious.contrib.notmuch, 
 function (widget, args)
     if args["count"] > 0 then
@@ -233,7 +240,8 @@ function (widget, args)
 end,
 10, querystring)
 mailbuttons = awful.util.table.join(
-  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot '"..querystring.."'") end)
+  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot search "..querystring) end),
+  awful.button({ }, 3, function () awful.util.spawn("notmuch tag -inbox '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
 notmuchhoover.addToWidget(mailicon, querystring, 30)
@@ -477,7 +485,6 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey,           }, "j",     function (c) awful.client.incwfact(0.05,c)  end),
     awful.key({ modkey,           }, "k",     function (c) awful.client.incwfact(-0.05,c)  end),
     awful.key({ modkey, "Control" }, "t",      function (c) c.ontop = not c.ontop            end),
-    awful.key({ modkey,           }, "n",      function (c) c.minimized = not c.minimized    end),
     awful.key({ modkey, "Shift"   }, "m",
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
