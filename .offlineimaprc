@@ -16,12 +16,23 @@ type = IMAP
 remotehost = imap.gmail.com
 remoteuser = patricktotzke@gmail.com
 remotepasseval = getpwd("Gmail")
-nametrans = lambda foldername: re.sub(' Mail','',re.sub('^\[Google\ Mail\]\/', '',foldername))
-folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Trash', '[Google Mail]/Bin', '[Google Mail]/All Mail','[Google Mail]/Sent Mail', ]
+#folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Trash', '[Google Mail]/Bin', '[Google Mail]/Sent Mail', ]
+folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Trash', '[Google Mail]/Bin']
+
+# "[Gmail]/Some Folder" --> some_folder
+#nametrans = lambda foldername: re.sub(' Mail','',re.sub('^\[Google\ Mail\]\/', '',foldername))
+nametrans = lambda folder: re.sub('^inbox$', 'INBOX',
+                           re.sub(' +', '_',
+                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
+
 ssl = yes
 maxconnections = 6
 holdconnectionopen = yes
-idlefolders = ['INBOX']
+#idlefolders = ['INBOX']
+#Setting realdelete = yes will Really Delete email from the server.
+#Otherwise "deleting" a message will just remove any labels and
+#retain the message in the All Mail folder.
+realdelete = no
 
 
 [Account UoE]

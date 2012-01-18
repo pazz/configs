@@ -253,7 +253,8 @@ function (widget, args)
 end,
 10, querystring)
 mailbuttons = awful.util.table.join(
-  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot '"..querystring.."'") end)
+  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot search "..querystring) end),
+  awful.button({ }, 3, function () awful.util.spawn("notmuch tag -inbox '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
 notmuchhoover.addToWidget(mailicon, querystring, 30)
@@ -565,7 +566,6 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey,           }, "j",     function (c) awful.client.incwfact(0.05,c)  end),
     awful.key({ modkey,           }, "k",     function (c) awful.client.incwfact(-0.05,c)  end),
     awful.key({ modkey, "Control" }, "t",      function (c) c.ontop = not c.ontop            end),
-    awful.key({ modkey,           }, "n",      function (c) c.minimized = not c.minimized    end),
     awful.key({ modkey, "Shift"   }, "m",
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
@@ -650,7 +650,8 @@ naughty.config.screen = screen.count()
 --os.execute("export $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
-os.execute("gnome-power-manager&")
+--os.execute("gnome-power-manager&")
+os.execute("xfce4-power-manager&")
 os.execute("xset b 0 s 0 -dpms&")
 --os.execute("offlineimap >~/.offlineimap.log&")
 --os.execute("offlineimap -u Noninteractive.Quiet&")

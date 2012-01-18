@@ -83,7 +83,7 @@ vnoremap <c-space> zf
 nnoremap j gj
 nnoremap k gk
 
-set updatetime=1000
+set updatetime=4000
 set undofile
 set undodir=~/.vim/undodir
 
