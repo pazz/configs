@@ -52,7 +52,7 @@ signature_as_attachment = True
 1 = compose --template bpp
 T = search is:todo
 A = search is:alot
-% = shellescape '/home/pazz/bin/pullmail.py'
+% = shellescape '/home/pazz/bin/pullmail.sh'
 ^ = shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'
 
 [envelope-maps]

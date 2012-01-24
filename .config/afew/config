@@ -9,46 +9,47 @@
 #[ArchiveSentMailsFilter]
 
 #custom filters
-#
+# remember to remove new tag when removing inbox!
 [Filter.1]
 query = 'subject:alot'
 tags = +alot
+message = alot mails
 [Filter.2]
 query = 'to:notmuch@notmuchmail.org and subject:emacs'
-tags = -inbox
+tags = -inbox -new
+message = notmuch emacs stuff
 [Filter.3]
 query = 'sicsa-students@sicsa.ac.uk'
 tags = +sicsa
+message = sicsa
 [Filter.4]
-query = 'to:lingcirc@ling.ed.ac.uk'
-tags = -inbox
+query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to:ianc-talks@inf.ed.ac.uk OR to:lingcirc@ling.ed.ac.uk'
+tags = -inbox -new
+message = boring seminars
 [Filter.5]
-query = 'to:ianc-talks@inf.ed.ac.uk'
-tags = -inbox
-[Filter.6]
-query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk'
-tags = -inbox
-[Filter.7]
-query = 'to:ipab-members@inf.ed.ac.uk'
-tags = -inbox
-[Filter.8]
 query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
-tags = -inbox
-[Filter.9]
+tags = -inbox -new
+message = superboring seminars
+[Filter.6]
 query = 'pa-meetings or subject:"[PA]"'
 tags = +PA
-[Filter.10]
+message = process algebra list
+[Filter.7]
 query = 'folder:uoe/Call4Papers'
-tags = +C4P,-inbox
-[Filter.11]
+tags = +C4P -inbox -new
+message = call for papers
+[Filter.8]
 query = 'from:foosoc.ed@gmail.com or from:GT Silber'
-tags = +soc,+foo
-[Filter.12]
+tags = +soc +foo
+message = foosoc
+[Filter.9]
 query = 'folder:gmail/G+'
 tags = +G+
-[Filter.13]
+message = gmail spam
+[Filter.10]
 query = '(wczerwin@duch.mimuw.edu.pl OR ph209519@mimuw.edu.pl OR "Piotrek Hofman" OR Wojciech) OR (Colin AND BPP)'
 tags = +BPP
+message = warsaw connection
 
 [InboxFilter]
 
