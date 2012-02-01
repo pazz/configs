@@ -15,7 +15,7 @@ query = 'subject:alot'
 tags = +alot
 message = alot mails
 [Filter.2]
-query = 'to:notmuch@notmuchmail.org and subject:emacs'
+query = 'to:notmuch@notmuchmail.org AND (subject:emacs OR subject:elisp OR "(defun" OR "(setq")'
 tags = -inbox -new
 message = notmuch emacs stuff
 [Filter.3]
