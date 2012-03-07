@@ -241,7 +241,7 @@ end,
 10, querystring)
 mailbuttons = awful.util.table.join(
   awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot search "..querystring) end),
-  awful.button({ }, 3, function () awful.util.spawn("notmuch tag -inbox '"..querystring.."'") end)
+  awful.button({ }, 3, function () awful.util.spawn("notmuch tag +killed '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
 notmuchhoover.addToWidget(mailicon, querystring, 30)
