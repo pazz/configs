@@ -53,6 +53,10 @@ message = warsaw connection
 query = 'to:wols@lists.ed.ac.uk'
 tags = +soc +list +wols
 message = wols newsletter
+[Filter.12]
+query = 'from:rmayr@staffmail.ed.ac.uk OR from:cps@staffmail.ed.ac.uk'
+tags = +flagged
+message = supervisors
 
 [ArchiveSentMailsFilter]
 [InboxFilter]
