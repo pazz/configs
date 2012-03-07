@@ -46,7 +46,9 @@ function read_index(querystring,maxcount)
         if count == maxcount then break else count = count +1 end
         date = os.date("%c",thread["timestamp"])
         subject = thread["subject"]
-        subject = string.gsub(subject, "<(.*)>","\<%1\>")
+        subject = string.gsub(subject, "&","&amp;")
+        subject = string.gsub(subject, "<","&lt;")
+        subject = string.gsub(subject, ">","&gt;")
         authors = thread["authors"]
         authors = string.gsub(authors, "<(.*)>","")
         tags = table.concat(thread["tags"],', ')
