@@ -1,6 +1,6 @@
 [general]
 accounts = GMail, UoE
-maxsyncaccounts = 3
+maxsyncaccounts = 5
 pythonfile = ~/.offlineimap.py
 
 [Account GMail]
@@ -21,12 +21,12 @@ folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Tras
 
 # "[Gmail]/Some Folder" --> some_folder
 #nametrans = lambda foldername: re.sub(' Mail','',re.sub('^\[Google\ Mail\]\/', '',foldername))
-nametrans = lambda folder: re.sub('^inbox$', 'INBOX',
-                           re.sub(' +', '_',
-                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
+#nametrans = lambda folder: re.sub('^inbox$', 'INBOX',
+#                           re.sub(' +', '_',
+#                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
 
 ssl = yes
-maxconnections = 6
+maxconnections = 5
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
 #Setting realdelete = yes will Really Delete email from the server.
