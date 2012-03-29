@@ -38,7 +38,7 @@ query = 'folder:uoe/Call4Papers'
 tags = +C4P -inbox -new
 message = call for papers
 [Filter.8]
-query = 'from:foosoc.ed@gmail.com or from:GT Silber'
+query = 'from:foosoc.ed@gmail.com OR from:GT Silber OR from:lizzie.brough@eusa.ed.ac.uk'
 tags = +soc +foo
 message = foosoc
 [Filter.9]
