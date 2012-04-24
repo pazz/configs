@@ -7,13 +7,14 @@ URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
 URxvt.background:      black
-URxvt.foreground:      white
+!URxvt.background:      #fdf6e3
+!URxvt.foreground:      white
 URxvt.scrollBar:       false
 URxvt*font: xft:Bitstream Vera Sans Mono:size=10
 Urxvt*boldFont: xft:Bitstream Vera Sans Mono:size=10:style=Bold
 URxvt.letterSpace: -1
-URxvt.cursorColor:  #89B83F
-URxvt.pointerColor: #FFFFFF
+!URxvt.cursorColor:  #89B83F
+!URxvt.pointerColor: #FFFFFF
 
 !xdvi
 xdvi.editor:        vim --servername tex --remote +%l %f
@@ -26,3 +27,24 @@ xdvi.expertMode:    0
 xdvi.shrinkFactor:  5
 xdvi.sideMargin:    2.5cm
 xdvi.topMargin:     3cm
+
+!! drop in Solarized colorscheme for Xresources/Xdefaults
+*fadeColor: #002b36
+*foreground: #839496
+*background: #002b36
+*color0: #073642
+*color1: #dc322f
+*color2: #859900
+*color3: #b58900
+*color4: #268bd2
+*color5: #d33682
+*color6: #2aa198
+*color7: #eee8d5
+*color8: #002b36
+*color9: #cb4b16
+*color10: #586e75
+*color11: #657b83
+*color12: #cb4b16
+*color13: #6c71c4
+*color14: #93a1a1
+*color15: #fdf6e3
