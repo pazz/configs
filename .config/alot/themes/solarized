@@ -1,0 +1,388 @@
+[1]
+[[global]]
+    [[[footer]]]
+        fg = 'standout'
+    [[[body]]]
+        fg = 'default'
+    [[[notify_error]]]
+        fg = 'standout'
+    [[[notify_normal]]]
+        fg = 'default'
+    [[[prompt]]]
+        fg = 'default'
+    [[[tag]]]
+        fg = 'default'
+[[help]]
+    [[[text]]]
+        fg = 'default'
+    [[[section]]]
+        fg = 'underline'
+    [[[title]]]
+        fg = 'standout'
+[[bufferlist]]
+    [[[focus]]]
+        fg = 'standout'
+    [[[results_even]]]
+        fg = 'default'
+    [[[results_odd]]]
+        fg = 'default'
+[[search]]
+    [[[thread]]]
+        fg = 'default'
+    [[[thread_authors]]]
+        fg = 'default,underline'
+    [[[thread_authors_focus]]]
+        fg = 'standout'
+    [[[thread_content]]]
+        fg = 'default'
+    [[[thread_content_focus]]]
+        fg = 'standout'
+    [[[thread_date]]]
+        fg = 'default'
+    [[[thread_date_focus]]]
+        fg = 'standout'
+    [[[thread_focus]]]
+        fg = 'standout'
+    [[[thread_mailcount]]]
+        fg = 'default'
+    [[[thread_mailcount_focus]]]
+        fg = 'standout'
+    [[[thread_subject]]]
+        fg = 'default'
+    [[[thread_subject_isunread]]]
+        fg = 'bold'
+    [[[thread_subject_isflagged]]]
+        fg = 'underline'
+    [[[thread_subject_focus]]]
+        fg = 'standout'
+    [[[thread_subject_isunread_focus]]]
+        fg = 'standout,bold'
+    [[[thread_subject_isflagged_focus]]]
+        fg = 'standout,underline'
+    [[[thread_tags]]]
+        fg = 'bold'
+    [[[thread_tags_focus]]]
+        fg = 'standout'
+[[thread]]
+    [[[attachment]]]
+        fg = 'default'
+    [[[attachment_focus]]]
+        fg = 'underline'
+    [[[body]]]
+        fg = 'default'
+    [[[header]]]
+        fg = 'default'
+    [[[header_key]]]
+        fg = 'default'
+    [[[header_value]]]
+        fg = 'default'
+    [[[summary_even]]]
+        fg = 'default'
+    [[[summary_focus]]]
+        fg = 'standout'
+    [[[summary_odd]]]
+        fg = 'default'
+[[envelope]]
+    [[[body]]]
+        fg = 'default'
+    [[[header]]]
+        fg = 'default'
+    [[[header_key]]]
+        fg = 'default'
+    [[[header_value]]]
+        fg = 'default'
+
+[16]
+solarized_base03 = 'dark gray'
+solarized_base02 = 'black'
+solarized_base01 = 'dark gray'
+solarized_base00 = 'light gray'
+solarized_base0 = 'light gray'
+solarized_base1 = 'light gray'
+solarized_base2 = 'light gray'
+solarized_base3 = 'white'
+solarized_yellow = 'brown'
+solarized_orange = 'light red'
+solarized_red = 'dark red'
+solarized_magenta = 'dark magenta'
+solarized_violet = 'light blue'
+solarized_blue = 'dark blue'
+solarized_cyan = 'dark cyan'
+solarized_green = 'dark green'
+[[global]]
+    # attributes used in all modi
+    [[[footer]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[notify_error]]]
+        bg = '%(solarized_red)s'
+        fg = '%(solarized_base3)s'
+    [[[notify_normal]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[prompt]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base00)s'
+    [[[tag]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_cyan)s'
+    [[[tag_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+[[help]]
+    # formating of the `help bindings` overlay
+    [[[text]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[section]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base1)s'
+    [[[title]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+# mode specific attributes
+[[bufferlist]]
+    [[[focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[results_even]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[results_odd]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base00)s'
+[[search]]
+    [[[thread]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_authors]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_authors_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s,bold'
+    [[[thread_content]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_content_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_date]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_date_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_mailcount]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_mailcount_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_subject]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_violet)s'
+    [[[thread_subject_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_tags]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_blue)s'
+    [[[thread_tags_focus]]]
+        bg = '%(solarized_orange)s'
+        fg = '%(solarized_base02)s'
+[[thread]]
+    [[[attachment]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[attachment_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[header]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_base00)s'
+    [[[header_key]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_orange)s'
+    [[[header_value]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_violet)s'
+    [[[summary_even]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_base00)s'
+    [[[summary_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[summary_odd]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+[[envelope]]
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[header]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base00)s'
+    [[[header_key]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_orange)s'
+    [[[header_value]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_violet)s'
+[256]
+solarized_base03 = 'h234'
+#solarized_base03 = 'default'
+solarized_base02 = 'h235'
+solarized_base01 = 'h240'
+solarized_base00 = 'h241'
+solarized_base0 = 'h244'
+solarized_base1 = 'h245'
+solarized_base2 = 'h254'
+solarized_base3 = 'white'
+#solarized_base3 = 'h230'
+solarized_yellow = 'h136'
+solarized_orange = 'h166'
+solarized_red = 'h160'
+solarized_magenta = 'h125'
+solarized_violet = 'h61'
+solarized_blue = 'h33'
+solarized_cyan = 'h37'
+solarized_green = 'h64'
+[[global]]
+    # attributes used in all modi
+    [[[footer]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[notify_error]]]
+        bg = '%(solarized_red)s'
+        fg = '%(solarized_base3)s'
+    [[[notify_normal]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base00)s'
+    [[[prompt]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_base00)s'
+    [[[tag]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_cyan)s'
+    [[[tag_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+[[help]]
+    # formating of the `help bindings` overlay
+    [[[text]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[section]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base1)s'
+    [[[title]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+# mode specific attributes
+[[bufferlist]]
+    [[[focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[results_even]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[results_odd]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base0)s'
+[[search]]
+    [[[thread]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[thread_authors]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[thread_authors_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s,bold'
+    [[[thread_content]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[thread_content_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_date]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[thread_date_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[thread_mailcount]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base1)s'
+    [[[thread_mailcount_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_subject]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_violet)s'
+    [[[thread_subject_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base01)s'
+    [[[thread_tags]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_blue)s'
+    [[[thread_tags_focus]]]
+        bg = '%(solarized_orange)s'
+        fg = '%(solarized_base02)s'
+[[thread]]
+    [[[attachment]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[attachment_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[header]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_base0)s'
+    [[[header_key]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_orange)s'
+    [[[header_value]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_violet)s'
+    [[[summary_even]]]
+        bg = '%(solarized_base2)s'
+        fg = '%(solarized_base0)s'
+    [[[summary_focus]]]
+        bg = '%(solarized_yellow)s'
+        fg = '%(solarized_base02)s'
+    [[[summary_odd]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+[[envelope]]
+    [[[body]]]
+        bg = '%(solarized_base3)s'
+        fg = '%(solarized_base0)s'
+    [[[header]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_base0)s'
+    [[[header_key]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_orange)s'
+    [[[header_value]]]
+        bg = '%(solarized_base02)s'
+        fg = '%(solarized_violet)s'
