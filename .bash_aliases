@@ -7,7 +7,7 @@ alias w="weather -mq -i EGPH"
 alias ll='ls -lh'
 export one="pazz@0x7fffffff.net"
 alias texcleanup="tc"
-alias tc="for f in *bbl *toc *aux *log *blg *out *.synctex.gz *.project.vim *~; do rm \$f 2>/dev/null; done"
+alias tc="for f in *snm *nav *bbl *toc *aux *log *blg *out *.synctex.gz *.project.vim *~; do rm \$f 2>/dev/null; done"
 
 alias o="ssh -X $one"
 alias s='ssh -X -L8888:129.215.91.36:80 s0976898@ssh.inf.ed.ac.uk'
