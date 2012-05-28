@@ -26,6 +26,7 @@ folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Tras
 #                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
 
 ssl = yes
+cert_fingerprint = f3043dd689a2e7dddfbef82703a6c65ea9b634c1
 maxconnections = 5
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
@@ -48,6 +49,7 @@ remotehost = imap.sms.ed.ac.uk
 remoteuser = s0976898
 remotepasseval = getpwd("UoE")
 ssl = yes
+cert_fingerprint = f51692edb1370abf4e7589819682466c2010b265
 maxconnections = 6
 holdconnectionopen = yes
 idlefolders = ['INBOX']

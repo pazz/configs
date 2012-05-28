@@ -5,12 +5,15 @@ if has('syntax') && (&t_Co > 2)
    set foldmethod=syntax
 endif
 " ??
-colorscheme desert256
+"
+"set t_Co=256
+colorscheme solarized
+set background=dark
 highlight   ShowMarksHLl ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLu ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLo ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLm ctermfg=white ctermbg=black cterm=bold
-hi Conceal       ctermbg=None "conceal..
+"#hi Conceal       ctermbg=None "conceal..
 
 set guioptions=''
 set incsearch
@@ -88,4 +91,11 @@ set undofile
 set undodir=~/.vim/undodir
 
 
-set textwidth=120
+set textwidth=100
+
+" for latex-suite:
+set grepprg=grep\ -nH\ $*
+let g:tex_flavor='latex'
+
+" make easytags work with atp
+let g:easytags_updatetime_autodisable=1

@@ -89,8 +89,8 @@ theme.taglist_squares_sel   = "/usr/share/awesome/themes/default/taglist/squaref
 theme.taglist_squares_unsel = "/usr/share/awesome/themes/default/taglist/squarew.png"
 
 -- MISC
---theme.wallpaper_cmd         = { "awsetbg /home/pazz/.config/awesome/pazz/imm007_8A.jpg" }
-theme.wallpaper_cmd         = { "awsetbg -f -u feh /home/pazz/.config/awesome/themes/pazz/DSC_4729.JPG" }
+theme.wallpaper_cmd         = { "awsetbg /home/pazz/.config/awesome/themes/pazz/imm007_8A.jpg" }
+--theme.wallpaper_cmd         = { "awsetbg -f -u feh /home/pazz/.config/awesome/themes/pazz/DSC_4729.JPG" }
 --theme.wallpaper_cmd         = { "awsetbg -f -u feh /home/pazz/.config/awesome/themes/pazz/imm011_14A.jpg" }
 theme.taglist_squares       = "false"
 theme.titlebar_close_button = "true"
