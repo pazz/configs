@@ -15,7 +15,7 @@ tags = +alot
 message = alot mails
 [Filter.2]
 query = 'to:notmuch@notmuchmail.org AND (subject:emacs OR subject:elisp OR "(defun" OR "(setq" OR PATCH)'
-tags = -inbox -new
+tags = -inbox;-new
 message = notmuch emacs stuff
 [Filter.3]
 query = 'sicsa-students@sicsa.ac.uk'
@@ -23,11 +23,11 @@ tags = +sicsa
 message = sicsa
 [Filter.4]
 query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to:ianc-talks@inf.ed.ac.uk OR to:lingcirc@ling.ed.ac.uk'
-tags = -inbox -new
+tags = -inbox;-new
 message = boring seminars
 [Filter.5]
 query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
-tags = -inbox -new
+tags = -inbox;-new
 message = superboring seminars
 [Filter.6]
 query = 'pa-meetings or subject:"[PA]"'
@@ -35,11 +35,11 @@ tags = +PA
 message = process algebra list
 [Filter.7]
 query = 'folder:uoe/Call4Papers'
-tags = +C4P -inbox -new
+tags = +C4P;-inbox;-new
 message = call for papers
 [Filter.8]
 query = 'from:foosoc.ed@gmail.com OR from:GT Silber OR from:lizzie.brough@eusa.ed.ac.uk'
-tags = +soc +foo
+tags = +soc;+foo
 message = foosoc
 [Filter.9]
 query = 'folder:gmail/G+'
@@ -51,12 +51,16 @@ tags = +BPP
 message = warsaw connection
 [Filter.11]
 query = 'to:wols@lists.ed.ac.uk'
-tags = +soc +list +wols
+tags = +soc;+list;+wols
 message = wols newsletter
 [Filter.12]
 query = 'from:rmayr@staffmail.ed.ac.uk OR from:cps@staffmail.ed.ac.uk'
 tags = +flagged
 message = supervisors
+[Filter.13]
+query = 'offlineimap'
+tags = -inbox;-new
+message = alot mails
 
 [ArchiveSentMailsFilter]
 [InboxFilter]
