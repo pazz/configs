@@ -1,6 +1,6 @@
 * P - polynomial time
 
 ** Complete problems:
- - [[CIRCUIT VALUE]]
- - [[REL:Bisimulation]] for [[MOD:FS]]
- - [[REL:Simulation]] for [[MOD:FS]]
+ - [-circuit value-]
+ - REL::Bisimulation for [[MOD:FS]]
+ - REL:Simulation for [[MOD:FS]]
