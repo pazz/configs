@@ -2,5 +2,5 @@
 
 ** Complete problems:
  - [[CIRCUIT VALUE]]
- - [[CON:Bisimulation]] for [[MOD::FS]]
- - [[CON:Simulation]] for [[MOD::FS]]
+ - [[REL:Bisimulation]] for [[MOD:FS]]
+ - [[REL:Simulation]] for [[MOD:FS]]
