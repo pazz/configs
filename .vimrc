@@ -1,3 +1,4 @@
+
 filetype plugin indent on
 
 if has('syntax') && (&t_Co > 2)
@@ -8,7 +9,7 @@ endif
 "
 "set t_Co=256
 colorscheme solarized
-set background=dark
+set background=light
 highlight   ShowMarksHLl ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLu ctermfg=white ctermbg=black cterm=bold
 highlight   ShowMarksHLo ctermfg=white ctermbg=black cterm=bold
@@ -99,3 +100,27 @@ let g:tex_flavor='latex'
 
 " make easytags work with atp
 let g:easytags_updatetime_autodisable=1
+
+
+
+""""""""
+" VIKI "
+""""""""
+let g:vikiHomePage = "/home/pazz/repo/wiki/index.viki"
+let g:vikiFamily = "anyword"
+let g:vikiOpenFileWith_ANY   = "silent !gnome-open %{FILE}"
+"let g:vikiMapLeader = "<LocalLeader>w"
+let g:vikiMapLeader = "?"
+let g:deplatePrg = "deplate -x -X "
+au FileType viki compiler deplate
+autocmd! BufRead,BufNewFile *.viki set filetype=viki
+let g:vikiNameSuffix=".viki"
+
+let g:viki_intervikis = {}
+let g:viki_intervikis['BIB']  = [$HOME."/repo/bib/notes"]
+autocmd BufNewFile /home/pazz/repo/bib/notes/*.viki TSkeletonSetup bibnote.viki
+autocmd BufWritePost /home/pazz/repo/bib/notes/*.viki execute '!git add % && git commit -m %'
+let g:viki_intervikis['MOD']  = [$HOME."/repo/wiki/models/"]
+let g:viki_intervikis['REL']  = [$HOME."/repo/wiki/relations/"]
+let g:viki_intervikis['COM']  = [$HOME."/repo/wiki/complexity/"]
+autocmd BufWritePost /home/pazz/repo/wiki/*/*.viki execute '!git add % && git commit -m %'
