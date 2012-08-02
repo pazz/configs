@@ -1,108 +1,240 @@
-
+#theme=mutt
+#theme=m
+theme = solarized_dark
+#theme = solarized
 search_threads_sort_order = newest_first
-thread_highlight_components = date,mailcount,authors,subject
+
+thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages}
+
 
 editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
+editor_spawn = True
+editor_in_thread = True
+
+#quote_prefix = '|'
+
+#editor_in_thread = False
 #editor_spawn = True
-#editor_in_thread = True
-#edit_headers_whitelist = From, Subject, To
-edit_headers_whitelist = , 
+#editor_cmd = vim
 
-#TODO: shouldnt be case sensitive..
-#displayed_headers = From,To,Cc,Bcc,Subject,to,cc,bcc,subject
+edit_headers_whitelist = ,
+#edit_headers_blacklist = ' '
+#display_content_in_threadline = True
 
-notify_timeout = 5
+displayed_headers = To,Cc,Bcc,Subject
+
+notify_timeout = 4
 #show_statusbar = False
+
+#timestamp_format = '%c'
 
 print_cmd = muttprint -F Utopia -a From_Date_*Subject*_/Tags/
 complete_matching_abook_only = False
 
-prompt_suffix = '> '
+prompt_suffix = "> "
 
 #user_agent = alot/{version}
 
 [accounts]
-    [[uoe]]
-    realname = Patrick Totzke
-    address = p.totzke@ed.ac.uk
-    aliases = p.totzke@sms.ed.ac.uk,s0976898@sms.ed.ac.uk
-    type = sendmail
-    sendmail_command = msmtp --account=uoe -t
-    sent_box = maildir:///home/pazz/mail/uoe/Sent
-    draft_box = maildir:///home/pazz/mail/uoe/Drafts
-    signature = ~/pt.uni.vcf
-    signature_filename = p.totzke.vcf
-    signature_as_attachment = True
-        [[[abook]]]
-          type=abook
-
-[[gmail]]
+  
+  [[gmail]]
     realname = Patrick Totzke
     address = patricktotzke@gmail.com
     aliases = patricktotzke@googlemail.com,
     gpg_key = D7D6C5AA
+    sign_by_default = True
     type = sendmail
     sendmail_command = msmtp --account=gmail -t
-    draft_box = "maildir:///home/pazz/mail/gmail/[Google Mail].Drafts"
-    sent_box = "maildir:///home/pazz/mail/gmail/[Google Mail].Sent Mail"
-        [[[abook]]]
-          command = nottoomuch-addresses.sh
-          regexp = (\"(?P<name>.+)\")?\s*<(?P<email>.*@.+?)>
+    draft_box = maildir:///home/pazz/mail/gmail/[Google Mail].Drafts
+    sent_box = maildir:///home/pazz/mail/gmail/[Google Mail].Sent Mail
+    [[[abook]]]
+      type = shellcommand
+      command = nottoomuch-addresses.sh
+      regexp = (\"(?P<name>.+)\")?\s*<(?P<email>.*@.+?)>
+  
+  [[uoe]]
+    realname = Patrick Totzke
+    address = p.totzke@ed.ac.uk
+    aliases = p.totzke@sms.ed.ac.uk, s0976898@sms.ed.ac.uk
+    type = sendmail
+    sendmail_command = msmtp --account=uoe -t
+    sent_box = maildir:///home/pazz/mail/uoe/Sent
+    draft_box = maildir:///home/pazz/mail/uoe/Drafts
+    #signature = ~/pt.uni.vcf
+    #signature_filename = p.totzke.vcf
+    signature_as_attachment = True
+    [[[abook]]]
+      type = abook
 
 
 
 [bindings]
-1 = compose --template bpp
-M = compose --spawn
-T = search is:todo
-A = search is:alot
-S = search is:sent
-% = shellescape '/home/pazz/bin/pullmail.sh'
-^ = shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'
+  1 = compose --template bpp
+  M = compose --spawn
+  T = search is:todo
+  A = search is:alot
+  S = search is:sent
+  % = "shellescape 'killall offlineimap && /home/pazz/bin/pullmail.sh'"
+  ^ = "shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'"
+  
+  [[search]]
+    & = toggletags killed
+    ! = toggletags flagged
+    s = toggletags unread
+    t = toggletags todo
+  
+  [[thread]]
+    G = "pipeto 'git am'"
+    t = toggletags todo
+    a = toggletags inbox
+    v = verify
 
-[[thread]]
-G = pipeto 'git am'
-t = toggletags todo
-a = toggletags inbox
-v = verify
+########################################################
+16_base03 = 'dark gray'
+16_base02 = 'black'
+16_base01 = 'light green'
+16_base00 = 'yellow'
+16_base0 = 'light blue'
+16_base1 = 'light cyan'
+16_base2 = 'light gray'
+16_base3 = 'white'
+16_yellow = 'brown'
+16_orange = 'light red'
+16_red = 'dark red'
+16_magenta = 'dark magenta'
+16_violet = 'light magenta'
+16_blue = 'dark blue'
+16_cyan = 'dark cyan'
+16_green = 'dark green'
 
-[[search]]
-t = toggletags todo
-
+# Use a slightly different mapping here to be able to use "bold" in 256c mode
+256_base03 = 'dark gray'
+256_base02 = 'black'
+256_base01 = 'light green'
+256_base00 = 'yellow'
+256_base0 = 'g66'
+256_base1 = 'g70'
+256_base2 = 'light gray'
+256_base3 = 'white'
+256_yellow = 'brown'
+256_orange = 'light red'
+256_red = 'dark red'
+256_magenta = 'dark magenta'
+256_violet = 'light magenta'
+256_blue = 'dark blue'
+256_cyan = '#088'
+256_green = 'dark green'
+########################################################
+#
+#   ⅏
 [tags]
   [[flagged]]
-    translated = ⚑
-    fg = light red
-
-  [[unread]]
-    translated= ✉
-    fg = white
-
-  [[replied]]
-    translated=  ⏎
-
-  [[encrypted]]
-    translated= ⚷
-
+      translated = ⚑
+      normal = '','','light red','','dark red',''
   [[inbox]]
-      fg = '#fff'
-      bg = '#88d'
-      translated = ✉
-
+    translated = ➤#●#◉#↘
+    normal = "", "", "", "", "", ""
+  [[sent]]
+    translated =  ↗#⇗
+    normal = "", "", 'dark blue', '', 'dark blue', ''
+  [[unread]]
+    translated = ''
+  [[replied]]
+    translated = ⏎
+    normal = "", "", 'dark cyan', default, 'dark blue', default
+  [[encrypted]]
+    translated = ⚷
+#    normal = "", "", "", "", "#0ff", "#006"
+  [[signed]]
+    translated = ®
+#    normal = "", "", "", "", "", ""
   [[killed]]
-      fg = 'g70'
-      bg = 'g27'
-      translated = τ # ☠
-      hidden = True
-
+    translated = τ  # ☠
+#    normal = "", "", "", "", g70, g27
+#  
   [[lists]]
-      translated = ⎎
-
-  [[notmuch::bug]]
-      fg = 'light red, bold'
-      bg = '#88d'
-      translated = 'nm:bug'
-  [[notmuch.*]]
-      fg = '#fff'
-      bg = '#88d'
-      translation = 'notmuch::(.*)','\1'
+    translated = ⎎
+  
+  [[todo]]
+    normal = "", "", white, "dark magenta", white, "dark magenta"
+  
+#  [[C4P]]
+#    normal = "", "", "", "", g74, g23
+#  
+#  [[seminars]]
+#    normal = "", "", "", "", "", "#6da"
+#  
+#  [[G+]]
+#    normal = "", "", "", "", "#0ff", "#00f"
+#  
+#  [[edlug]]
+#    normal = "", "", "", "", "#006", "#08d"
+#  
+#  [[peergroup]]
+#    normal = "", "", "", "", "#006", "#08d"
+#  
+#  [[soc]]
+#    normal = "", "", "", "", "#6da", "#08d"
+#  
+#  [[foo]]
+#    normal = "", "", "", "", "#6da", "#08d"
+#  
+#  [[wols]]
+#    normal = "", "", "", "", "#6da", "#08d"
+#  
+#  
+#  [[PA]]
+#    normal = "", "", "", "", "#df0", "#060"
+#  
+#  [[sicsa]]
+#    normal = "", "", "", "", "#6da", "#060"
+#  
+#  [[gradschool]]
+#    normal = "", "", "", "", "#6da", "#060"
+#  
+#  [[students]]
+#    normal = "", "", "", "", g74, "#080"
+#  
+#  [[phd-degree-students]]
+#    translated = PhD
+#    normal = "", "", "", "", g74, "#080"
+#  [[automata]]
+#    normal = "", "", "", "", g74, "#060"
+#  
+#  [[sup.*]]
+#    translation = sup.*, sup
+#    normal = "", "", "", "", "#d8a", "#606"
+#  
+#  [[atp-vim-list]]
+#    #fg = '#ffa'
+#    translated = atp
+#    normal = "", "", "", "", "", "#606"
+#  
+#  [[inf-general]]
+#    translated = inf
+#    #normal = "", "", "", "", g23, ""
+#  
+#  [[alot]]
+#    normal = "", "", "", "", "#80d,bold", "#df6"
+#  
+#  [[offlineimap-project]]
+#    translated = offlineimap
+#    normal = "", "", "", "", "#d8a", "#606"
+#  
+#  [[urwid]]
+#    normal = "", "", "", "", "#080", "#606"
+#  
+#  [[mutt-kz]]
+#    normal = "", "", "", "", "#fff", "#606"
+#  
+#  [[notmuch::bug]]
+#    translated = nm:bug
+#    normal = "", "", "light red, bold", "light blue", "light red, bold", "#88d"
+#  
+#  [[notmuch.*]]
+#    translation = notmuch::(.*), \1
+#    normal = "", "", "", "", "#fff", "#88d"
+#  
+#  [[lfcs-.*]]
+#    translation = lfcs-(.*), LFCS-\1
+#    normal = "", "", "", "", "#6da", "#060"
