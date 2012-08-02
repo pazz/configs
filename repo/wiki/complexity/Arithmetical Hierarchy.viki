@@ -1,0 +1,14 @@
+* Arithmetical Hierarchy
+
+a hierarchy of highly undecidable problems.
+
+It consists of inductively defined classes,
+$\Sigma^0_n$
+$\Pi^0_n$
+$\Delta^0_n = \Sigma^1_n \cap \Pi^1_n$
+Of languages logically equivalent to
+existential ($\Sigma^0_n$) and universal ($\Pi^0_n$)
+first order praenex NF formulae with $i$ quantifier alternations.
+
+The difference to the [[Polynomial Hierarchy]] is that
+here we quantify over naturals, not boolean values.
