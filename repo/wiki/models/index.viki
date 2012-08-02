@@ -1,4 +1,3 @@
-#Files glob=models/*.viki types=f <<
-[[OneCounterNet.viki]!]
+#Files glob=*.viki types=f <<
 
 
