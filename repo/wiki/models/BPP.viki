@@ -1,0 +1,21 @@
+* Basic Parallel Processes
+
+** Weak Bisimulation
+
+
+This is an interesting Grammar:
+It shows that $X^3 = X^2 != X$,
+and works for normed systems (uses norm 0, otherwise trivial by norm preservation)
+--------------------------------
+X→ε
+X → cY
+X → cZ
+Y →ε
+Y → aY
+Y → cY
+Y → cZ
+Z→ε
+Z → bZ
+Z → cZ
+Z → cY
+--------------------------------
