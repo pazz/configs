@@ -1,4 +1,4 @@
-#Files glob=** types=f <<
+#Files glob=*.viki types=f <<
 [[BPP]] Basic Parallel Processes
 
 
