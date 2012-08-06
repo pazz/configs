@@ -17,7 +17,7 @@ module("notmuchhoover")
 
 local popup
 local query_format = "<span color='" .. beautiful.fg_urgent .."'><b><u>%s</u>\n</b></span>"
-local thread_format = "<span color='" .. beautiful.fg_normal .. "'>%s: </span><span color='" .. beautiful.fg_focus .."'>%s </span><span color='" .. beautiful.fg_normal .."'>%s </span><span color='" .. beautiful.fg_urgent .."'>(%s)</span>"
+local thread_format = "<span color='" .. beautiful.fg_normal.."'>%s </span><span color='" .. beautiful.fg_focus .."'>%s </span><span color='" .. beautiful.fg_urgent .."'>(%s)</span>"
 
 function addToWidget(mywidget, querystring, maxcount)
   mywidget:add_signal('mouse::enter', function ()
@@ -53,7 +53,7 @@ function read_index(querystring,maxcount)
         authors = string.gsub(authors, "<(.*)>","")
         tags = table.concat(thread["tags"],', ')
 
-        info = info .. string.format(thread_format,date,authors,subject,tags) .. '\n' 
+        info = info .. string.format(thread_format,authors,subject,tags) .. '\n' 
     end
    return info
 end
