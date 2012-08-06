@@ -1,0 +1,13 @@
+#AU: ROsenkrantz and Hunt
+#TI: Polynomial Algorithms for deterministic Pushdown Automata
+%KEYWORDS: [[COM::P]] [[MOD::DPDA]]
+% [[../papers/RH1978.pdf]]
+
+* Polynomial Algorithms for deterministic Pushdown Automata
+
+This paper shows ho to eliminate diverging $\varepsilon$-cycles in
+DPDA's in polynomial time.
+
+It shows that the problems $DPDA \subseteq FSA$ and vice versa are in P.
+It follows that also $L(M) = L(F)$ for DPDA M and FSA F is in COM:P
+and thus also emptiness testing for DPDA.
