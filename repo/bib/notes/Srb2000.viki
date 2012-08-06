@@ -1,8 +1,0 @@
-* Complexity of Weak Bisimilarity and Regularity for BPA and BPP
-** Jiri Srba
-
-[[../papers/Srb2000.pdf]]
-
-Shows COM::PSPACE hardness of weak bisimulation for MOD::BPP
-This is obsoleted by [[Srb2002]], which shows PSPACE-hardness for
-strong simulation for BPP.
