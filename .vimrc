@@ -34,7 +34,7 @@
           exec 'set runtimepath+='.vam_install_path.'/vim-addon-manager'
 
           " Tell VAM which plugins to fetch & load:
-          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen'], {'auto_install' : 0})
+          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen', 'pyflakes%2441', 'snipmate', 'snipmate-snippets','delimitMate'], {'auto_install' : 0})
           " sample: call vam#ActivateAddons(['pluginA','pluginB', ...], {'auto_install' : 0})
 
           " Addons are put into vam_install_path/plugin-name directory
@@ -109,6 +109,11 @@ nnoremap j gj
 nnoremap k gk
 
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Supertab
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:SuperTabDefaultCompletionType = "context"
+
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " VIKI 
@@ -157,6 +162,11 @@ set winaltkeys=no
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  let g:pymode_lint_write = 0
  autocmd FileType python map <F5> :PyLint<cr>
+ autocmd FileType python map <F6> :PyLintAuto<cr>
 
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" delimitMate
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let delimitMate_autoclose = 0
 
