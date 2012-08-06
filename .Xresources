@@ -11,10 +11,21 @@ URxvt.keysym.M-Escape: perl:keyboard-select:activate
 URxvt.foreground:      light gray
 URxvt.scrollBar:       false
 URxvt*font: xft:Bitstream Vera Sans Mono:size=10
-Urxvt*boldFont: xft:Bitstream Vera Sans Mono:size=10:style=Bold
+!URxvt*font: xft:Droid Sans Mono:size=10
+!URxvt*font: xft:Monospace:pixelsize=12
+!Urxvt*boldFont: xft:Droid Sans Mono:size=10:style=Bold
 URxvt.letterSpace: -1
 !URxvt.cursorColor:  #89B83F
 !URxvt.pointerColor: #FFFFFF
+
+! Change fonts on demand
+URxvt.keysym.M-C-1: command:\033]710;tixus\007\033]711;tixus\007
+URxvt.keysym.M-C-2: command:\033]710;artsie\007\033]711;artsie\007
+URxvt.keysym.M-C-3: command:\033]710;lucidasanstypewriter-10\007\033]711;lucidasanstypewriter-10\007
+URxvt.keysym.M-C-4: command:\033]710;xft:Liberation Mono:style=Regular\007\033]711;xft:Liberation Mono:style=Regular\007
+URxvt.keysym.M-C-5: command:\033]710;xft:Bitstream Vera Sans Mono:style=Bold\007\033]711;xft:Bitstream Vera Sans Mono:style=Bold\007
+URxvt.keysym.M-C-6: command:\033]710;12x24\007\033]711;12x24\007
+URxvt.keysym.M-C-0: command:\033]710;lucidasanstypewriter-24\007\033]711;lucidasanstypewriter-24\007
 
 !xdvi
 xdvi.editor:        vim --servername tex --remote +%l %f
@@ -27,24 +38,6 @@ xdvi.expertMode:    0
 xdvi.shrinkFactor:  5
 xdvi.sideMargin:    2.5cm
 xdvi.topMargin:     3cm
-
-!! drop in Solarized colorscheme for Xresources/Xdefaults
-#define S_base03        #002b36
-#define S_base02        #073642
-#define S_base01        #586e75
-#define S_base00        #657b83
-#define S_base0         #839496
-#define S_base1         #93a1a1
-#define S_base2         #eee8d5
-#define S_base3         #fdf6e3
-#define S_yellow        #b58900
-#define S_orange        #cb4b16
-#define S_red           #dc322f
-#define S_magenta       #d33682
-#define S_violet        #6c71c4
-#define S_blue          #268bd2
-#define S_cyan          #2aa198
-#define S_green         #859900
 
 *background:            S_base03
 *foreground:            S_base00

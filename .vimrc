@@ -1,33 +1,73 @@
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Vim Addon Manager
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-filetype plugin indent on
+        fun! EnsureVamIsOnDisk(vam_install_path)
+          if !filereadable(a:vam_install_path.'/vim-addon-manager/.git/config')
+             \&& 1 == confirm("Clone VAM into ".a:vam_install_path."?","&Y\n&N")
+            " I'm sorry having to add this reminder. Eventually it'll pay off.
+            call confirm("Remind yourself that most plugins ship with ".
+                        \"documentation (README*, doc/*.txt). It is your ".
+                        \"first source of knowledge. If you can't find ".
+                        \"the info you're looking for in reasonable ".
+                        \"time ask maintainers to improve documentation")
+            call mkdir(a:vam_install_path, 'p')
+            execute '!git clone --depth=1 git://github.com/MarcWeber/vim-addon-manager '.shellescape(a:vam_install_path, 1).'/vim-addon-manager'
+            " VAM runs helptags automatically when you install or update 
+            " plugins
+            exec 'helptags '.fnameescape(a:vam_install_path.'/vim-addon-manager/doc')
+          endif
+        endf
 
-if has('syntax') && (&t_Co > 2)
-   syntax on
-   set foldmethod=syntax
-endif
-" ??
-"
-"set t_Co=256
+        fun! SetupVAM()
+          " Set advanced options like this:
+          " let g:vim_addon_manager = {}
+          " let g:vim_addon_manager['key'] = value
+
+          " Example: drop git sources unless git is in PATH. Same plugins can
+          " be installed from www.vim.org. Lookup MergeSources to get more control
+          " let g:vim_addon_manager['drop_git_sources'] = !executable('git')
+
+          " VAM install location:
+          let vam_install_path = expand('$HOME') . '/.vim/vim-addons'
+          call EnsureVamIsOnDisk(vam_install_path)
+          exec 'set runtimepath+='.vam_install_path.'/vim-addon-manager'
+
+          " Tell VAM which plugins to fetch & load:
+          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen'], {'auto_install' : 0})
+          " sample: call vam#ActivateAddons(['pluginA','pluginB', ...], {'auto_install' : 0})
+
+          " Addons are put into vam_install_path/plugin-name directory
+          " unless those directories exist. Then they are activated.
+          " Activating means adding addon dirs to rtp and do some additional
+          " magic
+
+          " How to find addon names?
+          " - look up source from pool
+          " - (<c-x><c-p> complete plugin names):
+          " You can use name rewritings to point to sources:
+          "    ..ActivateAddons(["github:foo", .. => github://foo/vim-addon-foo
+          "    ..ActivateAddons(["github:user/repo", .. => github://user/repo
+          " Also see section "2.2. names of addons and addon sources" in VAM's documentation
+        endfun
+        call SetupVAM()
+        " experimental [E1]: load plugins lazily depending on filetype, See
+        " NOTES
+        " experimental [E2]: run after gui has been started (gvim) [3]
+        " option1:  au VimEnter * call SetupVAM()
+        " option2:  au GUIEnter * call SetupVAM()
+        " See BUGS sections below [*]
+        " Vim 7.0 users see BUGS section [3]
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" general settings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 colorscheme solarized
 set background=light
-highlight   ShowMarksHLl ctermfg=white ctermbg=black cterm=bold
-highlight   ShowMarksHLu ctermfg=white ctermbg=black cterm=bold
-highlight   ShowMarksHLo ctermfg=white ctermbg=black cterm=bold
-highlight   ShowMarksHLm ctermfg=white ctermbg=black cterm=bold
-"#hi Conceal       ctermbg=None "conceal..
 
-set guioptions=''
-set incsearch
-
-let Tlist_Auto_Update = 1     " Always call ctags when opening files/changing directories?
-let Tlist_Close_On_Select = 1 " Close the taglist window when a file or tag is selected.
-let Tlist_Compart_Format = 1 " Remove extra information and blank lines from the taglist window.
-let Tlist_Enable_Fold_Column = 1 " Don't Show the fold indicator column in the taglist window.
-let Tlist_GainFocus_On_ToggleOpen = 1 " Jump to taglist window on open.
-let Tlist_Process_File_Always = 1   " call ctags even if taglist is closed?
-let Tlist_Auto_Highlight_Tag = 1    " Highlight when entering a buffer?
-let Tlist_WinWidth = 40
-
+filetype plugin indent on
+syntax on
 
 "menu for tabcompletion in file open
 set wildmenu " turn on command line completion wild style
@@ -51,61 +91,28 @@ set enc=utf-8  "internal encoding
 set fenc=utf-8 "file enc
 set tenc=utf-8 "term enc
 
+set undofile
+set undodir=~/.vim/undodir
 
-" Fast window resizing with +/- keys (horizontal); / and * keys (vertical)
-if bufwinnr(1)
- map <kPlus> <c-W>+
- map <kMinus> <c-W>-
- map <kDivide> <c-w><
- map <kMultiply> <c-w>>
-endif
+set textwidth=100
 
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Bindings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set pastetoggle=<c-P>
-nmap ,l :set list!<CR>
-
-"set ruler
 :map <F4> :setlocal spell! spelllang=de<cr>
-:map <F10> :setlocal spell! spelllang=en_gb<cr>
-:map <c-F10> :r !/usr/bin/tranlate-de-en <cword> <cr>
-:map <c-F12> :cw<cr>
-:map <s-c-F12> :ccl<cr>
-:map <F2> :bp<cr>
-:map <F3> :bn<cr>
-noremap <F9> :TlistToggle<cr>
-
-"folding
-nnoremap <c-@> za
-nnoremap <c-up> zc
-nnoremap <c-down> zo
-vnoremap <c-space> zf
-
-"remap supertab
-"#let g:SuperTabMappingForward = '<c-@>'
-"#let g:SuperTabMappingBackward = '<s-c-@>'
+:map <F3> :setlocal spell! spelllang=en_gb<cr>
 
 " remap j and k to scroll by visual lines
 nnoremap j gj
 nnoremap k gk
 
-set updatetime=4000
-set undofile
-set undodir=~/.vim/undodir
 
 
-set textwidth=100
-
-" for latex-suite:
-set grepprg=grep\ -nH\ $*
-let g:tex_flavor='latex'
-
-" make easytags work with atp
-let g:easytags_updatetime_autodisable=1
-
-
-
-""""""""
-" VIKI "
-""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" VIKI 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:vikiHomePage = "/home/pazz/repo/wiki/index.viki"
 let g:vikiFamily = "anyword"
 let g:vikiOpenFileWith_ANY   = "silent !gnome-open %{FILE}"
@@ -124,3 +131,32 @@ let g:viki_intervikis['MOD']  = [$HOME."/repo/wiki/models/"]
 let g:viki_intervikis['REL']  = [$HOME."/repo/wiki/relations/"]
 let g:viki_intervikis['COM']  = [$HOME."/repo/wiki/complexity/"]
 autocmd BufWritePost /home/pazz/repo/wiki/*/*.viki execute '!git add % && git commit -m %'
+
+
+
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ATP
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set iskeyword+=:
+"
+let g:Tex_Leader = '#'
+let g:Tex_DefaultTargetFormat = 'pdf'
+let b:atp_Viewer = 'zathura'
+let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
+
+let g:Tex_AutoFolding = 0
+let g:Tex_Folding = 0
+
+set winaltkeys=no
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" python
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ let g:pymode_lint_write = 0
+ autocmd FileType python map <F5> :PyLint<cr>
+
+
+
