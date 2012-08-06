@@ -1,0 +1,67 @@
+#AU: Böhm, S.; Göller, S. & Jancar, P. 
+#TI: Bisimilarity of One-Counter Processes Is PSPACE-Complete 
+
+* Bisimilarity of One-Counter Processes Is PSPACE-Complete 
+** Böhm, S.; Göller, S. & Jancar, P. 
+
+----
+ 1. a PSPACE algorithm for (strong) Bisimilarity in [[models/oca]]
+ 2. P-completeness for $\mbsim$-regularity for [[models/oca]]
+----
+This paper continues Jancars work [[bib/Jan1997]] on the topic, where decidability was first shown
+with similar techniques. PSPACE-hardness of 1) has been shown in Srba 2009.
+ 
+
+The Algorithm introduced generates the bisimulation on the fly:
+Given $p(m),q(n)$, a polnomial-time algorithm is used to classify the pair as
+''surely bisimilar'', ''surely non-bisimilar'' or as a ''candidate'',
+which has to be further evaluated.
+The Idea here is introducing a ''distance to INC'', the set of configurations 
+which are not $|Q|$-bisimilar (stratification) to a state in the finite-state version $F_N$ of the net.
+If $p(m),q(n)$ have different distances, they are surely non-bisimilar. Also, if $m,n\ge |Q|$
+and both have infinite distances (always behave like a state in $F_N$) and $p,q$ are bisimilar
+(bisimulation on FSA is P-complete) then they are surely bisimilar. All other pairs are candidates.
+
+An important ingredient for the following is that non-bisimilarity can be verifyed locally, i.e.
+for a relation $R\subseteq Q\x\N\x Q\x\N$, for checking whether a pair as above satisfyes the 
+bisimilarity condition one only needs to look at the $NEIGHBOURS(m,n) = \{p'(m'),q'(n'): |m'-m|\le 1, |n'-n|\le 1 \}$
+
+Also, the set $CAND_i$, of all candidate-pairs with first counter is $i$ is finite, polynomially bounded and
+in $P$ time computable.
+The algorithm enumerates $CAND_i$, for each nondeterministically guesses a subset $B_i\subseteq CAND_i$,
+verifyes its guess locally. In each stage, only the sets $B_{i-1},B_i,B_{i+1}$ will be stored!
+This can continue forever iff the pair was bisimilar. (1)
+
+Just like in [[BIB::JKM2000]], after at most
+exponentially many such steps, we can stop and conclude bisimilarity.
+The correctness of the halting condition is proved via repetative patterns:
+The distribution of bisimilar pairs in $CAND$ is characterised as lying on ''rationally sloped belts'':
+each bisimilar pair in $p(m),q(n) \in CAND$ we have $n=\rho \cdot m + \chi$ for bounded rationals $\rho, \chi$.
+(lemma 11/3). That means one can choose the period of a subsequence of the approximation sequence so that
+it yields two integers $m_i,m_2$ such that the ''cuts'' (subsets of $CAND_{m_i}$ restricted to one particular belt, identified with its slope $\rho$)
+repeat: The cut at $m_1$ and $m_2$ as well as their direct successors at stages $m_1+1,m_2+1$ are isomorphic.
+We can then "fill in the gaps" accordingly. If the original pair of configurations is in $CAND_0$ and after exponentially (fixed,see p186)
+many steps no (local) contradiction to bisimularity has been found, the above discussion yields that the approximation will continue
+forever (without local contradictions), therefore bisimilarity holds (1).
+
+** 2 regularity
+*hardness* by reduction from FSA bisimilarity to OCN regularity:
+take finite processes $f,g$ and define net like this $s\step{a,+}s, s\step{a,-}s, s\step{b}f, s\step{b,-}g$.
+in the OCN f and g behave as in the FSA. then,
+$f\mbsim g$ implies that the bisim quotient of s is finite, $f\not\mbsim g$ means there are inifinitely many pairwise
+inequivalent processes $s(n)$ reachable from $s(0)$.
+
+*** containment in P
+s(m) is not regular if 
+ - it can reach processes with arbitrary high distance to INC. or,
+ - it can reach $s(m)\step{}^*q(m+2|Q|)\step{}^*INC$.
+point 2 comes from the fact that to reach level $m+2|Q|$ and then back down to INC, there must be pumpable cycles involved.
+This then allows arbitrary high distances to INC as in point 1.
+
+Observations that lead to a P algorithm for regularity:
+ 1. one can compute (in P) all $q(m +2k)$ with finite distances to INC
+ 2. reachability from p0 to q2k can be done, that is one can compute all q2k (by 1. with fin. distances to INC) reachable from p0.
+
+Now to check regularity of p(m) one just has to check reachability to q(m+2k) for one of the states q determined in 2.
+or reachability of a q(0) wich is non-regular.
+
