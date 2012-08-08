@@ -2,6 +2,12 @@
 " Vim Addon Manager
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+let s:pluglist = [
+\   'SuperTab%1643', 'Solarized', 'tlib', 'github:tomtom/viki_vim',
+\   'AutomaticLaTeXPlugin', 'Python-mode-klen', 'pyflakes%2441', 'snipmate',
+\   'snipmate-snippets', 'delimitMate', 'vimwiki'
+\]
+
         fun! EnsureVamIsOnDisk(vam_install_path)
           if !filereadable(a:vam_install_path.'/vim-addon-manager/.git/config')
              \&& 1 == confirm("Clone VAM into ".a:vam_install_path."?","&Y\n&N")
@@ -32,9 +38,8 @@
           let vam_install_path = expand('$HOME') . '/.vim/vim-addons'
           call EnsureVamIsOnDisk(vam_install_path)
           exec 'set runtimepath+='.vam_install_path.'/vim-addon-manager'
-
           " Tell VAM which plugins to fetch & load:
-          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen', 'pyflakes%2441', 'snipmate', 'snipmate-snippets','delimitMate'], {'auto_install' : 0})
+          call vam#ActivateAddons(s:pluglist, {'auto_install' : 0})
           " sample: call vam#ActivateAddons(['pluginA','pluginB', ...], {'auto_install' : 0})
 
           " Addons are put into vam_install_path/plugin-name directory
@@ -119,11 +124,16 @@ let g:SuperTabDefaultCompletionType = "context"
 " VIKI 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:vikiHomePage = "/home/pazz/repo/wiki/index.viki"
-let g:vikiFamily = "anyword"
+"let g:vikiFamily = "anyword"
 let g:vikiOpenFileWith_ANY   = "silent !gnome-open %{FILE}"
 "let g:vikiMapLeader = "<LocalLeader>w"
 let g:vikiMapLeader = "?"
 let g:deplatePrg = "deplate -x -X "
+au FileType viki compiler deplate
+let g:vikiFancyHeadings = 1
+nmap <space> :VikiFindNext<cr>
+nmap <S-space> :VikiFindPrevious<cr>
+
 au FileType viki compiler deplate
 autocmd! BufRead,BufNewFile *.viki set filetype=viki
 let g:vikiNameSuffix=".viki"
@@ -169,4 +179,3 @@ set winaltkeys=no
 " delimitMate
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let delimitMate_autoclose = 0
-
