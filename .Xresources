@@ -10,11 +10,13 @@ URxvt.keysym.M-Escape: perl:keyboard-select:activate
 !URxvt.background:      #fdf6e3
 URxvt.foreground:      light gray
 URxvt.scrollBar:       false
-URxvt*font: xft:Bitstream Vera Sans Mono:size=10
+!URxvt*font: xft:Bitstream Vera Sans Mono, xft:Symbola:size=10
+!URxvt*font: xft:Symbola:size=10,antialias=false
+!URxvt*boldfont: xft:Symbola Bold:size=10
 !URxvt*font: xft:Droid Sans Mono:size=10
-!URxvt*font: xft:Monospace:pixelsize=12
+URxvt*font: xft:Monospace:size=12, xft:Symbola:pixelsize=12
 !Urxvt*boldFont: xft:Droid Sans Mono:size=10:style=Bold
-URxvt.letterSpace: -1
+URxvt.letterSpace: 0
 !URxvt.cursorColor:  #89B83F
 !URxvt.pointerColor: #FFFFFF
 
