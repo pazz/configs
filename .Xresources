@@ -6,15 +6,17 @@ URxvt.urlLauncher:     firefox
 URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
-URxvt.background:      black
+!URxvt.background:      black
 !URxvt.background:      #fdf6e3
-!URxvt.foreground:      white
+URxvt.foreground:      light gray
 URxvt.scrollBar:       false
-URxvt*font: xft:Bitstream Vera Sans Mono:size=10
+!URxvt*font: xft:Bitstream Vera Sans Mono, xft:Symbola:size=10
+!URxvt*font: xft:Symbola:size=10,antialias=false
+!URxvt*boldfont: xft:Symbola Bold:size=10
 !URxvt*font: xft:Droid Sans Mono:size=10
-!URxvt*font: xft:Monospace:pixelsize=12
+URxvt*font: xft:Monospace:size=12, xft:Symbola:pixelsize=12
 !Urxvt*boldFont: xft:Droid Sans Mono:size=10:style=Bold
-URxvt.letterSpace: -1
+URxvt.letterSpace: 0
 !URxvt.cursorColor:  #89B83F
 !URxvt.pointerColor: #FFFFFF
 
@@ -39,22 +41,22 @@ xdvi.shrinkFactor:  5
 xdvi.sideMargin:    2.5cm
 xdvi.topMargin:     3cm
 
-#define S_base03        #002b36
-#define S_base02        #073642
-#define S_base01        #586e75
-#define S_base00        #657b83
-#define S_base0         #839496
-#define S_base1         #93a1a1
-#define S_base2         #eee8d5
-#define S_base3         #fdf6e3
-#define S_yellow        #b58900
-#define S_orange        #cb4b16
-#define S_red           #dc322f
-#define S_magenta       #d33682
-#define S_violet        #6c71c4
-#define S_blue          #268bd2
-#define S_cyan          #2aa198
-#define S_green         #859900
+#define S_base03 #002b36
+#define S_base02 #073642
+#define S_base01 #586e75
+#define S_base00 #657b83
+#define S_base0 #839496
+#define S_base1 #93a1a1
+#define S_base2 #eee8d5
+#define S_base3 #fdf6e3
+#define S_yellow #b58900
+#define S_orange #cb4b16
+#define S_red #dc322f
+#define S_magenta #d33682
+#define S_violet #6c71c4
+#define S_blue #268bd2
+#define S_cyan #2aa198
+#define S_green #859900
 
 *background:            S_base03
 *foreground:            S_base00
