@@ -8,7 +8,7 @@
  1. a PSPACE algorithm for (strong) Bisimilarity in [[models/oca]]
  2. P-completeness for $\mbsim$-regularity for [[models/oca]]
 ----
-This paper continues Jancars work [[bib/Jan1997]] on the topic, where decidability was first shown
+This paper continues Jancars work [[BIB::Jan1997]] on the topic, where decidability was first shown
 with similar techniques. PSPACE-hardness of 1) has been shown in Srba 2009.
  
 
