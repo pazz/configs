@@ -34,7 +34,7 @@
           exec 'set runtimepath+='.vam_install_path.'/vim-addon-manager'
 
           " Tell VAM which plugins to fetch & load:
-          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen', 'pyflakes%2441', 'snipmate', 'snipmate-snippets','delimitMate'], {'auto_install' : 0})
+          call vam#ActivateAddons(['SuperTab%1643', 'Solarized', 'tlib','github:tomtom/viki_vim', 'AutomaticLaTeXPlugin','Python-mode-klen', 'pyflakes%2441', 'snipmate', 'snipmate-snippets','delimitMate'], {'auto_install' : 1})
           " sample: call vam#ActivateAddons(['pluginA','pluginB', ...], {'auto_install' : 0})
 
           " Addons are put into vam_install_path/plugin-name directory
@@ -119,23 +119,24 @@ let g:SuperTabDefaultCompletionType = "context"
 " VIKI 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:vikiHomePage = "/home/pazz/repo/wiki/index.viki"
-let g:vikiFamily = "anyword"
+"let g:vikiFamily = "anyword"
 let g:vikiOpenFileWith_ANY   = "silent !gnome-open %{FILE}"
 "let g:vikiMapLeader = "<LocalLeader>w"
 let g:vikiMapLeader = "?"
-let g:deplatePrg = "deplate -x -X "
+let g:deplatePrg = "deplate -x -X -d html/"
 au FileType viki compiler deplate
 autocmd! BufRead,BufNewFile *.viki set filetype=viki
+au FileType tex let b:vikiFamily="LaTeX"
 let g:vikiNameSuffix=".viki"
 
 let g:viki_intervikis = {}
-let g:viki_intervikis['BIB']  = [$HOME."/repo/bib/notes"]
-autocmd BufNewFile /home/pazz/repo/bib/notes/*.viki TSkeletonSetup bibnote.viki
-autocmd BufWritePost /home/pazz/repo/bib/notes/*.viki execute '!git add % && git commit -m %'
-let g:viki_intervikis['MOD']  = [$HOME."/repo/wiki/models/"]
-let g:viki_intervikis['REL']  = [$HOME."/repo/wiki/relations/"]
-let g:viki_intervikis['COM']  = [$HOME."/repo/wiki/complexity/"]
-autocmd BufWritePost /home/pazz/repo/wiki/*/*.viki execute '!git add % && git commit -m %'
+"call viki#Define('BIB', $HOME."/repo/bib/notes", ".viki")
+"autocmd BufWritePost /home/pazz/repo/bib/notes/*.viki execute '!git add % && git commit -m %'
+let g:viki_intervikis['V']  = [$HOME."/repo/wiki", ".viki"]
+
+autocmd BufNewFile /home/pazz/repo/wiki/*\d\d\d\d.viki exe "normal OBIBSKEL\<tab>"
+autocmd BufWritePre /home/pazz/repo/wiki/*.viki silent! cd %:h
+autocmd BufWritePost /home/pazz/repo/wiki/*.viki execute '!git add % && git commit -m %'
 
 
 
