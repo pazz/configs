@@ -5,7 +5,7 @@
 let s:pluglist = [
 \   'SuperTab%1643', 'Solarized', 'tlib', 'github:tomtom/viki_vim',
 \   'AutomaticLaTeXPlugin', 'Python-mode-klen', 'pyflakes%2441', 'snipmate',
-\   'snipmate-snippets', 'delimitMate', 'vimwiki'
+\   'snipmate-snippets'
 \]
 
         fun! EnsureVamIsOnDisk(vam_install_path)
