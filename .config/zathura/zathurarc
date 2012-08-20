@@ -7,4 +7,4 @@ map - zoom out
 
 set recolor-darkcolor "#93A1A1"
 set recolor-lightcolor "#002B36"
-set recolor true
+set adjust-open "width"
