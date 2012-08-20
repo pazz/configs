@@ -9,6 +9,7 @@ let s:pluglist = [
 \   'snipmate', 'snipmate-snippets',
 \   'fugitive',
 \   'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim'
+\   'matchit.zip',
 \]
 
 "\   'AutomaticLaTeXPlugin',
