@@ -4,17 +4,24 @@
 
 " list of plugns to activate
 let s:pluglist = [
-\   'SuperTab%1643', 'Solarized', 'tlib', 'github:tomtom/viki_vim',
-\   'Python-mode-klen',
-\   'snipmate', 'snipmate-snippets',
-\   'fugitive',
-\   'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
-\   'matchit.zip',
+\'Solarized',
+\'tlib',
+\'github:tomtom/viki_vim',
+\'github:ervandew/supertab',
+\'Python-mode-klen',
+\'snipmate', 'snipmate-snippets',
+\'fugitive',
+\'matchit.zip',
+\'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
 \]
-
-"\   'AutomaticLaTeXPlugin',
-"\   'LaTeX-Suite_aka_Vim-LaTeX',
-" 'pyflakes%2441',
+"
+let notused = [
+\'LaTeX_Box',
+\'github:LaTeX-Box-Team/LaTeX-Box',
+\'AutomaticLaTeXPlugin',
+\'LaTeX-Suite_aka_Vim-LaTeX',
+\'pyflakes%2441',
+\]
 
 " setup VAM
 " this bit is taken from the VAM docs
@@ -127,7 +134,9 @@ nnoremap k gk
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Supertab
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let g:SuperTabDefaultCompletionType = "context"
+let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
+"let g:SuperTabDefaultCompletionType = "context"
+"let g:SuperTabContextDefaultCompletionType = "<c-o>"
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -165,16 +174,21 @@ autocmd BufWritePost /home/pazz/repo/wiki/*.viki execute '!git add % && git comm
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ATP
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set iskeyword+=:
+"set iskeyword+=:
 "
 let g:Tex_Leader = '#'
 let g:Tex_DefaultTargetFormat = 'pdf'
 let b:atp_Viewer = 'zathura'
-let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
-let b:atp_TexCompiler  = "pdflatex"
+"let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
+"let b:atp_TexCompiler  = "pdflatex"
 
 let g:Tex_AutoFolding = 0
 let g:Tex_Folding = 0
+
+let g:LatexBox_viewer = 'zathura'
+"let g:LatexBox_latexmk_options="-pvc"
+let g:LatexBox_latexmk_options=""
+let g:LatexBox_output_type="pdf"
 
 set winaltkeys=no
 
@@ -187,8 +201,3 @@ set winaltkeys=no
  autocmd FileType python map <F5> :PyLint<cr>
  autocmd FileType python map <F6> :PyLintAuto<cr>
 
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" delimitMate
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let delimitMate_autoclose = 0
