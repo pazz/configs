@@ -63,4 +63,5 @@ tags = -inbox;-new
 message = alot mails
 
 [ArchiveSentMailsFilter]
+sent_tag = sent
 [InboxFilter]

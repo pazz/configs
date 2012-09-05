@@ -138,6 +138,32 @@ let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
 "let g:SuperTabDefaultCompletionType = "context"
 "let g:SuperTabContextDefaultCompletionType = "<c-o>"
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ATP
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set iskeyword+=:
+"
+let g:Tex_Leader = '#'
+let g:Tex_DefaultTargetFormat = 'pdf'
+let b:atp_Viewer = 'zathura'
+let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
+let b:atp_TexCompiler = "pdflatex"
+let b:atp_TexFlavor = "latex"
+let b:atp_ProjectScript = 0
+
+let g:Tex_AutoFolding = 0
+let g:Tex_Folding = 0
+
+set winaltkeys=no
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" python
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ let g:pymode_lint_write = 0
+ autocmd FileType python map <F5> :PyLint<cr>
+ autocmd FileType python map <F6> :PyLintAuto<cr>
+
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " VIKI 
@@ -166,38 +192,3 @@ let g:viki_intervikis['V']  = [$HOME."/repo/wiki", ".viki"]
 autocmd BufNewFile /home/pazz/repo/wiki/*\d\d\d\d.viki exe "normal OBIBSKEL\<tab>"
 autocmd BufWritePre /home/pazz/repo/wiki/*.viki silent! cd %:h
 autocmd BufWritePost /home/pazz/repo/wiki/*.viki execute '!git add % && git commit -m %'
-
-
-
-
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" ATP
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"set iskeyword+=:
-"
-let g:Tex_Leader = '#'
-let g:Tex_DefaultTargetFormat = 'pdf'
-let b:atp_Viewer = 'zathura'
-"let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
-"let b:atp_TexCompiler  = "pdflatex"
-
-let g:Tex_AutoFolding = 0
-let g:Tex_Folding = 0
-
-let g:LatexBox_viewer = 'zathura'
-"let g:LatexBox_latexmk_options="-pvc"
-let g:LatexBox_latexmk_options=""
-let g:LatexBox_output_type="pdf"
-
-set winaltkeys=no
-
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" python
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
- let g:pymode_lint_write = 0
- let g:pymode_utils_whitespaces = 0
- autocmd FileType python map <F5> :PyLint<cr>
- autocmd FileType python map <F6> :PyLintAuto<cr>
-
