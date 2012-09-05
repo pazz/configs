@@ -9,8 +9,8 @@ thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages
 
 #bug_on_exit = true
 editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
-editor_spawn = True
-editor_in_thread = True
+editor_spawn = False
+editor_in_thread = False
 
 #show_statusbar = false
 #quote_prefix = '|'
@@ -48,6 +48,7 @@ prompt_suffix = "> "
     type = sendmail
     sendmail_command = msmtp --account=gmail -t
     draft_box = maildir:///home/pazz/mail/gmail/[Google Mail].Drafts
+    #sent_box = maildir:///home/pazz/Maildir/Sent
     sent_box = maildir:///home/pazz/mail/gmail/[Google Mail].Sent Mail
     [[[abook]]]
       type = shellcommand
@@ -71,6 +72,9 @@ prompt_suffix = "> "
 
 
 [bindings]
+  g = "shellescape 'mutt -v'"
+  G = "!mutt -v"
+  H = "bnext;bufferlist"
   1 = compose --template bpp
   M = compose --spawn=1
   T = search is:todo
@@ -78,6 +82,13 @@ prompt_suffix = "> "
   S = search is:sent
   % = "shellescape 'killall offlineimap && /home/pazz/bin/pullmail.sh'"
   ^ = "shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'"
+  'meta left' = bprevious
+  'meta right' = bnext
+  'meta 1' = buffer 1
+  'meta 2' = buffer 2
+  'meta 3' = buffer 3
+  'meta 4' = buffer 4
+  'meta 5' = buffer 5
   
   [[search]]
     & = toggletags killed
@@ -150,95 +161,95 @@ prompt_suffix = "> "
 #    normal = "", "", "", "", "#0ff", "#006"
   [[signed]]
     translated = ®
-#    normal = "", "", "", "", "", ""
-#  [[killed]]
-#    translated = τ  # ☠
-##    normal = "", "", "", "", g70, g27
-#  [[lists]]
-#    translated = 📃#⎎
-#
-#  [[attachment]]
-#    translated = 📎
-#    normal = "", "", 'light blue', '', 'light blue', ''
-#  
-#  [[bug]]
-#    translated = 🐜#🐛🐝
-#    normal = "", "", "dark red", "", "light red", ""
-#  [[todo]]
-#    normal = "", "", white, "dark magenta", white, "dark magenta"
-#  
-#  [[C4P]]
-#    normal = "", "", "", "", g74, g23
-#  
-#  [[seminars]]
-#    normal = "", "", "", "", "", "#6da"
-#  
-#  [[G+]]
-#    normal = "", "", "", "", "#0ff", "#00f"
-#  
-#  [[edlug]]
-#    normal = "", "", "", "", "#006", "#08d"
-#  
-#  [[peergroup]]
-#    normal = "", "", "", "", "#006", "#08d"
-#  
-#  [[soc]]
-#    normal = "", "", "", "", "#6da", "#08d"
-#  
-#  [[foo]]
-#    translated = ⚽
-#    #normal = "", "", "", "", "#6da", "#08d"
-#  
-#  [[wols]]
-#    normal = "", "", "", "", "#6da", "#08d"
-#  
-#  [[sicsa]]
-#    normal = "", "", "", "", "#6da", "#060"
-#  
-#  [[gradschool]]
-#    normal = "", "", "", "", "#6da", "#060"
-#  
-#  [[students]]
-#    normal = "", "", "", "", g74, "#080"
-#  
-#  [[phd-degree-students]]
-#    translated = PhD
-#    normal = "", "", "", "", g74, "#080"
-#  [[automata]]
-#    normal = "", "", "", "", g74, "#060"
-#  
-#  [[sup.*]]
-#    translation = sup.*, sup
-#    normal = "", "", "", "", "#d8a", "#606"
-#  
-#  [[atp-vim-list]]
-#    translated = atp
-#    normal = "", "", "", "", "", "#606"
-#  
-#  [[inf-general]]
-#    translated = inf
-#  
-#  [[alot]]
-#    normal = "", "", "", "", "#80d,bold", "#df6"
-#  
-#  [[offlineimap-project]]
-#    translated = offlineimap
-#    normal = "", "", "", "", "#d8a", "#606"
-#  
-#  [[urwid]]
-#    normal = "", "", "", "", "#080", "#606"
-#  
-#  [[mutt-kz]]
-#    normal = "", "", "", "", "#fff", "#606"
-#  
-#  [[notmuch::bug]]
-#    translated = nm:bug
-#    normal = "", "", "light red, bold", "light blue", "light red, bold", "#88d"
-#  
-#  [[notmuch.*]]
-#    translation = notmuch::(.*), \1
-#    normal = "", "", "", "", "#fff", "#88d"
-#  
-#  [[lfcs-.*]]
-#    translation = lfcs-(.*), LFCS-\1
-#    normal = "", "", "", "", "#6da", "#060"
+    normal = "", "", "", "", "", ""
+  [[killed]]
+    translated = τ  # ☠
+#    normal = "", "", "", "", g70, g27
+  [[lists]]
+    translated = 📃#⎎
+
+  [[attachment]]
+    translated = 📎
+    normal = "", "", 'light blue', '', 'light blue', ''
+  
+  [[bug]]
+    translated = 🐜#🐛🐝
+    normal = "", "", "dark red", "", "light red", ""
+  [[todo]]
+    normal = "", "", white, "dark magenta", white, "dark magenta"
+  
+  [[C4P]]
+    normal = "", "", "", "", g74, g23
+  
+  [[seminars]]
+    normal = "", "", "", "", "", "#6da"
+  
+  [[G+]]
+    normal = "", "", "", "", "#0ff", "#00f"
+  
+  [[edlug]]
+    normal = "", "", "", "", "#006", "#08d"
+  
+  [[peergroup]]
+    normal = "", "", "", "", "#006", "#08d"
+  
+  [[soc]]
+    normal = "", "", "", "", "#6da", "#08d"
+  
+  [[foo]]
+    translated = ⚽
+    #normal = "", "", "", "", "#6da", "#08d"
+  
+  [[wols]]
+    normal = "", "", "", "", "#6da", "#08d"
+  
+  [[sicsa]]
+    normal = "", "", "", "", "#6da", "#060"
+  
+  [[gradschool]]
+    normal = "", "", "", "", "#6da", "#060"
+  
+  [[students]]
+    normal = "", "", "", "", g74, "#080"
+  
+  [[phd-degree-students]]
+    translated = PhD
+    normal = "", "", "", "", g74, "#080"
+  [[automata]]
+    normal = "", "", "", "", g74, "#060"
+  
+  [[sup.*]]
+    translation = sup.*, sup
+    normal = "", "", "", "", "#d8a", "#606"
+  
+  [[atp-vim-list]]
+    translated = atp
+    normal = "", "", "", "", "", "#606"
+  
+  [[inf-general]]
+    translated = inf
+  
+  [[alot]]
+    normal = "", "", "", "", "#80d,bold", "#df6"
+  
+  [[offlineimap-project]]
+    translated = offlineimap
+    normal = "", "", "", "", "#d8a", "#606"
+  
+  [[urwid]]
+    normal = "", "", "", "", "#080", "#606"
+  
+  [[mutt-kz]]
+    normal = "", "", "", "", "#fff", "#606"
+  
+  [[notmuch::bug]]
+    translated = nm:bug
+    normal = "", "", "light red, bold", "light blue", "light red, bold", "#88d"
+  
+  [[notmuch.*]]
+    translation = notmuch::(.*), \1
+    normal = "", "", "", "", "#fff", "#88d"
+  
+  [[lfcs-.*]]
+    translation = lfcs-(.*), LFCS-\1
+    normal = "", "", "", "", "#6da", "#060"
