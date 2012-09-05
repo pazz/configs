@@ -3,11 +3,16 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let s:pluglist = [
-\   'SuperTab%1643', 'Solarized', 'tlib', 'github:tomtom/viki_vim',
-\   'AutomaticLaTeXPlugin', 'Python-mode-klen', 'pyflakes%2441',
+\   'SuperTab%1643', 'Solarized',
 \   'snipmate', 'snipmate-snippets',
 \   'matchit.zip',
+\   'tlib',
+\   'github:tomtom/viki_vim',
+\   'Python-mode-klen', 'pyflakes%2441',
+\   'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
 \]
+"\   'LaTeX_Box'
+"\   'LaTeX-Suite_aka_Vim-LaTeX'
 
         fun! EnsureVamIsOnDisk(vam_install_path)
           if !filereadable(a:vam_install_path.'/vim-addon-manager/.git/config')
@@ -120,6 +125,32 @@ nnoremap k gk
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:SuperTabDefaultCompletionType = "context"
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ATP
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set iskeyword+=:
+"
+let g:Tex_Leader = '#'
+let g:Tex_DefaultTargetFormat = 'pdf'
+let b:atp_Viewer = 'zathura'
+let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
+let b:atp_TexCompiler = "pdflatex"
+let b:atp_TexFlavor = "latex"
+let b:atp_ProjectScript = 0
+
+let g:Tex_AutoFolding = 0
+let g:Tex_Folding = 0
+
+set winaltkeys=no
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" python
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ let g:pymode_lint_write = 0
+ autocmd FileType python map <F5> :PyLint<cr>
+ autocmd FileType python map <F6> :PyLintAuto<cr>
+
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " VIKI 
@@ -153,31 +184,3 @@ autocmd BufWritePost /home/pazz/repo/wiki/*.viki execute '!git add % && git comm
 
 
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" ATP
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set iskeyword+=:
-"
-let g:Tex_Leader = '#'
-let g:Tex_DefaultTargetFormat = 'pdf'
-let b:atp_Viewer = 'zathura'
-let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
-
-let g:Tex_AutoFolding = 0
-let g:Tex_Folding = 0
-
-set winaltkeys=no
-
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" python
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
- let g:pymode_lint_write = 0
- autocmd FileType python map <F5> :PyLint<cr>
- autocmd FileType python map <F6> :PyLintAuto<cr>
-
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" delimitMate
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let delimitMate_autoclose = 0
