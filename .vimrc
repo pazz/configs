@@ -13,6 +13,7 @@ let s:pluglist = [
 \'fugitive',
 \'matchit.zip',
 \'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
+\'github:Lokaltog/vim-powerline',
 \]
 "
 let notused = [
@@ -28,16 +29,8 @@ let notused = [
 fun! EnsureVamIsOnDisk(vam_install_path)
   if !filereadable(a:vam_install_path.'/vim-addon-manager/.git/config')
      \&& 1 == confirm("Clone VAM into ".a:vam_install_path."?","&Y\n&N")
-    " I'm sorry having to add this reminder. Eventually it'll pay off.
-    call confirm("Remind yourself that most plugins ship with ".
-                \"documentation (README*, doc/*.txt). It is your ".
-                \"first source of knowledge. If you can't find ".
-                \"the info you're looking for in reasonable ".
-                \"time ask maintainers to improve documentation")
     call mkdir(a:vam_install_path, 'p')
     execute '!git clone --depth=1 git://github.com/MarcWeber/vim-addon-manager '.shellescape(a:vam_install_path, 1).'/vim-addon-manager'
-    " VAM runs helptags automatically when you install or update 
-    " plugins
     exec 'helptags '.fnameescape(a:vam_install_path.'/vim-addon-manager/doc')
   endif
 endf
@@ -56,7 +49,7 @@ fun! SetupVAM()
   call EnsureVamIsOnDisk(vam_install_path)
   exec 'set runtimepath+='.vam_install_path.'/vim-addon-manager'
   " Tell VAM which plugins to fetch & load:
-  call vam#ActivateAddons(s:pluglist, {'auto_install' : 0, 'shell_commands_run_method': 'system'})
+  silent call vam#ActivateAddons(s:pluglist, {'auto_install' : 0, 'shell_commands_run_method': 'system'})
   " sample: call vam#ActivateAddons(['pluginA','pluginB', ...], {'auto_install' : 0})
 
   " Addons are put into vam_install_path/plugin-name directory
@@ -192,3 +185,15 @@ let g:viki_intervikis['V']  = [$HOME."/repo/wiki", ".viki"]
 autocmd BufNewFile /home/pazz/repo/wiki/*\d\d\d\d.viki exe "normal OBIBSKEL\<tab>"
 autocmd BufWritePre /home/pazz/repo/wiki/*.viki silent! cd %:h
 autocmd BufWritePost /home/pazz/repo/wiki/*.viki execute '!git add % && git commit -m %'
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Powerline
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set nocompatible   " Disable vi-compatibility
+set laststatus=2   " Always show the statusline
+set encoding=utf-8 " Necessary to show Unicode glyphs
+let g:Powerline_symbols = 'unicode'
+"let g:Powerline_symbols = 'fancy'
+"let g:Powerline_dividers_override = ['▙', '▚', '▟', '▞']
+let g:Powerline_dividers_override = ['▙', '╲', '▟', 'y╱']
+"⛕ ❯⟪􏿽
