@@ -26,7 +26,7 @@ folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Tras
 #                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
 
 ssl = yes
-cert_fingerprint = f3043dd689a2e7dddfbef82703a6c65ea9b634c1
+cert_fingerprint = 6d1b5b5ee0180ab493b71d3b94534b5ab937d042
 maxconnections = 5
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
@@ -45,11 +45,11 @@ type = Maildir
 localfolders = /home/pazz/mail/uoe/
 [Repository uoeimap]
 type = IMAP
-remotehost = imap.sms.ed.ac.uk
+remotehost = imap.staffmail.ed.ac.uk
 remoteuser = s0976898
 remotepasseval = getpwd("UoE")
 ssl = yes
-cert_fingerprint = f51692edb1370abf4e7589819682466c2010b265
+cert_fingerprint = e7e9d60b80c3c69aef59f97c413388770c01f0e8
 maxconnections = 6
 holdconnectionopen = yes
 idlefolders = ['INBOX']
