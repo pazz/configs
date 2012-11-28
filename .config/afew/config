@@ -26,7 +26,7 @@ query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to
 tags = -inbox;-new
 message = boring seminars
 [Filter.5]
-query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
+query = '(to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)) OR (from:thomas.bak@ed.ac.uk AND subject:"[seminars]") OR (is:seminars AND subject:ILCC/HCRC) OR (is:seminars AND subject:ICSA)'
 tags = -inbox;-new
 message = superboring seminars
 [Filter.6]
@@ -61,6 +61,15 @@ message = supervisors
 query = 'offlineimap'
 tags = -inbox;-new
 message = alot mails
+[Filter.14]
+query = 'edlug'
+tags = +edlug
+message = EDI linux user group
+
+[Filter.15]
+query = 'from:patricktotzke@gmail.com AND to:p.totzke@ed.ac.uk AND is:attachment'
+tags = +print
+message = print from phone
 
 [ArchiveSentMailsFilter]
 sent_tag = sent
