@@ -67,9 +67,9 @@ tags = +edlug
 message = EDI linux user group
 
 [Filter.15]
-query = 'from:patricktotzke@gmail.com AND to:p.totzke@ed.ac.uk AND is:attachment'
-tags = +print
-message = print from phone
+query = 'from:patricktotzke@gmail.com AND subject:"Note to self" AND attachment:amr'
+tags = +todo
+message = notes to self
 
 [ArchiveSentMailsFilter]
 sent_tag = sent
