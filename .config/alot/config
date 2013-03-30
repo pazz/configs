@@ -1,29 +1,36 @@
 #theme=mutt
 #theme=sup
+body_mimetype=text/plain
 theme = solarized_dark
+#prefer_plaintext=True
 #theme = solarized
 search_threads_sort_order = newest_first
+complete_matching_abook_only = False
 
-thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages}
+#thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages}
 
+show_count_in_tag_list = messages
 
 #bug_on_exit = true
-editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
-editor_spawn = False
-editor_in_thread = False
+#editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
+#editor_cmd = emacs +4
+#editor_spawn = False
+#editor_in_thread = False
 
 #show_statusbar = false
 #quote_prefix = '|'
+#compose_ask_tags = True
 
 #editor_in_thread = False
 #editor_spawn = True
 #editor_cmd = vim
 
+#edit_headers_whitelist = Attach,From,To,Subject
 edit_headers_whitelist = ,
 #edit_headers_blacklist = ' '
 #display_content_in_threadline = True
 
-displayed_headers = To,Cc,Bcc,Subject
+displayed_headers = To,Cc,Bcc,Subject,Tags,Date,Message-Id
 
 notify_timeout = 4
 #show_statusbar = False
@@ -31,7 +38,6 @@ notify_timeout = 4
 #timestamp_format = '%c'
 
 print_cmd = muttprint -F Utopia -a From_Date_*Subject*_/Tags/
-complete_matching_abook_only = False
 
 prompt_suffix = "> "
 
@@ -68,14 +74,13 @@ prompt_suffix = "> "
     signature_as_attachment = True
     [[[abook]]]
       type = abook
+      ignorecase = True
 
 
 
 [bindings]
-  g = "shellescape 'mutt -v'"
-  G = "!mutt -v"
-  H = "bnext;bufferlist"
-  1 = compose --template bpp
+  #G = "call hooks.test_globals()"
+  '[' = compose --template bpp
   M = compose --spawn=1
   T = search is:todo
   A = search is:alot
@@ -89,18 +94,23 @@ prompt_suffix = "> "
   'meta 3' = buffer 3
   'meta 4' = buffer 4
   'meta 5' = buffer 5
+  'g g' = move first
   
   [[search]]
+    #H = untag --all LA
     & = toggletags killed
     ! = toggletags flagged
     s = toggletags unread
     t = toggletags todo
+    #enter = "select; fold NOT is:unread"
   
   [[thread]]
-    G = "pipeto 'git am'"
+    #H = "call ui.current_buffer.get_selected_message().test_parser()"
+    #G = "pipeto 'git am'"
     t = toggletags todo
     a = toggletags inbox
     v = verify
+    ' ' = fold;move next;unfold
 
 ########################################################
 16_base03 = 'dark gray'
