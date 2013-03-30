@@ -3,65 +3,64 @@
 
 # This is the default filter chain
 [SpamFilter]
-#[ClassifyingFilter]
 [KillThreadsFilter]
 [ListMailsFilter]
+[ArchiveSentMailsFilter]
+sent_tag = sent
 
-#custom filters
+# add specific tags
 # remember to remove new tag when removing inbox!
-[Filter.1]
+[Filter.0]
 query = 'subject:alot'
 tags = +alot
 message = alot mails
-[Filter.2]
-query = 'to:notmuch@notmuchmail.org AND (subject:emacs OR subject:elisp OR "(defun" OR "(setq" OR PATCH)'
-tags = -inbox;-new
-message = notmuch emacs stuff
-[Filter.3]
+
+[Filter.1]
 query = 'sicsa-students@sicsa.ac.uk'
 tags = +sicsa
 message = sicsa
-[Filter.4]
-query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to:ianc-talks@inf.ed.ac.uk OR to:lingcirc@ling.ed.ac.uk'
-tags = -inbox;-new
-message = boring seminars
-[Filter.5]
-query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
-tags = -inbox;-new
-message = superboring seminars
-[Filter.6]
-query = 'pa-meetings or subject:"[PA]"'
-tags = +PA
-message = process algebra list
-[Filter.7]
-query = 'folder:uoe/Call4Papers'
-tags = +C4P;-inbox;-new
-message = call for papers
-[Filter.8]
+
+[Filter.2]
 query = 'from:foosoc.ed@gmail.com OR from:GT Silber OR from:lizzie.brough@eusa.ed.ac.uk'
 tags = +soc;+foo
 message = foosoc
-[Filter.9]
+
+[Filter.3]
 query = 'folder:gmail/G+'
 tags = +G+
 message = gmail spam
-[Filter.10]
-query = '(wczerwin@duch.mimuw.edu.pl OR ph209519@mimuw.edu.pl OR from:"Piotrek Hofman" OR Wojciech) OR (Colin AND BPP)'
-tags = +BPP
-message = warsaw connection
-[Filter.11]
+
+[Filter.4]
 query = 'to:wols@lists.ed.ac.uk'
 tags = +soc;+list;+wols
 message = wols newsletter
-[Filter.12]
+
+[Filter.5]
 query = 'from:rmayr@staffmail.ed.ac.uk OR from:cps@staffmail.ed.ac.uk'
 tags = +flagged
 message = supervisors
-[Filter.13]
-query = 'offlineimap'
-tags = -inbox;-new
-message = alot mails
 
-[ArchiveSentMailsFilter]
-sent_tag = sent
+
+# skip inbox
+[Filter.6]
+query = 'to:notmuch@notmuchmail.org AND (subject:emacs OR subject:elisp OR "(defun" OR "(setq" OR PATCH)'
+tags = -inbox;-new
+message = notmuch emacs stuff
+
+[Filter.7]
+query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to:ianc-talks@inf.ed.ac.uk OR to:lingcirc@ling.ed.ac.uk'
+tags = -inbox;-new
+message = boring seminars
+
+[Filter.8]
+query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
+tags = -inbox;-new
+message = superboring seminars
+
+[Filter.9]
+query = 'folder:uoe/Call4Papers'
+tags = +C4P;-inbox;-new
+message = call for papers
+
+# all thats still new goes into the inbox
 [InboxFilter]
