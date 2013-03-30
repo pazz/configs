@@ -61,6 +61,7 @@ shifty.config.tags = {
         mwfact = 0.65,
         position = 2, 
         icon=beautiful.tag_edit,
+        spawn = terminal
     },
     ["web"] = { 
         mwfact = 0.65,

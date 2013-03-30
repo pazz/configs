@@ -72,13 +72,14 @@ shifty.config.tags = {
         mwfact = 0.65,
         position = 2, 
         icon=beautiful.tag_edit,
+        spawn = terminal
     },
     ["web"] = { 
         mwfact = 0.65,
         position = 3, 
         init = false,
         icon=beautiful.tag_web,
-        spawn = 'firefox' 
+        spawn = 'firefox'
     },
     ["fm"] = { 	
         mwfact = 0.65,
