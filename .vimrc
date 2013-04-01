@@ -7,16 +7,16 @@ let s:pluglist = [
 \'Solarized',
 \'tlib',
 \'github:tomtom/viki_vim',
-\'github:ervandew/supertab',
 \'Python-mode-klen',
 \'snipmate', 'snipmate-snippets',
 \'fugitive',
 \'matchit.zip',
-\'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
+\'git:git://git.code.sf.net/p/atp-vim/code',
 \'github:Lokaltog/vim-powerline',
 \]
 "
 let notused = [
+\'github:ervandew/supertab',
 \'LaTeX_Box',
 \'github:LaTeX-Box-Team/LaTeX-Box',
 \'AutomaticLaTeXPlugin',
@@ -136,16 +136,17 @@ let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set iskeyword+=:
 "
+let g:atp_tab_map = 0
 let g:Tex_Leader = '#'
 let g:Tex_DefaultTargetFormat = 'pdf'
 let b:atp_Viewer = 'zathura'
 let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
 let b:atp_TexCompiler = "pdflatex"
 let b:atp_TexFlavor = "latex"
-let b:atp_ProjectScript = 0
+let b:atp_ProjectScript = 1
 
 let g:Tex_AutoFolding = 0
-let g:Tex_Folding = 0
+let g:Tex_Folding = 1
 
 set winaltkeys=no
 
