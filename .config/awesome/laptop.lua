@@ -99,9 +99,9 @@ shifty.config.tags = {
         spawn = 'jabref -s',
         icon= beautiful.tag_bib,
     },
-    ["calendar"] = {  
-        spawn="prism-google-calendar",
-        icon= beautiful.tag_cal,
+    ["p2p"] = {  
+        spawn="transgui",
+        icon= beautiful.tag_p2p,
         position = 7,
     },
     ["mail"] = { 
