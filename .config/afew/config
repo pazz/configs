@@ -40,24 +40,28 @@ query = 'from:rmayr@staffmail.ed.ac.uk OR from:cps@staffmail.ed.ac.uk'
 tags = +flagged
 message = supervisors
 
+[Filter.6]
+query = 'from:patricktotzke@gmail.com AND subject:"Note to self" AND attachment:amr'
+tags = +todo
+message = notes to self
 
 # skip inbox
-[Filter.6]
+[Filter.7]
 query = 'to:notmuch@notmuchmail.org AND (subject:emacs OR subject:elisp OR "(defun" OR "(setq" OR PATCH)'
 tags = -inbox;-new
 message = notmuch emacs stuff
 
-[Filter.7]
+[Filter.8]
 query = 'to:ilcc-hcrc-seminar@inf.ed.ac.uk OR to:ipab-members@inf.ed.ac.uk OR to:ianc-talks@inf.ed.ac.uk OR to:lingcirc@ling.ed.ac.uk'
 tags = -inbox;-new
 message = boring seminars
 
-[Filter.8]
+[Filter.9]
 query = 'to:seminars@inf.ed.ac.uk AND (from:hlow@exseed.ed.ac.uk OR from:hlow@staffmail.ed.ac.uk)'
 tags = -inbox;-new
 message = superboring seminars
 
-[Filter.9]
+[Filter.10]
 query = 'folder:uoe/Call4Papers'
 tags = +C4P;-inbox;-new
 message = call for papers

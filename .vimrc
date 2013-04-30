@@ -7,7 +7,6 @@ let s:pluglist = [
 \'Solarized',
 \'tlib',
 \'github:tomtom/viki_vim',
-\'github:ervandew/supertab',
 \'Python-mode-klen',
 \'github:garbas/vim-snipmate',
 \'snipmate-snippets',
@@ -18,6 +17,7 @@ let s:pluglist = [
 \]
 "
 let notused = [
+\'github:ervandew/supertab',
 \'LaTeX_Box',
 \'github:LaTeX-Box-Team/LaTeX-Box',
 \'AutomaticLaTeXPlugin',
@@ -137,6 +137,7 @@ let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set iskeyword+=:
 "
+let g:atp_tab_map = 0
 let g:Tex_Leader = '#'
 let g:Tex_DefaultTargetFormat = 'pdf'
 let b:atp_Viewer = 'zathura'
@@ -146,7 +147,7 @@ let b:atp_TexFlavor = "latex"
 let b:atp_ProjectScript = 1
 
 let g:Tex_AutoFolding = 0
-let g:Tex_Folding = 0
+let g:Tex_Folding = 1
 
 set winaltkeys=no
 
