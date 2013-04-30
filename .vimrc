@@ -9,10 +9,11 @@ let s:pluglist = [
 \'github:tomtom/viki_vim',
 \'github:ervandew/supertab',
 \'Python-mode-klen',
-\'snipmate', 'snipmate-snippets',
+\'github:garbas/vim-snipmate',
+\'snipmate-snippets',
 \'fugitive',
 \'matchit.zip',
-\'git:git://atp-vim.git.sourceforge.net/gitroot/atp-vim/atp-vim',
+\'git:git://git.code.sf.net/p/atp-vim/code',
 \'github:Lokaltog/vim-powerline',
 \]
 "
@@ -142,7 +143,7 @@ let b:atp_Viewer = 'zathura'
 let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode --enable-write18 $*'
 let b:atp_TexCompiler = "pdflatex"
 let b:atp_TexFlavor = "latex"
-let b:atp_ProjectScript = 0
+let b:atp_ProjectScript = 1
 
 let g:Tex_AutoFolding = 0
 let g:Tex_Folding = 0
@@ -154,6 +155,8 @@ set winaltkeys=no
 " python
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  let g:pymode_lint_write = 0
+ let g:pymode_utils_whitespaces = 0
+ let g:pymode_lint_checker = "pyflakes,pep8"
  autocmd FileType python map <F5> :PyLint<cr>
  autocmd FileType python map <F6> :PyLintAuto<cr>
 
