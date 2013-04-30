@@ -26,7 +26,7 @@ folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Tras
 #                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
 
 ssl = yes
-cert_fingerprint = 6d1b5b5ee0180ab493b71d3b94534b5ab937d042
+cert_fingerprint = b0ba392bba326e6feb1add4d04fa0fb86cd173fa
 maxconnections = 5
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
