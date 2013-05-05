@@ -66,5 +66,22 @@ query = 'folder:uoe/Call4Papers'
 tags = +C4P;-inbox;-new
 message = call for papers
 
+[HeaderMatchingFilter.0]
+header = subject
+pattern = .*CfP.*
+tags = +C4P;-inbox;-new
+message = call for papers
+
+#[HeaderMatchingFilter.1]
+#header = subject
+#pattern = .*CfP.* (?P<conf>.*?2013.*?) .*
+#tags = +{conf}
+#message = call for papers
+
+[Filter.11]
+query = 'is:offlineimap-project'
+tags = -inbox;-new
+message = OI list
+
 # all thats still new goes into the inbox
 [InboxFilter]

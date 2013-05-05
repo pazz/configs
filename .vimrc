@@ -8,7 +8,9 @@ let s:pluglist = [
 \'tlib',
 \'github:tomtom/viki_vim',
 \'Python-mode-klen',
-\'snipmate', 'snipmate-snippets',
+\'github:garbas/vim-snipmate',
+\'github:honza/vim-snippets',
+\'github:scrooloose/syntastic',
 \'fugitive',
 \'matchit.zip',
 \'git:git://git.code.sf.net/p/atp-vim/code',
@@ -123,6 +125,14 @@ set pastetoggle=<c-P>
 nnoremap j gj
 nnoremap k gk
 
+
+" Spell settings:
+function! SpellToggle()
+    let &l:spell=(&l:spell==0) " tricky, isn't it ;)
+    setl spell?
+endfunction
+map <F8>        :call SpellToggle()<CR>
+set spelllang=en_gb
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Supertab
