@@ -165,6 +165,8 @@ set winaltkeys=no
 " python
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  let g:pymode_lint_write = 0
+ let g:pymode_utils_whitespaces = 0
+ let g:pymode_lint_checker = "pyflakes,pep8"
  autocmd FileType python map <F5> :PyLint<cr>
  autocmd FileType python map <F6> :PyLintAuto<cr>
 
