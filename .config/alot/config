@@ -72,9 +72,9 @@ prompt_suffix = "> "
     #signature = ~/pt.uni.vcf
     #signature_filename = p.totzke.vcf
     signature_as_attachment = True
-    [[[abook]]]
-      type = abook
-      ignorecase = True
+    #[[[abook]]]
+    #  type = abook
+    #  ignorecase = True
 
 
 
