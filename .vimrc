@@ -85,6 +85,7 @@ set background=light
 
 filetype plugin indent on
 syntax on
+syntax spell toplevel
 
 "menu for tabcompletion in file open
 set wildmenu " turn on command line completion wild style
