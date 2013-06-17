@@ -28,8 +28,7 @@ mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 --mixer_cmd = terminal .. " -T alsamixer -e alsamixer"
 mixer_cmd = "pavucontrol"
 --mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
-mail_cmd = 'urxvt -T alot -e alot'
-gmail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc.gmail'
+mail_cmd = terminal .. " -T alot -e alot"
 
 -- Default modkey.
 modkey = "Mod4"
@@ -648,12 +647,10 @@ naughty.config.presets.critical.bg     = beautiful.bg_urgent
 naughty.config.presets.critical.fg     = beautiful.fg_urgent
 naughty.config.screen = screen.count()
 
---os.execute("export $(gnome-keyring-daemon -s)")
+--os.execute("eval $(gnome-keyring-daemon -s)")
 --os.execute("eval $(seahorse-agent --variables)")
 --os.execute("system-config-printer-applet & > /dev/null 2> /dev/null")
 --os.execute("gnome-power-manager&")
-os.execute("gnome-settings-daemon&")
+--os.execute("gnome-settings-daemon&")
 --os.execute("xfce4-power-manager&")
 os.execute("xset b 0 s 0 -dpms&")
---os.execute("offlineimap >~/.offlineimap.log&")
---os.execute("offlineimap -u Noninteractive.Quiet&")
