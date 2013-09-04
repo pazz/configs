@@ -8,7 +8,7 @@ local io = { popen = io.popen }
 local tonumber = tonumber
 local setmetatable = setmetatable
 local table = table
-local json = require("json")
+local json = require("cjson")
 -- }}}
 
 -- {{{ Variable definitions

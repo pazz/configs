@@ -9,7 +9,7 @@ local capi = {
     mouse = mouse,
     screen = screen
 }
-local json = require("json")
+local json = require("cjson")
 local awful = require("awful")
 local naughty = require("naughty")
 local beautiful = require('beautiful')
