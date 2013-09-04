@@ -27,7 +27,7 @@ URxvt.keysym.M-C-3: command:\033]710;lucidasanstypewriter-10\007\033]711;lucidas
 URxvt.keysym.M-C-4: command:\033]710;xft:Liberation Mono:style=Regular\007\033]711;xft:Liberation Mono:style=Regular\007
 URxvt.keysym.M-C-5: command:\033]710;xft:Bitstream Vera Sans Mono:style=Bold\007\033]711;xft:Bitstream Vera Sans Mono:style=Bold\007
 URxvt.keysym.M-C-6: command:\033]710;12x24\007\033]711;12x24\007
-URxvt.keysym.M-C-0: command:\033]710;lucidasanstypewriter-24\007\033]711;lucidasanstypewriter-24\007
+URxvt.keysym.M-C-0: command:\033]710;xft:Monospace:size=18,style=Regular\007\033]711;xft:Symbola:pixelsize=18,style=Regular\007
 
 !xdvi
 xdvi.editor:        vim --servername tex --remote +%l %f
