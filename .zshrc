@@ -15,7 +15,7 @@ ZSH_THEME="pazz"
 # CASE_SENSITIVE="true"
 
 # Comment this out to disable weekly auto-update checks
-# DISABLE_AUTO_UPDATE="true"
+DISABLE_AUTO_UPDATE="true"
 
 # Uncomment following line if you want to disable colors in ls
 # DISABLE_LS_COLORS="true"
@@ -39,4 +39,8 @@ unsetopt correct_all
 export PATH=/home/pazz/.local/bin:/home/pazz/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
 
 
-alias O="cd ~/repo/ocn/svn; git svn rebase"
+alias lm="latexmk -pdf -silent"
+alias lc="latexmk -c"
+alias lC="latexmk -C"
+#alias vim="vim --servername VIM"
+alias -s pdf=zathura
