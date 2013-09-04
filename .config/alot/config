@@ -72,9 +72,9 @@ prompt_suffix = "> "
     #signature = ~/pt.uni.vcf
     #signature_filename = p.totzke.vcf
     signature_as_attachment = True
-    [[[abook]]]
-      type = abook
-      ignorecase = True
+    #[[[abook]]]
+     # type = abook
+      #ignorecase = True
 
 
 
@@ -102,6 +102,7 @@ prompt_suffix = "> "
     ! = toggletags flagged
     s = toggletags unread
     t = toggletags todo
+    7 = toggletags travel
     #enter = "select; fold NOT is:unread"
   
   [[thread]]
@@ -111,6 +112,7 @@ prompt_suffix = "> "
     a = toggletags inbox
     v = verify
     ' ' = fold;move next;unfold
+    $ = call hooks.github(ui)
 
 ########################################################
 16_base03 = 'dark gray'
