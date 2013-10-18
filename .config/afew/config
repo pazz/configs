@@ -62,7 +62,7 @@ tags = -inbox;-new
 message = superboring seminars
 
 [Filter.10]
-query = 'folder:uoe/Call4Papers'
+query = 'folder:uoe/Call4Papers OR (from:Pascual AND to:lfcs-interest)'
 tags = +C4P;-inbox;-new
 message = call for papers
 
@@ -72,16 +72,21 @@ pattern = .*CfP.*
 tags = +C4P;-inbox;-new
 message = call for papers
 
+[Filter.11]
+query = 'is:offlineimap-project'
+tags = -inbox;-new
+message = OI list
+
+[Filter.12]
+query = 'from:lastminute.com OR from:easyjet OR from:ryanair OR checkin OR from:eastcoast OR from:britishairways OR from:KLM'
+tags = +travel;
+message = travel
+
 #[HeaderMatchingFilter.1]
 #header = subject
 #pattern = .*CfP.* (?P<conf>.*?2013.*?) .*
 #tags = +{conf}
 #message = call for papers
-
-[Filter.11]
-query = 'is:offlineimap-project'
-tags = -inbox;-new
-message = OI list
 
 # all thats still new goes into the inbox
 [InboxFilter]
