@@ -73,7 +73,7 @@ tags = +C4P;-inbox;-new
 message = call for papers
 
 [Filter.11]
-query = 'is:offlineimap-project'
+query = 'to:offlineimap-project@lists.alioth.debian.org'
 tags = -inbox;-new
 message = OI list
 
