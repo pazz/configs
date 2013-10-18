@@ -29,6 +29,8 @@ mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 mixer_cmd = "pavucontrol"
 --mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
 mail_cmd = terminal .. " -T alot -e alot"
+toggle_display_cmd = "xrandr --output LVDS1 --auto --output HDMI1 --auto --right-of LVDS1"
+toggle_touchpad_cmd = "toggle_touchpad"
 
 -- Default modkey.
 modkey = "Mod4"
@@ -543,12 +545,13 @@ globalkeys = awful.util.table.join(
                   awful.util.getdir("cache") .. "/history_eval")
               end),
     -- multimedia and fn keys
-    awful.key({}, "XF86Launch1", function () awful.util.spawn('samsung-tools -b toggle') end),
-    awful.key({}, "XF86Display", function () awful.util.spawn('toggleDisplays.sh') end),
-    awful.key({}, "XF86Launch2", function () awful.util.spawn('samsung-tools -n -w toggle') end),
-    awful.key({}, "XF86Launch3", function () awful.util.spawn('samsung-tools -n -c cycle') end),
-    --awful.key({}, "XF86Battery", function () awful.util.spawn('samsung-scripts ') end),
-    awful.key({}, "XF86WLAN", function () awful.util.spawn('samsung-tools -n -W toggle') end),
+    --awful.key({}, "XF86Launch1", function () awful.util.spawn('samsung-tools -b toggle') end),
+    awful.key({}, "XF86Display", function () awful.util.spawn(toggle_display_cmd) end),
+    --awful.key({}, "XF86Launch2", function () awful.util.spawn('samsung-tools -n -w toggle') end),
+    --awful.key({}, "XF86Launch3", function () awful.util.spawn('samsung-tools -n -c cycle') end),
+    awful.key({}, "XF86TouchpadToggle", function () awful.util.spawn(toggle_touchpad_cmd) end),
+    awful.key({}, "XF86ScreenSaver", function () awful.util.spawn(lock_cmd) end),
+    --awful.key({}, "XF86WLAN", function () awful.util.spawn('samsung-tools -n -W toggle') end),
     awful.key({}, "XF86AudioMute", function () awful.util.spawn('amixer -q set Master toggle') end),
     awful.key({}, "XF86AudioRaiseVolume", function () awful.util.spawn('amixer -q set Master 5%+') end),
     awful.key({}, "XF86AudioLowerVolume", function () awful.util.spawn('amixer -q set Master 5%-') end)
