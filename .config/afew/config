@@ -62,7 +62,7 @@ tags = -inbox;-new
 message = superboring seminars
 
 [Filter.10]
-query = 'folder:uoe/Call4Papers OR (from:Pascual AND to:lfcs-interest)'
+query = 'folder:uoe/Call4Papers OR (from:Pascual AND to:lfcs-interest) OR subject:"call for papers"'
 tags = +C4P;-inbox;-new
 message = call for papers
 
@@ -81,6 +81,11 @@ message = OI list
 query = 'from:lastminute.com OR from:easyjet OR from:ryanair OR checkin OR from:eastcoast OR from:britishairways OR from:KLM'
 tags = +travel;
 message = travel
+
+[Filter.13]
+query = 'from:groupon.co.uk OR from:grouponmail.co.uk'
+tags = +promotions;-new
+message = promotions
 
 #[HeaderMatchingFilter.1]
 #header = subject

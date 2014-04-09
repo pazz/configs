@@ -29,7 +29,7 @@ mpd_cmd = terminal .. " -T ncmpc -e ncmpc -c"
 mixer_cmd = "pavucontrol"
 --mail_cmd = 'urxvt -T mutt -e mutt -F ~/.muttrc'
 mail_cmd = terminal .. " -T alot -e alot"
-toggle_display_cmd = "xrandr --output LVDS1 --auto --output HDMI1 --auto --right-of LVDS1"
+toggle_display_cmd = "xrandr --output LVDS1 --auto --output HDMI1 --auto --right-of LVDS1 --output VGA1 --auto --left-of LVDS1 --output HDMI2 --auto --right-of LVDS1"
 toggle_touchpad_cmd = "toggle_touchpad"
 
 -- Default modkey.
@@ -97,7 +97,7 @@ shifty.config.tags = {
     ["bib"] = { 	
         position = 6, 
         init = false,
-        spawn = 'jabref -s',
+        spawn = '_JAVA_AWT_WM_NONREPARENTING=1; export _JAVA_AWT_WM_NONREPARENTING; jabref -s',
         icon= beautiful.tag_bib,
     },
     ["p2p"] = {  
@@ -255,7 +255,7 @@ function (widget, args)
 end,
 10, querystring)
 mailbuttons = awful.util.table.join(
-  awful.button({ }, 1, function () awful.util.spawn("urxvt -T alot -e alot search "..querystring) end),
+  awful.button({ }, 1, function () awful.util.spawn(terminal .. " -T alot -e alot search "..querystring) end),
   awful.button({ }, 3, function () awful.util.spawn("notmuch tag -inbox '"..querystring.."'") end)
 )
 mailicon:buttons(mailbuttons)
@@ -521,6 +521,11 @@ globalkeys = awful.util.table.join(
       function () 
           t= awful.tag.selected()
           awful.util.spawn('urxvt -T URXVT' ..t.name) 
+      end),
+    awful.key({ modkey, "Control", "Shift"   }, "Return", 
+      function () 
+          t= awful.tag.selected()
+          awful.util.spawn("gnome-terminal") 
       end),
     awful.key({ modkey, "Control" }, "r", awesome.restart),
     awful.key({ modkey, "Shift"   }, "q", awesome.quit),

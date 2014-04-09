@@ -1,11 +1,17 @@
 !urxvt
 URxvt.urgentOnBell:    true
 URxvt.perl-lib:        /home/pazz/.urxvt/
+!URxvt.perl-ext-common: default,url-select,keyboard-select,matcher
 URxvt.perl-ext-common: default,url-select,keyboard-select
 URxvt.urlLauncher:     firefox
-URxvt.underlineURLs:   false
 URxvt.keysym.M-u:      perl:url-select:select_next
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
+URxvt.matcher.button:  0
+URxvt.keysym.C-Delete:  perl:matcher:last
+URxvt.keysym.M-Delete:  perl:matcher:list
+URxvt.underlineURLs:   false
+
+
 !URxvt.background:      black
 !URxvt.background:      #fdf6e3
 URxvt.foreground:      light gray
@@ -15,10 +21,12 @@ URxvt.scrollBar:       false
 !URxvt*boldfont: xft:Symbola Bold:size=10
 !URxvt*font: xft:Droid Sans Mono:size=10
 URxvt*font: xft:Monospace:size=12, xft:Symbola:pixelsize=12
+!URxvt*font: xft:Monospace:size=17, xft:Symbola:pixelsize=17
 !Urxvt*boldFont: xft:Droid Sans Mono:size=10:style=Bold
 URxvt.letterSpace: 0
 !URxvt.cursorColor:  #89B83F
 !URxvt.pointerColor: #FFFFFF
+URxvt.colorUL: #4682B4
 
 ! Change fonts on demand
 URxvt.keysym.M-C-1: command:\033]710;tixus\007\033]711;tixus\007
@@ -27,7 +35,8 @@ URxvt.keysym.M-C-3: command:\033]710;lucidasanstypewriter-10\007\033]711;lucidas
 URxvt.keysym.M-C-4: command:\033]710;xft:Liberation Mono:style=Regular\007\033]711;xft:Liberation Mono:style=Regular\007
 URxvt.keysym.M-C-5: command:\033]710;xft:Bitstream Vera Sans Mono:style=Bold\007\033]711;xft:Bitstream Vera Sans Mono:style=Bold\007
 URxvt.keysym.M-C-6: command:\033]710;12x24\007\033]711;12x24\007
-URxvt.keysym.M-C-0: command:\033]710;xft:Monospace:size=18,style=Regular\007\033]711;xft:Symbola:pixelsize=18,style=Regular\007
+URxvt.keysym.M-C-7: command:\033]710;xft:Monospace:size=17\007\033]711;xft:Symbola:pixelsize=17\007
+URxvt.keysym.M-C-0: command:\033]710;xft:Monospace:size=12,style=Regular\007\033]711;xft:Symbola:pixelsize=12,style=Regular\007
 
 !xdvi
 xdvi.editor:        vim --servername tex --remote +%l %f

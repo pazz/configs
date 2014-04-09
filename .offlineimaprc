@@ -26,7 +26,10 @@ folderfilter = lambda foldername: foldername not in ['[Google Mail]/Spam', 'Tras
 #                           re.sub(r'.*/(.*)$', r'\1', folder).lower()))
 
 ssl = yes
-cert_fingerprint = b0ba392bba326e6feb1add4d04fa0fb86cd173fa
+#cert_fingerprint = b0ba392bba326e6feb1add4d04fa0fb86cd173fa
+#cert_fingerprint = 89091347184d41768bfc0da9fad94bfe882dd358
+sslcacertfile = /etc/ssl/certs/ca-certificates.crt
+
 maxconnections = 5
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
@@ -49,7 +52,31 @@ remotehost = imap.staffmail.ed.ac.uk
 remoteuser = s0976898
 remotepasseval = getpwd("UoE")
 ssl = yes
+#cert_fingerprint = 89091347184d41768bfc0da9fad94bfe882dd358
 cert_fingerprint = e7e9d60b80c3c69aef59f97c413388770c01f0e8
 maxconnections = 6
 holdconnectionopen = yes
 idlefolders = ['INBOX']
+
+
+
+[Account LaBRI]
+localrepository = LABRIdir
+remoterepository = LABRIrep
+
+[Repository LABRIdir]
+type = Maildir
+localfolders = /home/pazz/mail/labri
+
+[Repository LABRIrep]
+type = IMAP
+remotehost = mailhost.labri.fr
+remoteuser = ptotzke
+remotepasseval = getpwd("LaBRI")
+ssl = yes
+cert_fingerprint = 5122b1dff718ca7143c47a87ace0bf0e32329a2f
+#cert_fingerprint = e7e9d60b80c3c69aef59f97c413388770c01f0e8
+maxconnections = 6
+holdconnectionopen = yes
+idlefolders = ['INBOX']
+

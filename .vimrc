@@ -8,22 +8,23 @@ let s:pluglist = [
 \'tlib',
 \'github:tomtom/viki_vim',
 \'Python-mode-klen',
+\'git:git://git.code.sf.net/p/atp-vim/code',
 \'github:garbas/vim-snipmate',
 \'github:honza/vim-snippets',
 \'github:scrooloose/syntastic',
 \'fugitive',
 \'matchit.zip',
-\'git:git://git.code.sf.net/p/atp-vim/code',
 \'github:Lokaltog/vim-powerline',
 \]
 "
 let notused = [
-\'github:ervandew/supertab',
+\'vim-airline',
 \'LaTeX_Box',
 \'github:LaTeX-Box-Team/LaTeX-Box',
 \'AutomaticLaTeXPlugin',
 \'LaTeX-Suite_aka_Vim-LaTeX',
 \'pyflakes%2441',
+\'github:ervandew/supertab',
 \]
 
 " setup VAM
@@ -112,7 +113,7 @@ set tenc=utf-8 "term enc
 set undofile
 set undodir=~/.vim/undodir
 
-set textwidth=100
+set textwidth=80
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -138,7 +139,7 @@ set spelllang=en_gb
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Supertab
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
+"let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
 "let g:SuperTabDefaultCompletionType = "context"
 "let g:SuperTabContextDefaultCompletionType = "<c-o>"
 
@@ -147,7 +148,7 @@ let g:SuperTabDefaultCompletionType = "<c-x><c-o>"
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set iskeyword+=:
 "
-let g:atp_tab_map = 0
+"let g:atp_tab_map = 1
 let g:Tex_Leader = '#'
 let g:Tex_DefaultTargetFormat = 'pdf'
 let b:atp_Viewer = 'zathura'
@@ -158,6 +159,11 @@ let b:atp_ProjectScript = 1
 
 let g:Tex_AutoFolding = 0
 let g:Tex_Folding = 1
+let g:LatexBox_latexmk_options = "-pvc -pdf"
+
+let g:atp_statusNotif=1
+let g:atp_ProgressBar=1
+
 
 set winaltkeys=no
 

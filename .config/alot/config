@@ -2,6 +2,7 @@
 #theme=sup
 body_mimetype=text/plain
 theme = solarized_dark
+#theme = sup
 #prefer_plaintext=True
 #theme = solarized
 search_threads_sort_order = newest_first
@@ -10,7 +11,7 @@ complete_matching_abook_only = False
 #thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages}
 
 show_count_in_tag_list = messages
-
+#initial_command = search tag:inbox ; search tag:sent
 #bug_on_exit = true
 #editor_cmd = /usr/bin/vim -f -c 'set filetype=mail' +
 #editor_cmd = emacs +4
@@ -25,9 +26,9 @@ show_count_in_tag_list = messages
 #editor_spawn = True
 #editor_cmd = vim
 
-#edit_headers_whitelist = Attach,From,To,Subject
-edit_headers_whitelist = ,
-#edit_headers_blacklist = ' '
+edit_headers_whitelist = Attach,From,To,Subject
+#edit_headers_whitelist = ,
+edit_headers_blacklist = ' '
 #display_content_in_threadline = True
 
 displayed_headers = To,Cc,Bcc,Subject,Tags,Date,Message-Id
@@ -51,6 +52,7 @@ prompt_suffix = "> "
     aliases = patricktotzke@googlemail.com,
     gpg_key = D7D6C5AA
     sign_by_default = True
+    encrypt_by_default = True
     type = sendmail
     sendmail_command = msmtp --account=gmail -t
     draft_box = maildir:///home/pazz/mail/gmail/[Google Mail].Drafts
@@ -58,7 +60,7 @@ prompt_suffix = "> "
     sent_box = maildir:///home/pazz/mail/gmail/[Google Mail].Sent Mail
     [[[abook]]]
       type = shellcommand
-      command = nottoomuch-addresses.sh
+      command = /home/pazz/bin/nottoomuch-addresses.sh
       regexp = (\"(?P<name>.+)\")?\s*<(?P<email>.*@.+?)>
   
   [[uoe]]
@@ -71,11 +73,24 @@ prompt_suffix = "> "
     draft_box = maildir:///home/pazz/mail/uoe/Drafts
     #signature = ~/pt.uni.vcf
     #signature_filename = p.totzke.vcf
+    #sign_by_default = True
     signature_as_attachment = True
     #[[[abook]]]
      # type = abook
       #ignorecase = True
 
+  [[labri]]
+    realname = Patrick Totzke
+    address = patrick.totzke@labri.fr
+    #aliases = p.totzke@sms.ed.ac.uk, s0976898@sms.ed.ac.uk
+    type = sendmail
+    sendmail_command = msmtp --account=labri -t
+    sent_box = maildir:///home/pazz/mail/labri/INBOX.Sent
+    draft_box = maildir:///home/pazz/mail/labri/INBOX.Drafts
+    #signature = ~/pt.uni.vcf
+    #signature_filename = p.totzke.vcf
+    #sign_by_default = True
+    #signature_as_attachment = True
 
 
 [bindings]
@@ -83,6 +98,7 @@ prompt_suffix = "> "
   '[' = compose --template bpp
   M = compose --spawn=1
   T = search is:todo
+  Y = search is:travel
   A = search is:alot
   S = search is:sent
   % = "shellescape 'killall offlineimap && /home/pazz/bin/pullmail.sh'"
@@ -102,7 +118,7 @@ prompt_suffix = "> "
     ! = toggletags flagged
     s = toggletags unread
     t = toggletags todo
-    7 = toggletags travel
+    y = toggletags travel
     #enter = "select; fold NOT is:unread"
   
   [[thread]]
@@ -110,9 +126,11 @@ prompt_suffix = "> "
     #G = "pipeto 'git am'"
     t = toggletags todo
     a = toggletags inbox
+    y = toggletags travel
     v = verify
     ' ' = fold;move next;unfold
     $ = call hooks.github(ui)
+    U = call hooks.unsubscribe()
 
 ########################################################
 16_base03 = 'dark gray'
@@ -185,7 +203,7 @@ prompt_suffix = "> "
     normal = "", "", 'light blue', '', 'light blue', ''
   
   [[bug]]
-    translated = 🐜#🐛🐝
+    translated = 🐜
     normal = "", "", "dark red", "", "light red", ""
   [[todo]]
     normal = "", "", white, "dark magenta", white, "dark magenta"
@@ -250,6 +268,9 @@ prompt_suffix = "> "
   
   [[urwid]]
     normal = "", "", "", "", "#080", "#606"
+  
+  [[travel]]
+    translated = ✈
   
   [[mutt-kz]]
     normal = "", "", "", "", "#fff", "#606"

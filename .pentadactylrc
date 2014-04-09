@@ -3,3 +3,23 @@ colorscheme simple_dark
 set guioptions='sC'
 set editor='urxvt -e vim -f +<line> <file>'
 
+
+"" google translate
+command trans -js <<EOF
+let getParameterByName = function(url, name) {
+    let name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
+    let regexS = '[\\?&]' + name + '=([^&#]*)';
+    let regex = new RegExp(regexS);
+    let results = regex.exec(url);
+    if (results == null)
+        return '';
+    else
+        return decodeURIComponent(results[1].replace(/\+/g, ' '));
+};
+if (buffer.URL.spec.startsWith('http://translate.google.com/')) {
+    dactyl.open(getParameterByName(buffer.URL.spec, 'u'));
+} else {
+    dactyl.open('http://translate.google.com/translate?hl=en&sl=auto&tl=en&u=' + encodeURIComponent(buffer.URL.spec));
+}
+EOF
+nmap -builtin ,t :trans<CR>

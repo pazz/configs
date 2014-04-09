@@ -27,7 +27,7 @@ line_focus = standout, default, white, dark gray, "#ffa", "#68a"
 [[threadline]]
 normal = default, default, default, default, "#6d6", default
 focus = standout, default, light gray, dark gray, white, "#68a"
-parts = date, mailcount, tags, authors, subject
+parts = date, mailcount, tags, authors, subject, content
 [[[date]]]
 normal = default, default, light gray, default, g58, default
 focus = standout, default, light gray, dark gray, g89, "#68a"
