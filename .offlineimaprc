@@ -1,5 +1,5 @@
 [general]
-accounts = GMail, UoE
+accounts = GMail, UoE, LaBRI
 maxsyncaccounts = 5
 pythonfile = ~/.offlineimap.py
 
@@ -30,7 +30,7 @@ ssl = yes
 #cert_fingerprint = 89091347184d41768bfc0da9fad94bfe882dd358
 sslcacertfile = /etc/ssl/certs/ca-certificates.crt
 
-maxconnections = 5
+maxconnections = 4
 holdconnectionopen = yes
 #idlefolders = ['INBOX']
 #Setting realdelete = yes will Really Delete email from the server.

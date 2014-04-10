@@ -1,14 +1,18 @@
 #theme=mutt
+quit_on_last_bclose = True
 #theme=sup
 body_mimetype=text/plain
-theme = solarized_dark
+#theme = solarized_dark
 #theme = sup
 #prefer_plaintext=True
-#theme = solarized
+theme = solarized
 search_threads_sort_order = newest_first
 complete_matching_abook_only = False
 
-#thread_statusbar = [{buffer_no}: thread:{tid}] {subject}, total: {total_messages}
+#thread_statusbar = [{buffer_no}: thread:{tid}] {subject} total: {total_messages}, itags: {intersection_tags}  ttags: {thread_tags} 
+#thread_statusbar = [{buffer_no}: thread:{tid}] {subject} total: {total_messages}, tags: {thread_tags} 
+
+ansi_background=False
 
 show_count_in_tag_list = messages
 #initial_command = search tag:inbox ; search tag:sent
@@ -38,10 +42,16 @@ notify_timeout = 4
 
 #timestamp_format = '%c'
 
-print_cmd = muttprint -F Utopia -a From_Date_*Subject*_/Tags/
+#print_cmd = muttprint -F Utopia -a From_Date_*Subject*_/Tags/
+print_cmd = muttprint -2 -F Utopia -a From_Date_*Subject* -p TO_FILE:~/print.ps
 
 prompt_suffix = "> "
 
+reply_force_address = true
+forward_force_address = true
+bounce_force_address = true
+
+thread_subject= oldest
 #user_agent = alot/{version}
 
 [accounts]
@@ -55,14 +65,31 @@ prompt_suffix = "> "
     encrypt_by_default = True
     type = sendmail
     sendmail_command = msmtp --account=gmail -t
-    draft_box = maildir:///home/pazz/mail/gmail/[Google Mail].Drafts
-    #sent_box = maildir:///home/pazz/Maildir/Sent
-    sent_box = maildir:///home/pazz/mail/gmail/[Google Mail].Sent Mail
+    draft_box = maildir:///home/pazz/mail/gmail/[Google Mail]/Drafts
+    sent_box = maildir:///home/pazz/mail/gmail/[Google Mail]/Sent Mail
     [[[abook]]]
       type = shellcommand
-      command = /home/pazz/bin/nottoomuch-addresses.sh
-      regexp = (\"(?P<name>.+)\")?\s*<(?P<email>.*@.+?)>
+      #command = /home/pazz/bin/nottoomuch-addresses.sh
+      #command = /home/pazz/bin/notmuchaddress
+      command = "notmuch address --output=recipients date:1Y.. AND from:totzke AND NOT to:reply.github.com"
+      regexp = (\"?(?P<name>.+)\"?)?\s*<(?P<email>.*@.+?)>
+      #regexp = \"(?P<name>.+)\"\s*<(?P<email>.*.+?@.+?)>
+      shellcommand_external_filtering = False
+
   
+  [[uow]]
+    realname = Patrick Totzke
+    address = p.totzke@warwick.ac.uk
+    aliases = totzke@dcs.warwick.ac.uk, ptotzke@labri.fr
+    type = sendmail
+    sendmail_command = msmtp --account=uow -t
+    sent_box = maildir:///home/pazz/mail/uow/Sent
+    draft_box = maildir:///home/pazz/mail/uow/Drafts
+    #signature = ~/pt.uni.vcf
+    #signature_filename = p.totzke.vcf
+    #sign_by_default = True
+    signature_as_attachment = True
+
   [[uoe]]
     realname = Patrick Totzke
     address = p.totzke@ed.ac.uk
@@ -79,30 +106,16 @@ prompt_suffix = "> "
      # type = abook
       #ignorecase = True
 
-  [[labri]]
-    realname = Patrick Totzke
-    address = patrick.totzke@labri.fr
-    #aliases = p.totzke@sms.ed.ac.uk, s0976898@sms.ed.ac.uk
-    type = sendmail
-    sendmail_command = msmtp --account=labri -t
-    sent_box = maildir:///home/pazz/mail/labri/INBOX.Sent
-    draft_box = maildir:///home/pazz/mail/labri/INBOX.Drafts
-    #signature = ~/pt.uni.vcf
-    #signature_filename = p.totzke.vcf
-    #sign_by_default = True
-    #signature_as_attachment = True
-
-
 [bindings]
-  #G = "call hooks.test_globals()"
+  q=bclose;refresh
+  ', a' = "call hooks.pa(ui)"
   '[' = compose --template bpp
   M = compose --spawn=1
   T = search is:todo
   Y = search is:travel
   A = search is:alot
   S = search is:sent
-  % = "shellescape 'killall offlineimap && /home/pazz/bin/pullmail.sh'"
-  ^ = "shellescape 'killall offlineimap && rm /home/pazz.offlineimap/lock'"
+  % = "shellescape '/home/pazz/bin/pullmail.sh'; refresh"
   'meta left' = bprevious
   'meta right' = bnext
   'meta 1' = buffer 1
@@ -119,18 +132,25 @@ prompt_suffix = "> "
     s = toggletags unread
     t = toggletags todo
     y = toggletags travel
+    F = toggletags flat
+    D = toggletags delete
     #enter = "select; fold NOT is:unread"
   
   [[thread]]
+    ', t' = "call hooks.translate(ui)"
+    ', w' = "call hooks.whereisit(ui)"
     #H = "call ui.current_buffer.get_selected_message().test_parser()"
     #G = "pipeto 'git am'"
     t = toggletags todo
+    F = toggletags flat
     a = toggletags inbox
     y = toggletags travel
     v = verify
     ' ' = fold;move next;unfold
     $ = call hooks.github(ui)
     U = call hooks.unsubscribe()
+    D = call hooks.dimapseminar(ui)
+    u = pipeto urlscan 2> /dev/null
 
 ########################################################
 16_base03 = 'dark gray'
@@ -192,6 +212,8 @@ prompt_suffix = "> "
   [[signed]]
     translated = ®
     normal = "", "", "", "", "", ""
+  [[ring]]
+    translated = 💍#◉
   [[killed]]
     translated = τ  # ☠
 #    normal = "", "", "", "", g70, g27
@@ -211,14 +233,11 @@ prompt_suffix = "> "
   [[C4P]]
     normal = "", "", "", "", g74, g23
   
-  [[seminars]]
+  [[lists/seminars]]
     normal = "", "", "", "", "", "#6da"
   
   [[G+]]
     normal = "", "", "", "", "#0ff", "#00f"
-  
-  [[edlug]]
-    normal = "", "", "", "", "#006", "#08d"
   
   [[peergroup]]
     normal = "", "", "", "", "#006", "#08d"
@@ -230,59 +249,64 @@ prompt_suffix = "> "
     translated = ⚽
     #normal = "", "", "", "", "#6da", "#08d"
   
-  [[wols]]
+  [[lists/wols]]
+    translated = wols
     normal = "", "", "", "", "#6da", "#08d"
   
-  [[sicsa]]
+  [[lists/sicsa]]
+    translated = UoE/sicsa
     normal = "", "", "", "", "#6da", "#060"
   
-  [[gradschool]]
+  [[lists/gradschool]]
+    translated = UoE/gradschool
     normal = "", "", "", "", "#6da", "#060"
   
-  [[students]]
+  [[lists/students]]
+    translated = UoE/students
     normal = "", "", "", "", g74, "#080"
   
-  [[phd-degree-students]]
-    translated = PhD
+  [[lists/phd-degree-students]]
+    translated = UoE/PhD
     normal = "", "", "", "", g74, "#080"
   [[automata]]
     normal = "", "", "", "", g74, "#060"
   
-  [[sup.*]]
-    translation = sup.*, sup
-    normal = "", "", "", "", "#d8a", "#606"
-  
-  [[atp-vim-list]]
+  [[lists/atp-vim-list]]
     translated = atp
     normal = "", "", "", "", "", "#606"
   
-  [[inf-general]]
+  [[lists/inf-general]]
     translated = inf
   
-  [[alot]]
+  [[lists/alot]]
+   translated = alot
     normal = "", "", "", "", "#80d,bold", "#df6"
   
-  [[offlineimap-project]]
-    translated = offlineimap
-    normal = "", "", "", "", "#d8a", "#606"
-  
-  [[urwid]]
+  [[lists/urwid]]
     normal = "", "", "", "", "#080", "#606"
   
   [[travel]]
     translated = ✈
   
-  [[mutt-kz]]
+  [[lists/mutt-kz]]
     normal = "", "", "", "", "#fff", "#606"
   
   [[notmuch::bug]]
     translated = nm:bug
     normal = "", "", "light red, bold", "light blue", "light red, bold", "#88d"
   
-  [[notmuch.*]]
+  [[lists/notmuch.*]]
     translation = notmuch::(.*), \1
     normal = "", "", "", "", "#fff", "#88d"
   
-  [[lfcs-.*]]
-    translation = lfcs-(.*), LFCS-\1
+  [[lists/lfcs-.*]]
+    translation = lists/lfcs-(.*), LFCS-\1
     normal = "", "", "", "", "#6da", "#060"
+  
+  [[lists/labri]]
+    translated = labri
+    normal = "", "", "", "", "#6da", "#060"
+  
+  [[lists/dimapseminar]]
+    translated = dimap
+    normal = "", "", "", "", "#08f,bold", ""
