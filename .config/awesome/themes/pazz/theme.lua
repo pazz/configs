@@ -54,6 +54,9 @@ theme.tag_cal	=  theme.confdir .. "/icons/picol/calendar_16-white.png"
 --theme.tag_bib	=  theme.confdir .. "/icons/bib.png"
 theme.tag_bib	=  theme.confdir .. "/icons/picol/bookmark_16-white.png"
 --theme.tag_im	=  theme.confdir .. "/icons/im.png"
+--theme.tag_media	=  theme.confdir .. "/icons/media.png"
+theme.tag_audio	=  theme.confdir .. "/icons/audio.png"
+theme.tag_video	=  theme.confdir .. "/icons/video.png"
 theme.tag_im	=  theme.confdir .. "/icons/picol/social_network_16-white.png"
 
 -- widget icons
@@ -89,7 +92,8 @@ theme.taglist_squares_sel   = "/usr/share/awesome/themes/default/taglist/squaref
 theme.taglist_squares_unsel = "/usr/share/awesome/themes/default/taglist/squarew.png"
 
 -- MISC
-theme.wallpaper_cmd         = { "awsetbg /home/pazz/Pictures/wallpapers/flora-on-sand-1927.jpg" }
+--theme.wallpaper_cmd         = { "awsetbg /home/pazz/Pictures/wallpapers/flora-on-sand-1927.jpg" }
+theme.wallpaper_cmd         = { "awsetbg /home/pazz/.config/awesome/themes/pazz/nb.jpg" }
 --theme.wallpaper_cmd         = { "awsetbg /home/pazz/.config/awesome/themes/pazz/imm007_8A.jpg" }
 --theme.wallpaper_cmd         = { "awsetbg -f -u feh /home/pazz/.config/awesome/themes/pazz/DSC_4729.JPG" }
 --theme.wallpaper_cmd         = { "awsetbg -f -u feh /home/pazz/.config/awesome/themes/pazz/imm011_14A.jpg" }

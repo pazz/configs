@@ -86,23 +86,24 @@ shifty.config.tags = {
         mwfact = 0.65,
         position = 4, 
         init = false,
-        spawn = 'thunar' 
-    },
-    ["media"] = { 	
-        mwfact = 0.65,
-        position = 5, 
-        init = false,
-        spawn = mpd_cmd
+        spawn = 'nautilus --no-desktop' 
     },
     ["bib"] = { 	
-        position = 6, 
+        position = 5, 
         init = false,
         spawn = '_JAVA_AWT_WM_NONREPARENTING=1; export _JAVA_AWT_WM_NONREPARENTING; jabref -s',
         icon= beautiful.tag_bib,
     },
-    ["p2p"] = {  
-        spawn="transgui",
-        icon= beautiful.tag_p2p,
+    ["video"] = { 	
+        mwfact = 0.65,
+        position = 6, 
+        init = false,
+        spawn = terminal,
+        icon= beautiful.tag_video,
+    },
+    ["audio"] = {  
+        spawn="rhythmbox",
+        icon= beautiful.tag_audio,
         position = 7,
     },
     ["mail"] = { 
@@ -136,7 +137,8 @@ shifty.config.apps = {
          { match = { "URXVTweb" } ,tag='web'} ,
          { match = { "Firefox" }, tag = "web" } ,
          { match = { "URXVTfs" } ,tag='fs'} ,
-         { match = { "URXVTmedia", "Quodlibet", "ncmpc", "pavucontrol" } ,tag='media'} ,
+         { match = { "URXVTmedia", "Quodlibet", "ncmpc", "rhythmbox" } ,tag='audio'} ,
+         { match = { "mplayer" } ,tag='video'} ,
          { match = { "URXVTbib" } ,tag='bib'} ,
          { match = { "URXVTcalendar",".*Calendar.*" } ,tag='calendar'} ,
          { match = { "URXVTmail","Thunderbird","mutt","alot" } , tag = "mail" } ,
