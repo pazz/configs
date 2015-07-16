@@ -42,5 +42,6 @@ export PATH=/home/pazz/.local/bin:/home/pazz/bin:/usr/lib/lightdm/lightdm:/usr/l
 alias lm="latexmk -pdf -silent"
 alias lc="latexmk -c"
 alias lC="latexmk -C"
+alias ldiff="git-latexdiff --latexmk"
 #alias vim="vim --servername VIM"
 alias -s pdf=zathura
